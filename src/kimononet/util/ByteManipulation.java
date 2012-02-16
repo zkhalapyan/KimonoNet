@@ -2,53 +2,53 @@ package kimononet.util;
 
 public class ByteManipulation {
 
-	public static byte[] toByta(byte data) {
+	public static byte[] toByteArray(byte data) {
 	    return new byte[]{data};
 	}
 
-	public static byte[] toByta(byte[] data) {
+	public static byte[] toByteArray(byte[] data) {
 	    return data;
 	}
 
 	/* ========================= */
 
-	public static byte[] toByta(short data) {
+	public static byte[] toByteArray(short data) {
 	    return new byte[] {
 	        (byte)((data >> 8) & 0xff),
 	        (byte)((data >> 0) & 0xff),
 	    };
 	}
 
-	public static byte[] toByta(short[] data) {
+	public static byte[] toByteArray(short[] data) {
 	    if (data == null) return null;
 	    // ----------
 	    byte[] byts = new byte[data.length * 2];
 	    for (int i = 0; i < data.length; i++)
-	        System.arraycopy(toByta(data[i]), 0, byts, i * 2, 2);
+	        System.arraycopy(toByteArray(data[i]), 0, byts, i * 2, 2);
 	    return byts;
 	}
 
 	/* ========================= */
 
-	public static byte[] toByta(char data) {
+	public static byte[] toByteArray(char data) {
 	    return new byte[] {
 	        (byte)((data >> 8) & 0xff),
 	        (byte)((data >> 0) & 0xff),
 	    };
 	}
 
-	public static byte[] toByta(char[] data) {
+	public static byte[] toByteArray(char[] data) {
 	    if (data == null) return null;
 	    // ----------
 	    byte[] byts = new byte[data.length * 2];
 	    for (int i = 0; i < data.length; i++)
-	        System.arraycopy(toByta(data[i]), 0, byts, i * 2, 2);
+	        System.arraycopy(toByteArray(data[i]), 0, byts, i * 2, 2);
 	    return byts;
 	}
 
 	/* ========================= */
 
-	public static byte[] toByta(int data) {
+	public static byte[] toByteArray(int data) {
 	    return new byte[] {
 	        (byte)((data >> 24) & 0xff),
 	        (byte)((data >> 16) & 0xff),
@@ -57,18 +57,18 @@ public class ByteManipulation {
 	    };
 	}
 
-	public static byte[] toByta(int[] data) {
+	public static byte[] toByteArray(int[] data) {
 	    if (data == null) return null;
 	    // ----------
 	    byte[] byts = new byte[data.length * 4];
 	    for (int i = 0; i < data.length; i++)
-	        System.arraycopy(toByta(data[i]), 0, byts, i * 4, 4);
+	        System.arraycopy(toByteArray(data[i]), 0, byts, i * 4, 4);
 	    return byts;
 	}
 
 	/* ========================= */
 
-	public static byte[] toByta(long data) {
+	public static byte[] toByteArray(long data) {
 	    return new byte[] {
 	        (byte)((data >> 56) & 0xff),
 	        (byte)((data >> 48) & 0xff),
@@ -81,60 +81,60 @@ public class ByteManipulation {
 	    };
 	}
 
-	public static byte[] toByta(long[] data) {
+	public static byte[] toByteArray(long[] data) {
 	    if (data == null) return null;
 	    // ----------
 	    byte[] byts = new byte[data.length * 8];
 	    for (int i = 0; i < data.length; i++)
-	        System.arraycopy(toByta(data[i]), 0, byts, i * 8, 8);
+	        System.arraycopy(toByteArray(data[i]), 0, byts, i * 8, 8);
 	    return byts;
 	}
 
 	/* ========================= */
 
-	public static byte[] toByta(float data) {
-	    return toByta(Float.floatToRawIntBits(data));
+	public static byte[] toByteArray(float data) {
+	    return toByteArray(Float.floatToRawIntBits(data));
 	}
 
-	public static byte[] toByta(float[] data) {
+	public static byte[] toByteArray(float[] data) {
 	    if (data == null) return null;
 	    // ----------
 	    byte[] byts = new byte[data.length * 4];
 	    for (int i = 0; i < data.length; i++)
-	        System.arraycopy(toByta(data[i]), 0, byts, i * 4, 4);
+	        System.arraycopy(toByteArray(data[i]), 0, byts, i * 4, 4);
 	    return byts;
 	}
 
 	/* ========================= */
 
-	public static byte[] toByta(double data) {
-	    return toByta(Double.doubleToRawLongBits(data));
+	public static byte[] toByteArray(double data) {
+	    return toByteArray(Double.doubleToRawLongBits(data));
 	}
 
-	public static byte[] toByta(double[] data) {
+	public static byte[] toByteArray(double[] data) {
 	    if (data == null) return null;
 	    // ----------
 	    byte[] byts = new byte[data.length * 8];
 	    for (int i = 0; i < data.length; i++)
-	        System.arraycopy(toByta(data[i]), 0, byts, i * 8, 8);
+	        System.arraycopy(toByteArray(data[i]), 0, byts, i * 8, 8);
 	    return byts;
 	}
 
 	/* ========================= */
 
-	public static byte[] toByta(boolean data) {
+	public static byte[] toByteArray(boolean data) {
 	    return new byte[]{(byte)(data ? 0x01 : 0x00)}; // bool -> {1 byte}
 	}
 
-	public static byte[] toByta(boolean[] data) {
-	    // Advanced Technique: The byte array containts information
+	public static byte[] toByteArray(boolean[] data) {
+	    // Advanced Technique: The byte array contains information
 	    // about how many boolean values are involved, so the exact
 	    // array is returned when later decoded.
 	    // ----------
 	    if (data == null) return null;
 	    // ----------
 	    int len = data.length;
-	    byte[] lena = toByta(len); // int conversion; length array = lena
+	    byte[] lena = toByteArray(len); // int conversion; length array = lena
 	    byte[] byts = new byte[lena.length + (len / 8) + (len % 8 != 0 ? 1 : 0)];
 	    // (Above) length-array-length + sets-of-8-booleans +? byte-for-remainder
 	    System.arraycopy(lena, 0, byts, 0, lena.length);
@@ -150,11 +150,11 @@ public class ByteManipulation {
 
 	/* ========================= */
 
-	public static byte[] toByta(String data) {
+	public static byte[] toByteArray(String data) {
 	    return (data == null) ? null : data.getBytes();
 	}
 
-	public static byte[] toByta(String[] data) {
+	public static byte[] toByteArray(String[] data) {
 	    // Advanced Technique: Generates an indexed byte array
 	    // which contains the array of Strings. The byte array
 	    // contains information about the number of Strings and
@@ -165,7 +165,7 @@ public class ByteManipulation {
 	    int totalLength = 0; // Measure length of final byte array
 	    int bytesPos = 0; // Used later
 	    // ----- arrays:
-	    byte[] dLen = toByta(data.length); // byte array of data length
+	    byte[] dLen = toByteArray(data.length); // byte array of data length
 	    totalLength += dLen.length;
 	    int[] sLens = new int[data.length]; // String lengths = sLens
 	    totalLength += (sLens.length * 4);
@@ -173,7 +173,7 @@ public class ByteManipulation {
 	    // ----- pack strs:
 	    for (int i = 0; i < data.length; i++) {
 	        if (data[i] != null) {
-	            strs[i] = toByta(data[i]);
+	            strs[i] = toByteArray(data[i]);
 	            sLens[i] = strs[i].length;
 	            totalLength += strs[i].length;
 	        } else {
@@ -184,7 +184,7 @@ public class ByteManipulation {
 	    // ----------
 	    byte[] bytes = new byte[totalLength]; // final array
 	    System.arraycopy(dLen, 0, bytes, 0, 4);
-	    byte[] bsLens = toByta(sLens); // byte version of String sLens
+	    byte[] bsLens = toByteArray(sLens); // byte version of String sLens
 	    System.arraycopy(bsLens, 0, bytes, 4, bsLens.length);
 	    // -----
 	    bytesPos += 4 + bsLens.length; // mark position

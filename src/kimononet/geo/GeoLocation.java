@@ -109,10 +109,7 @@ public class GeoLocation {
 		this.longitude = ByteManipulation.toDouble(lon);
 		this.latitude = ByteManipulation.toDouble(lat);
 		this.accuracy = ByteManipulation.toDouble(acc);
-		
-		
 	}
-	
 	
 	/**
 	 * Resets the time stamp to the current system's time. 

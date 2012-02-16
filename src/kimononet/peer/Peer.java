@@ -1,6 +1,7 @@
 package kimononet.peer;
 
 import kimononet.geo.GeoLocation;
+import kimononet.peer.address.PeerAddress;
 
 /**
  * The Peer object stores information about the peer that is unique to a 
@@ -20,7 +21,7 @@ public class Peer {
 	/**
 	 * A unique peer identification address. 
 	 */
-	private String address;
+	private PeerAddress address;
 	
 	/**
 	 * Stores peer's current location.
@@ -33,10 +34,10 @@ public class Peer {
 	 * @param address A peer address that uniquely identifies a peer.
 	 */
 	public Peer(String address){
-		this(address, "unnamed-peer: " + address);
+		this(address, new PeerAddress("00:00:00:00:00:00"));
 	}
 	
-	public Peer(String name, String address){
+	public Peer(String name, PeerAddress address){
 		this.name = name;
 		this.address = address;
 	}
@@ -69,11 +70,11 @@ public class Peer {
 		this.name = name;
 	}
 
-	public String getAddress() {
+	public PeerAddress getAddress() {
 		return address;
 	}
 
-	public void setAddress(String address) {
+	public void setAddress(PeerAddress address) {
 		this.address = address;
 	}
 }

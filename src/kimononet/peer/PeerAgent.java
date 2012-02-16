@@ -4,6 +4,11 @@ import kimononet.geo.DefaultGeoDevice;
 import kimononet.geo.GeoDevice;
 import kimononet.net.p2p.PeerDiscoveryService;
 
+/**
+ * 
+ * @author Zorayr Khalapyan
+ *
+ */
 public class PeerAgent {
 
 	/**
