@@ -1,5 +1,7 @@
 package kimononet.net.p2p;
 
+import java.net.InetAddress;
+
 /**
  * The interface represents a peer-to-peer connection. The implementation might
  * be either state-full or state-less given the requirements for the connection.  
@@ -9,19 +11,9 @@ package kimononet.net.p2p;
  */
 public interface Connection {
 	
-	/**
-	 * Timeout for waiting to accept connections from clients.
-	 */
-	public static int SERVER_ACCEPT_TIMEOUT = 100;
-	
-	/**
-	 * Buffer size in bytes of the received UDP packets.
-	 */
-	public static int PACKET_BUFFER_SIZE = 2048;
-	
 	public boolean connect();
 	public boolean disconnect();
-	public boolean send(byte[] data);
-	public boolean receive();	
+	public boolean send(byte[] data, int port, InetAddress address);
+	public boolean receive(byte[] data);	
 
 }

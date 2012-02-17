@@ -61,6 +61,10 @@ public class GeoLocation {
 		setLocation(longitude, latitude, accuracy);
 	}
 	
+	public GeoLocation(byte[] location){
+		setLocation(location);
+	}
+	
 	/**
 	 * Sets GPS longitude, latitude, and accuracy, and also updates the current
 	 * time stamp. 

@@ -14,6 +14,10 @@ public class GeoService extends Thread {
 		this.agent = agent;
 	}
 	
+	public void startService(){
+		this.start();
+	}
+	
 	/**
 	 * Once stopped, the service shut not be started again.
 	 */
@@ -25,12 +29,13 @@ public class GeoService extends Thread {
 		
 		while(true){
 			
+			//Update the peer's current GPS location.
+			agent.getPeer().setLocation(agent.getGeoDevice().getLocation());
+			
 			//If the service has been shutdown, it should not be started again.
 			if(shutdown){
 				break;
-			}
-			
-			
+			}			
 			
 		}
 	}

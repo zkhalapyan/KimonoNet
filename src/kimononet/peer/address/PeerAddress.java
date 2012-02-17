@@ -1,5 +1,10 @@
 package kimononet.peer.address;
 
+/**
+ * 
+ * @author Zorayr Khalapyan
+ *
+ */
 public class PeerAddress {
 
 	/**
@@ -40,13 +45,13 @@ public class PeerAddress {
 		
 		String[] hex = address.split("(\\:|\\-)");
 		
-		if (hex.length != 6) {
+		if (hex.length != this.address.length) {
 			throw new PeerAddressException("Invalid address legth: " + address);
 		}
 		
 		try {
 			
-			for (int i = 0; i < ADDRESS_LENGTH; i++) {				
+			for (int i = 0; i < this.address.length; i++) {				
 				this.address[i] = (byte) Integer.parseInt(hex[i], 16);
 			}
 		}
@@ -59,7 +64,7 @@ public class PeerAddress {
 	 * Returns the byte array representation of the address.
 	 * @return
 	 */
-	public byte[] getAddressBytes(){
+	public byte[] toByteArray(){
 		return address;
 	}
 	

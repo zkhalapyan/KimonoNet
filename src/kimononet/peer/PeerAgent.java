@@ -2,6 +2,7 @@ package kimononet.peer;
 
 import kimononet.geo.DefaultGeoDevice;
 import kimononet.geo.GeoDevice;
+import kimononet.geo.GeoService;
 import kimononet.net.p2p.PeerDiscoveryService;
 
 /**
@@ -30,6 +31,12 @@ public class PeerAgent {
 	 * Peer's GPS device.
 	 */
 	private GeoDevice geoDevice;
+	
+	/**
+	 * Service that update's the current peer's GPS location at a certain
+	 * frequency.
+	 */
+	private GeoService geoService;
 	
 	/**
 	 * Creates a peer agent with a default peer environment.
@@ -61,9 +68,30 @@ public class PeerAgent {
 		this.peer = peer;
 		this.environment = environment;
 		this.geoDevice = geoDevice;
+		
+		this.discoveryService = new PeerDiscoveryService(this);		
+		this.geoService = new GeoService(this);
 	}
 	
-
+	public void startServices(){
+		this.geoService.startService();
+		this.discoveryService.startService();
+		
+	}
+	
+	public void shutdownServices(){
+		this.geoService.shutdown();
+		this.discoveryService.shutdownService();
+	}
+	
+	/**
+	 * Returns the peer's GPS device.
+	 * @return The peer's GPS device.
+	 */
+	public GeoDevice getGeoDevice(){
+		return geoDevice;
+	}
+	
 	/**
 	 * Returns the peer represented by this agent.
 	 * @return The peer represented by this agent.

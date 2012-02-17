@@ -34,10 +34,16 @@ public class Peer {
 	 * @param address A peer address that uniquely identifies a peer.
 	 */
 	public Peer(String address){
-		this(address, new PeerAddress("00:00:00:00:00:00"));
+		this(new PeerAddress(address), "unnamed-peer");
 	}
 	
-	public Peer(String name, PeerAddress address){
+	/**
+	 * Creates a new peer from the specified name and address.
+	 * 
+	 * @param name Peer's name.
+	 * @param address Peer's unique address.
+	 */
+	public Peer(PeerAddress address, String name){
 		this.name = name;
 		this.address = address;
 	}

@@ -1,5 +1,8 @@
 package kimononet.net.p2p;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import kimononet.peer.PeerAgent;
 
 public class PeerDiscoveryService {
@@ -20,7 +23,7 @@ public class PeerDiscoveryService {
 
 	}
 	
-	public void start()
+	public void startService()
 	{
 		beaconService = new BeaconService(agent);
 		beaconService.start();
@@ -29,7 +32,7 @@ public class PeerDiscoveryService {
 		handshakeService.start();
 	}
 	
-	public void shutdown()
+	public void shutdownService()
 	{
 		beaconService.shutdown();
 		handshakeService.shutdown();
@@ -37,6 +40,7 @@ public class PeerDiscoveryService {
 	
 	private class BeaconService extends Thread
 	{
+		private static final String BROADCAST_ADDRESS = "255.255.255.255";
 		/** 
 		 * The peer agent associated with this beacon service.
 		 */
@@ -72,22 +76,44 @@ public class PeerDiscoveryService {
 		{
 			shutdown = false;
 			
+			UDPConnection connection = new UDPConnection(24242);
+			BeaconPacket beacon = new BeaconPacket(agent);
+			
+			beacon.setType(BeaconType.BEACON);
+			
+			if(!connection.connect()){
+				return;
+			}
+			
 			while(true){
 				
 				try {
 					
+					byte[] packet = beacon.toByteArray();
 					
-					//If a shutdown was requested, then exist the core loop.
+					if(packet != null){
+						//Send the beacon packet.
+						connection.send(packet, 
+										24242, 
+										InetAddress.getByName(BROADCAST_ADDRESS));
+					}
+					
+					System.out.println("Beacon sent.");
+					
+					//If a shutdown was requested, then exit the core loop.
 					if(shutdown){
 						break;
 						
-					//Otherwise, pause the core loop 
+					//Otherwise, pause the core loop.
 					}else{
 						sleep(frequency);	
 					}
 					
 					
 				} catch (InterruptedException e) {
+					e.printStackTrace();
+					
+				} catch (UnknownHostException e) {
 					e.printStackTrace();
 				}
 			}
