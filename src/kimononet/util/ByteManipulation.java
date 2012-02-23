@@ -1,6 +1,34 @@
 package kimononet.util;
 
 public class ByteManipulation {
+	
+	public static int getLength(byte data){
+		return ByteManipulation.toByteArray(data).length;
+	}
+	
+	public static int getLength(double data){
+		return ByteManipulation.toByteArray(data).length;
+	}
+	
+	public static int getLength(float data){
+		return ByteManipulation.toByteArray(data).length;
+	}
+	
+	public static int getLength(long data){
+		return ByteManipulation.toByteArray(data).length;
+	}
+	
+	public static int getLength(int data){
+		return ByteManipulation.toByteArray(data).length;
+	}
+	
+	public static int getLength(short data){
+		return ByteManipulation.toByteArray(data).length;
+	}
+	
+	public static int getLength(char data){
+		return ByteManipulation.toByteArray(data).length;
+	}
 
 	public static byte[] toByteArray(byte data) {
 	    return new byte[]{data};
