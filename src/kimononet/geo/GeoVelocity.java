@@ -21,7 +21,7 @@ import java.util.Date;
  * @author Zorayr Khalapyan
  *
  */
-public class GeoVector {
+public class GeoVelocity {
 
 	
 	/**
@@ -44,6 +44,10 @@ public class GeoVector {
 	 */
 	private GeoLocation currentLocation;
 	
+	public GeoVelocity(){
+		this(null);
+	}
+	
 	/**
 	 * Creates a new vector initialized at the provided location. 
 	 * 
@@ -53,11 +57,18 @@ public class GeoVector {
 	 *  
 	 * @param currentLocation The current location of the vector. 
 	 */
-	public GeoVector(GeoLocation currentLocation){
+	public GeoVelocity(GeoLocation currentLocation){
 		this.currentLocation = currentLocation;
 	}
 	
 	public void updateLocation(GeoLocation newLocation){
+		
+		//If an initial location has not been specified, save the new location 
+		//as the current location and exit.
+		if(currentLocation == null){
+			currentLocation = newLocation;
+			return;
+		}
 		
 		double dTime = currentLocation.getLastUpdateTime() - newLocation.getLastUpdateTime();
 		
