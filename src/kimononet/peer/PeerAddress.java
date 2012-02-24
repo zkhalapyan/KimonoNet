@@ -1,17 +1,32 @@
-package kimononet.peer.address;
+package kimononet.peer;
+
+import kimononet.net.parcel.Parcel;
+import kimononet.net.parcel.Parcelable;
 
 /**
+ * The object represents a unique peer address. 
  * 
  * @author Zorayr Khalapyan
  *
  */
-public class PeerAddress {
+public class PeerAddress implements Parcelable{
 
 	/**
 	 * Peer address length in bytes.
 	 */
 	public static final int ADDRESS_LENGTH = 6;
 	
+	/**
+	 * Current implementation adds a two byte padding to the MAC-48 address in 
+	 * case address space has to increase in the future.
+	 */
+	public static final int ADDRESS_PADDING_LENGTH = 2;
+	
+	/**
+	 * Peer address's parcel size.
+	 */
+	public static final int PARCEL_SIZE = ADDRESS_LENGTH + ADDRESS_PADDING_LENGTH;
+
 	/**
 	 * A MAC-48 address according to IEEE 802 standard.
 	 */
@@ -61,12 +76,19 @@ public class PeerAddress {
 	}
 	
 	/**
-	 * Returns the byte array representation of the address.
-	 * @return
+	 * Returns the Parcel representation of the address.
+	 * @return Parcel representation of the address.
 	 */
-	public byte[] toByteArray(){
-		return address;
+	public Parcel toParcel(){
+		
+		//Pad and return the address parcel.
+		Parcel parcel = new Parcel(ADDRESS_LENGTH + ADDRESS_PADDING_LENGTH);
+		parcel.add(address);
+		
+		return parcel;
+		 
 	}
+	
 	
 	/**
 	 * Represents a string representation of the address.

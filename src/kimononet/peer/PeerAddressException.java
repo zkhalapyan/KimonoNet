@@ -1,4 +1,4 @@
-package kimononet.peer.address;
+package kimononet.peer;
 
 /**
  * Represents an exception associated with parsing or handling peer addresses.

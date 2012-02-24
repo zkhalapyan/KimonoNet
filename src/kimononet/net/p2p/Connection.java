@@ -11,6 +11,11 @@ import java.net.InetAddress;
  */
 public interface Connection {
 	
+	/**
+	 * Represents the maximum number of byte allowed in a packet.
+	 */
+	public static final int MAX_PACKET_LENGTH = 1500;
+	
 	public boolean connect();
 	public boolean disconnect();
 	public boolean send(byte[] data, int port, InetAddress address);

@@ -2,18 +2,33 @@ package kimononet.peer;
 
 import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoVelocity;
-import kimononet.peer.address.PeerAddress;
+import kimononet.net.parcel.Parcel;
+import kimononet.net.parcel.Parcelable;
 
 /**
  * The Peer object stores information about the peer that is unique to a 
  * specific peer. This information includes the peer's GPS location, velocity,
- * human-readable name, and uniquely identifying peer address.  
+ * human-readable name, and uniquely identifying peer address. 
+ * 
+ *  A peer parcel contains the following fields:
+ *  -id (PeerAddress/8)
+ *  -location (GeoLocation/24)
+ *  -velocity (GeoVelocity/12)
+ *  
+ *  
  * 
  * @author Zorayr Khalapyan
  *
  */
-public class Peer {
+public class Peer implements Parcelable{
 
+	/**
+	 * Parcel size includes PeerAddress, GeoLocation, and GeoVelocity.
+	 */
+	public static final int PARCEL_SIZE = PeerAddress.PARCEL_SIZE + 
+										  GeoLocation.PARCEL_SIZE + 
+										  GeoVelocity.PARCEL_SIZE;
+	
 	/**
 	 * Represents a human readable name for the this peer.
 	 */
@@ -56,13 +71,17 @@ public class Peer {
 		this.velocity = new GeoVelocity();
 	}
 	
+	public Parcel toParcel(){
+		return Parcel.combineParcelables(address, location, velocity);
+	}
+	
 	/**
 	 * Sets the peer's current GPS location and updates the velocity.
 	 * @param location The peer's current GPS location.
 	 */
 	public void setLocation(GeoLocation newLocation){
 		this.location = newLocation; 
-		this.velocity.updateLocation(newLocation);
+		this.velocity.update(newLocation);
 	}
 	
 	/**

@@ -2,6 +2,8 @@ package kimononet.geo;
 
 import java.util.Date;
 
+import kimononet.net.parcel.Parcel;
+import kimononet.net.parcel.Parcelable;
 import kimononet.util.ByteManipulation;
 
 /**
@@ -27,8 +29,13 @@ import kimononet.util.ByteManipulation;
  * @since 2/9/2012
  *
  */
-public class GeoLocation {
+public class GeoLocation implements Parcelable {
 
+	/**
+	 * Indicates the number of bytes in a location parcel.
+	 */
+	public static final int PARCEL_SIZE = 24;
+	
 	/**
 	 * Stores the longitude of the current GPS location.
 	 */
@@ -47,7 +54,7 @@ public class GeoLocation {
 	/**
 	 * Stores the UNIX time of last GPS location update in seconds.
 	 */
-	private long timestamp;
+	private int timestamp;
 	
 	/**
 	 * Creates a new GPS location with the specified longitude, latitude, and
@@ -106,9 +113,6 @@ public class GeoLocation {
 		int srcPos = 0;
 		
 		//Extract information from the location byte array.
-		System.arraycopy(location, srcPos, tim, 0, tim.length);
-		srcPos += tim.length;
-			
 		System.arraycopy(location, srcPos, lon, 0, lon.length);
 		srcPos += lon.length;
 		
@@ -118,8 +122,11 @@ public class GeoLocation {
 		System.arraycopy(location, srcPos, acc, 0, acc.length);
 		srcPos += acc.length;
 		
+		System.arraycopy(location, srcPos, tim, 0, tim.length);
+		srcPos += tim.length;
+		
 		//Convert byte array to actual values.
-		this.timestamp = ByteManipulation.toLong(tim);
+		this.timestamp = ByteManipulation.toInt(tim);
 		this.longitude = ByteManipulation.toDouble(lon);
 		this.latitude = ByteManipulation.toDouble(lat);
 		this.accuracy = ByteManipulation.toFloat(acc);
@@ -127,61 +134,40 @@ public class GeoLocation {
 	}
 	
 	/**
-	 * Converts this GPS location to a byte array representation. The final byte
-	 * array will have the following structure:
+	 * Converts this GPS location to a parcel. The final parcel will have the 
+	 * following structure:
 	 * 
-	 * [0-8)  : UNIX time stamp representing last GPS location update (long).
-	 * [8-16) : GPS longitude (double).
-	 * [16-24): GPS latitude (double).
-	 * [24-8): GPS accuracy (float).
+	 * -GPS longitude (double/8).
+	 * -GPS latitude (double/8).
+	 * -GPS accuracy (float/4).
+	 * -UNIX time stamp (int/4)
 	 *   
 	 * @return A byte array representation of the current GPS location.
-	 * 
-	 * @see {@link #setLocation(byte[])}
 	 */
-	public byte[] toByteArray(){
+	public Parcel toParcel(){
 		
-		//Convert each component of a GPS location into a byte array.
-		//To add a new member to the location byte array, just add another 
-		//member to the packaged array; the rest of the conversion will be done
-		//automatically i.e. no need to change anything else.
-		byte[][] packaged = new byte[4][];
-		packaged[0] = ByteManipulation.toByteArray(this.getLastUpdateTime());
-		packaged[1] = ByteManipulation.toByteArray(this.getLongitude());
-		packaged[2] = ByteManipulation.toByteArray(this.getLatitude());
-		packaged[3] = ByteManipulation.toByteArray(this.getAccuracy());
+		Parcel parcel = new Parcel(24);
 		
-		//Calculate the total length of the final byte array.
-		int byteArrayLength = 0;
-		for(int i = 0; i < packaged.length; i++){
-			byteArrayLength += packaged[i].length;
-		}
+		parcel.add(this.getLongitude());
+		parcel.add(this.getLatitude());
+		parcel.add(this.getAccuracy());
+		parcel.add(this.timestamp);
 		
-		//Create an array to store all the bytes.
-		byte[] location = new byte[byteArrayLength];
-		
-		int dstPos = 0;
-		
-		for(int i = 0; i < packaged.length; i++){
-			System.arraycopy(packaged[i], 0, location, dstPos, packaged[i].length);
-			dstPos += packaged[i].length;
-		}
-		
-		return location;
-	}
+		return parcel;
+	}	
 	
 	/**
 	 * Resets the time stamp to the current system's time. 
 	 */
 	private void updateTimestamp(){
-		this.timestamp = System.currentTimeMillis() / 1000;
+		this.timestamp = (int)(System.currentTimeMillis() / 1000);
 	}
 	
 	/**
 	 * Returns the UNIX time stamp of the last location update.
 	 * @return The UNIX time stamp of the last location update.
 	 */
-	public long getLastUpdateTime(){
+	public int getLastUpdateTime(){
 		return this.timestamp;
 	}
 
@@ -205,7 +191,7 @@ public class GeoLocation {
 	 * Returns current GPS accuracy.
 	 * @return Current GPS accuracy.
 	 */
-	public double getAccuracy() {
+	public float getAccuracy() {
 		return accuracy;
 	}
 
@@ -224,4 +210,5 @@ public class GeoLocation {
 		       "Accuracy: " + getAccuracy() + "\t" +
 		       "Timestamp: " + new Date(timestamp * 1000);
 	}
+
 }

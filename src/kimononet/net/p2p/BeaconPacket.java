@@ -1,79 +1,94 @@
 package kimononet.net.p2p;
 
+import java.util.HashMap;
+import java.util.zip.CRC32;
+
+import kimononet.net.Packet;
+import kimononet.net.PacketType;
+import kimononet.net.parcel.Parcel;
 import kimononet.peer.Peer;
+import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
 
-public class BeaconPacket extends Packet{
+/**
+ * 
+ * Beacon packet structure includes the following fields:
+ * 
+ * -neighbor count (int/4)
+ * -CRC32 (byte[]/4)
+ * -neighbors (neighbor count * bytes per peer)
+ * 
+ * @author Zorayr Khalapyan
+ *
+ */
+public class BeaconPacket extends Packet {
 
-	/**
-	 * Magic flag that identifies a packet as a beacon packet.
-	 */
-	public static final byte[] BEACON_PACKET_MAGIC_FLAG = new byte[] {(byte)0xBB, (byte)0xBB}; 
-	
 	/**
 	 * Current supported beacon packet version.
 	 */
-	public static final byte BEACON_PACKET_VERSION = (byte) 0x01;
+	private static final byte VERSION = (byte) 0x01;
 	
 	/**
-	 * 
+	 * Peer agent associated with the current beacon packet.
 	 */
 	private PeerAgent agent;
 	
-	
-	
+	/**
+	 * Creates a new beacon packet associated with the specified peer agent.
+	 * @param agent Peer agent to act as the source of the beacon packet.
+	 */
 	public BeaconPacket(PeerAgent agent){
-	
-		this.agent = agent;
+		super(VERSION, PacketType.BEACON, agent.getPeer());
 	}
 	
-	
-	public byte[] toByteArray(){
+	public Parcel toParcel(){
 		
-		Peer peer = agent.getPeer();
+		//Get the current peer's neighboring peers.
+		HashMap<PeerAddress, Peer> peers = agent.getPeers();
 		
-		byte[] address = peer.getAddress().toByteArray();
+		//Calculate maximum number of peers that can be included in the packet
+		//content. The subtracted 8 bytes is to account for the peer count 
+		//parcel variable and also the CRC that will be added at the bottom of 
+		//the final Packet.
+		int maxNumPeers = (int)((Connection.MAX_PACKET_LENGTH - 8) / Peer.PARCEL_SIZE);
 		
-		//If peer's location is unknown, then the beacon cannot be constructed.
-		if(peer.getLocation() == null){
-			return null;
+		//The actual number of peers to be included in the content is the 
+		//minimum of the calculated possible maximum number of peers that could
+		//be included and the actual number of peers.
+		int numPeers = Math.min(maxNumPeers, peers.size());
+		
+		//Compute the total number of bytes of a beacon parcel.
+		int beaconParcelLength = numPeers * Peer.PARCEL_SIZE + 8;
+		
+		Parcel beaconParcel = new Parcel(beaconParcelLength);
+		
+		beaconParcel.add(numPeers);
+		
+		//Add all the neighbor peers to the 
+		for(PeerAddress address : peers.keySet()){
+			beaconParcel.add(peers.get(address));
 		}
 		
-		byte[] location = peer.getLocation().toByteArray();
+		super.setContents(beaconParcel.toByteArray());
 		
-		//Includes magic flag, version flag, type flag, address bytes 
-		//and length bytes.
-		byte[] beacon = new byte[
-		                         	BEACON_PACKET_MAGIC_FLAG.length + 
-		                         	2 + 
-		                         	address.length + 
-		                         	location.length
-		                         ];
+		//Get the packet parcel which includes the common hader and the beacon
+		//contents. Since space was allocated for a checksum, the last 4 bytes 
+		//are still empty.
+		Parcel packetParcel = super.toParcel();
 		
-		int index = 0;
+		//Calculate the checksum of the current packet parcel. 
+		CRC32 crc = new CRC32();
+		crc.update(packetParcel.toByteArray(), 0, packetParcel.size());
 		
-		//Copy the magic flag.
-		System.arraycopy(BEACON_PACKET_MAGIC_FLAG, 0, beacon, index, BEACON_PACKET_MAGIC_FLAG.length);
-		index += BEACON_PACKET_MAGIC_FLAG.length;
+		//Finally add the checksum to the end of the parcel packet.
+		packetParcel.add(crc.getValue());
 		
-		//Copy packet version.
-		beacon[index++] = BEACON_PACKET_VERSION;
-		
-		//Copy beacon type.
-		beacon[index++] = type.getFlag();
-		
-		//Copy peer address.
-		System.arraycopy(address, 0, beacon, index, address.length);
-		index += address.length;
-		
-		//Copy peer location.
-		System.arraycopy(location, 0, beacon, index, location.length);
-		index += location.length;
-		
-		
-		return beacon;
+		return packetParcel;
 	}
 	
+	/**
+	 * Returns a string representation of the current beacon packet.
+	 */
 	public String toString(){
 		return agent.getPeer().getName() + " - " + 
 			   agent.getPeer().getAddress() + " - " + 

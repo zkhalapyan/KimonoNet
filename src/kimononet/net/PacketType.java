@@ -1,5 +1,7 @@
 package kimononet.net;
 
+import kimononet.net.parcel.*;
+
 /**
  * Enumeration object represents various types of packets and associated byte
  * flags. The enumeration provides the functionality to convert from an 
@@ -9,11 +11,11 @@ package kimononet.net;
  * @author Zorayr Khalapyan
  *
  */
-public enum PacketType {
+public enum PacketType implements Parcelable{
 	
 	BEACON((byte)0x01),
 	
-	HANDSHAKE((byte)0x02),
+	BEACON_ACK((byte)0x02),
 	
 	DATA((byte)0x03);
 	
@@ -46,6 +48,14 @@ public enum PacketType {
 	 */
 	public int getTypeLength(){
 		return 1;
+	}
+	
+	/**
+	 * Returns a parcel representation of the packet type.
+	 * @return Parcel representation of the packet type.
+	 */
+	public Parcel toParcel(){
+		return new Parcel(this.getFlag());
 	}
 	
 	/**

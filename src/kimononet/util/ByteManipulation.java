@@ -1,6 +1,19 @@
 package kimononet.util;
 
+import java.util.ArrayList;
+
 public class ByteManipulation {
+	
+	public static byte[] toByteArray(ArrayList<Byte> byteList){
+		
+		byte[] byteArray = new byte[byteList.size()];
+		
+		for(int i = 0; i < byteArray.length; i++){
+			byteArray[i] = byteList.get(i);
+		}
+	
+		return byteArray;
+	}
 	
 	public static int getLength(byte data){
 		return ByteManipulation.toByteArray(data).length;

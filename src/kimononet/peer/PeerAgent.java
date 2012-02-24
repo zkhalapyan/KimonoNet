@@ -1,9 +1,12 @@
 package kimononet.peer;
 
+import java.util.HashMap;
+
 import kimononet.geo.DefaultGeoDevice;
 import kimononet.geo.GeoDevice;
 import kimononet.geo.GeoService;
 import kimononet.net.p2p.PeerDiscoveryService;
+import kimononet.net.p2p.PortConfiguration;
 
 /**
  * 
@@ -18,7 +21,8 @@ public class PeerAgent {
 	private Peer peer;
 	
 	/**
-	 * Peer discovery service associated with the current peer.
+	 * Peer discovery service associated with the current peer. Peer discovery
+	 * service is responsible for sending beacons and beacon acknowledgements.
 	 */
 	private PeerDiscoveryService discoveryService;
 	
@@ -26,6 +30,13 @@ public class PeerAgent {
 	 * Stores current peer's environment information.
 	 */
 	private PeerEnvironment environment;
+	
+	/**
+	 * Current peer's port configuration. Includes information such as beacon
+	 * service port number, beacon acknowledgment port number, as well as port
+	 * number of the data service.
+	 */
+	private PortConfiguration portConfiguration;
 	
 	/**
 	 * Peer's GPS device.
@@ -37,6 +48,11 @@ public class PeerAgent {
 	 * frequency.
 	 */
 	private GeoService geoService;
+	
+	/**
+	 * Neighboring peer's mapped to a peer address. 
+	 */
+	private HashMap<PeerAddress, Peer> peers;
 	
 	/**
 	 * Creates a peer agent with a default peer environment.
@@ -71,6 +87,8 @@ public class PeerAgent {
 		
 		this.discoveryService = new PeerDiscoveryService(this);		
 		this.geoService = new GeoService(this);
+		
+		this.peers = new HashMap<PeerAddress, Peer>();
 	}
 	
 	public void startServices(){
@@ -82,6 +100,22 @@ public class PeerAgent {
 	public void shutdownServices(){
 		this.geoService.shutdown();
 		this.discoveryService.shutdownService();
+	}
+	
+	/**
+	 * Returns the current peer's peers.
+	 * @return The current peer's peers.
+	 */
+	public HashMap<PeerAddress, Peer> getPeers(){
+		return this.peers;
+	}
+	
+	/**
+	 * Returns peer's port configuration. 
+	 * @return Peer's port confgiuration. 
+	 */
+	public PortConfiguration getPortConfiguration(){
+		return this.portConfiguration;
 	}
 	
 	/**

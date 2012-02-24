@@ -78,8 +78,7 @@ public class PeerDiscoveryService {
 			
 			UDPConnection connection = new UDPConnection(24242);
 			BeaconPacket beacon = new BeaconPacket(agent);
-			
-			beacon.setType(BeaconType.BEACON);
+		
 			
 			if(!connection.connect()){
 				return;
@@ -89,7 +88,7 @@ public class PeerDiscoveryService {
 				
 				try {
 					
-					byte[] packet = beacon.toByteArray();
+					byte[] packet = beacon.toParcel().toByteArray();
 					
 					if(packet != null){
 						//Send the beacon packet.
