@@ -42,7 +42,7 @@ public class GeoLocation {
 	/**
 	 * Stores the accuracy of the current GPS location.
 	 */
-	private double accuracy;
+	private float accuracy;
 	
 	/**
 	 * Stores the UNIX time of last GPS location update in seconds.
@@ -57,7 +57,7 @@ public class GeoLocation {
 	 * @param latitude Latitude to set.
 	 * @param accuracy Accuracy to set.
 	 */
-	public GeoLocation(double longitude, double latitude, double accuracy){
+	public GeoLocation(double longitude, double latitude, float accuracy){
 		setLocation(longitude, latitude, accuracy);
 	}
 	
@@ -67,13 +67,13 @@ public class GeoLocation {
 	
 	/**
 	 * Sets GPS longitude, latitude, and accuracy, and also updates the current
-	 * time stamp. 
+	 * timestamp. 
 	 * 
 	 * @param longitude Longitude to set.
 	 * @param latitude Latitude to set.
 	 * @param accuracy Accuracy to set.
 	 */
-	public void setLocation(double longitude, double latitude, double accuracy){
+	public void setLocation(double longitude, double latitude, float accuracy){
 		this.longitude = longitude;
 		this.latitude = latitude;
 		this.accuracy = accuracy;
@@ -88,31 +88,86 @@ public class GeoLocation {
 	 * [0-8)  : UNIX time stamp representing last GPS location update (long).
 	 * [8-16) : GPS longitude (double).
 	 * [16-24): GPS latitude (double).
-	 * [24-32): GPS accuracy (double).
+	 * [24-28): GPS accuracy (float).
 	 * 
 	 * @param location A byte array representing a GPS location. 
 	 * 
-	 * @see kimononet.geo.GeoLocation#toByteArray()
+	 * @see {@link #toByteArray()}
 	 */
 	public void setLocation(byte[] location){
 		
 		//Create byte arrays to store the extracted byte arrays.
-		byte[] tim = new byte[8];
-		byte[] lon = new byte[8];
-		byte[] lat = new byte[8];
-		byte[] acc = new byte[8];
+		byte[] tim = new byte[ByteManipulation.getLength(this.timestamp)];
+		byte[] lon = new byte[ByteManipulation.getLength(this.longitude)];
+		byte[] lat = new byte[ByteManipulation.getLength(this.latitude)];
+		byte[] acc = new byte[ByteManipulation.getLength(this.accuracy)];
+		
+		//Offset position with the provided location byte array. 
+		int srcPos = 0;
 		
 		//Extract information from the location byte array.
-		System.arraycopy(location, 0 * 8, tim, 0, 8);
-		System.arraycopy(location, 1 * 8, lon, 0, 8);
-		System.arraycopy(location, 2 * 8, lat, 0, 8);
-		System.arraycopy(location, 3 * 8, acc, 0, 8);
+		System.arraycopy(location, srcPos, tim, 0, tim.length);
+		srcPos += tim.length;
+			
+		System.arraycopy(location, srcPos, lon, 0, lon.length);
+		srcPos += lon.length;
+		
+		System.arraycopy(location, srcPos, lat, 0, lat.length);
+		srcPos += lat.length;
+		
+		System.arraycopy(location, srcPos, acc, 0, acc.length);
+		srcPos += acc.length;
 		
 		//Convert byte array to actual values.
 		this.timestamp = ByteManipulation.toLong(tim);
 		this.longitude = ByteManipulation.toDouble(lon);
 		this.latitude = ByteManipulation.toDouble(lat);
-		this.accuracy = ByteManipulation.toDouble(acc);
+		this.accuracy = ByteManipulation.toFloat(acc);
+		
+	}
+	
+	/**
+	 * Converts this GPS location to a byte array representation. The final byte
+	 * array will have the following structure:
+	 * 
+	 * [0-8)  : UNIX time stamp representing last GPS location update (long).
+	 * [8-16) : GPS longitude (double).
+	 * [16-24): GPS latitude (double).
+	 * [24-8): GPS accuracy (float).
+	 *   
+	 * @return A byte array representation of the current GPS location.
+	 * 
+	 * @see {@link #setLocation(byte[])}
+	 */
+	public byte[] toByteArray(){
+		
+		//Convert each component of a GPS location into a byte array.
+		//To add a new member to the location byte array, just add another 
+		//member to the packaged array; the rest of the conversion will be done
+		//automatically i.e. no need to change anything else.
+		byte[][] packaged = new byte[4][];
+		packaged[0] = ByteManipulation.toByteArray(this.getLastUpdateTime());
+		packaged[1] = ByteManipulation.toByteArray(this.getLongitude());
+		packaged[2] = ByteManipulation.toByteArray(this.getLatitude());
+		packaged[3] = ByteManipulation.toByteArray(this.getAccuracy());
+		
+		//Calculate the total length of the final byte array.
+		int byteArrayLength = 0;
+		for(int i = 0; i < packaged.length; i++){
+			byteArrayLength += packaged[i].length;
+		}
+		
+		//Create an array to store all the bytes.
+		byte[] location = new byte[byteArrayLength];
+		
+		int dstPos = 0;
+		
+		for(int i = 0; i < packaged.length; i++){
+			System.arraycopy(packaged[i], 0, location, dstPos, packaged[i].length);
+			dstPos += packaged[i].length;
+		}
+		
+		return location;
 	}
 	
 	/**
@@ -154,38 +209,6 @@ public class GeoLocation {
 		return accuracy;
 	}
 
-	/**
-	 * Converts this GPS location to a byte array representation. The final byte
-	 * array will have the following structure:
-	 * 
-	 * [0-8)  : UNIX time stamp representing last GPS location update (long).
-	 * [8-16) : GPS longitude (double).
-	 * [16-24): GPS latitude (double).
-	 * [24-32): GPS accuracy (double).
-	 *   
-	 * @return A byte array representation of the current GPS location.
-	 * 
-	 * @see #setLocation(byte[])
-	 */
-	public byte[] toByteArray(){
-		
-		//Convert each component of a GPS location into a byte array.
-		byte[][] packaged = new byte[4][];
-		packaged[0] = ByteManipulation.toByteArray(this.getLastUpdateTime());
-		packaged[1] = ByteManipulation.toByteArray(this.getLongitude());
-		packaged[2] = ByteManipulation.toByteArray(this.getLatitude());
-		packaged[3] = ByteManipulation.toByteArray(this.getAccuracy());
-		
-		//Create an array to store all the bytes.
-		byte[] location = new byte[8 * 4];
-		
-		for(int i = 0; i < packaged.length; i++){
-			System.arraycopy(packaged[i], 0, location, i * 8, packaged[i].length);	
-		}
-		
-		return location;
-	}
-	
 	/**
 	 * Returns a string representation of the current location. The string will
 	 * contain the longitude, latitude, accuracy, and time stamp separated by 

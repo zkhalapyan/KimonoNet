@@ -3,23 +3,30 @@ package kimononet.net.p2p;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAgent;
 
-public class BeaconPacket {
+public class BeaconPacket extends Packet{
 
-	public static final byte[] BEACON_PACKET_MAGIC_FLAG = new byte[] {(byte)0xF0, (byte)0x0B}; 
+	/**
+	 * Magic flag that identifies a packet as a beacon packet.
+	 */
+	public static final byte[] BEACON_PACKET_MAGIC_FLAG = new byte[] {(byte)0xBB, (byte)0xBB}; 
+	
+	/**
+	 * Current supported beacon packet version.
+	 */
 	public static final byte BEACON_PACKET_VERSION = (byte) 0x01;
 	
+	/**
+	 * 
+	 */
 	private PeerAgent agent;
 	
-	private BeaconType type = BeaconType.BEACON;
+	
 	
 	public BeaconPacket(PeerAgent agent){
 	
 		this.agent = agent;
 	}
 	
-	public void setType(BeaconType type){
-		this.type = type;
-	}
 	
 	public byte[] toByteArray(){
 		

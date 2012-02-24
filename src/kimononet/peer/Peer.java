@@ -1,11 +1,12 @@
 package kimononet.peer;
 
 import kimononet.geo.GeoLocation;
+import kimononet.geo.GeoVelocity;
 import kimononet.peer.address.PeerAddress;
 
 /**
  * The Peer object stores information about the peer that is unique to a 
- * specific peer. This information includes the peer's GPS location, 
+ * specific peer. This information includes the peer's GPS location, velocity,
  * human-readable name, and uniquely identifying peer address.  
  * 
  * @author Zorayr Khalapyan
@@ -29,6 +30,12 @@ public class Peer {
 	private GeoLocation location;
 	
 	/**
+	 * Stores peer's current velocity as calculated by change of GPS location 
+	 * over time.
+	 */
+	private GeoVelocity velocity;
+	
+	/**
 	 * Creates a peer with the specified unique address and default name.
 	 * 
 	 * @param address A peer address that uniquely identifies a peer.
@@ -46,14 +53,24 @@ public class Peer {
 	public Peer(PeerAddress address, String name){
 		this.name = name;
 		this.address = address;
+		this.velocity = new GeoVelocity();
 	}
 	
 	/**
-	 * Sets the peer's current GPS location.
+	 * Sets the peer's current GPS location and updates the velocity.
 	 * @param location The peer's current GPS location.
 	 */
-	public void setLocation(GeoLocation location){
-		this.location = location; 
+	public void setLocation(GeoLocation newLocation){
+		this.location = newLocation; 
+		this.velocity.updateLocation(newLocation);
+	}
+	
+	/**
+	 * Returns peer's current velocity. 
+	 * @return Peer's current velocity.
+	 */
+	public GeoVelocity getVelocity(){
+		return this.velocity;
 	}
 
 	/**
@@ -72,6 +89,10 @@ public class Peer {
 		return name;
 	}
 
+	/**
+	 * Sets the peer's name.
+	 * @param name Peer's name.
+	 */
 	public void setName(String name) {
 		this.name = name;
 	}
