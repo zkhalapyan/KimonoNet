@@ -143,10 +143,13 @@ public class Packet implements Parcelable{
 	}
 	
 	/**
-	 * Returns the length of the current packet.
+	 * Returns the parcel size of the current packet. Size is calculated as 
+	 * header length + length of packet contents.
+	 * 
 	 * @return The length of the current packet.
 	 */
-	public int getPacketLength(){
+	@Override
+	public int getParcelSize(){
 		return HEADER_LENGTH + ((contents == null)? 0 : contents.length);
 	}
 	
@@ -157,9 +160,10 @@ public class Packet implements Parcelable{
 	 *  
 	 * @return A parcel representation of the current packet.
 	 */
+	@Override
 	public Parcel toParcel(){
 		
-		Parcel parcel = new Parcel(getPacketLength());
+		Parcel parcel = new Parcel(getParcelSize());
 		
 		parcel.add(magic);
 		parcel.add(version);

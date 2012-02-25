@@ -16,6 +16,11 @@ public class UDPConnection implements Connection{
 	public static final int DEFAULT_UDP_TIMEOUT = 200;
 	
 	/**
+	 * Buffer byte space for recieving data.
+	 */
+	private static final byte[] buffer = new byte[Connection.MAX_PACKET_LENGTH]; 
+		
+	/**
 	 * UDP connection socket.
 	 */
 	private DatagramSocket socket;
@@ -30,7 +35,6 @@ public class UDPConnection implements Connection{
 		connected = true;
 		
 		try {
-			
 			this.socket = new DatagramSocket(port);
 			
 		} catch (SocketException e) {
@@ -51,7 +55,6 @@ public class UDPConnection implements Connection{
 		connected = true;
 		
 		try {
-			
 			this.socket = new DatagramSocket(port, address);
 		} catch (SocketException e) {
 			
@@ -67,6 +70,14 @@ public class UDPConnection implements Connection{
 	public void setBlocking(boolean blocking){
 		try {
 			socket.setSoTimeout((blocking)? 0 : DEFAULT_UDP_TIMEOUT);
+		} catch (SocketException e) {
+			//
+		}
+	}
+	
+	public void setTimeout(int timeout){
+		try {
+			socket.setSoTimeout(timeout);
 		} catch (SocketException e) {
 			//
 		}
@@ -119,7 +130,7 @@ public class UDPConnection implements Connection{
 	}
 
 	@Override
-	public boolean receive(byte[] buffer) {
+	public byte[] receive() {
 
 		if(!connected){
 			throw new ConnectionException("Socket disconnected - data cannot be received.");
@@ -134,15 +145,18 @@ public class UDPConnection implements Connection{
             //throw an exception.
 			socket.receive(receivedPacket);
 			
-			return true;
+			byte[] data = new byte[receivedPacket.getLength()];
+			
+			System.arraycopy(receivedPacket.getData(), 0, data, 0, data.length);
+			
+			return data;
+			
 			
 		} catch(SocketTimeoutException ex){
-			
-			return false;  
+			  return null;
 						
 		} catch (IOException e) {
-			
-			return false;
+			return null;
 		}
         
 	}

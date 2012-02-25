@@ -158,6 +158,10 @@ public class GeoVelocity implements Parcelable {
 	       	   "Timestamp: "        + new Date(currentLocation.getLastUpdateTime() * 1000);
 	}
 	
+	public int getParcelSize(){
+		return PARCEL_SIZE;
+	}
+	
 	/**
 	 * The function uses the "Inverse Formula" as described in Survey Review, 
 	 * April, 1975 (section 4), to calculate distance, initial bearing, and 
@@ -267,7 +271,7 @@ public class GeoVelocity implements Parcelable {
 		return new float[] {distance, initialBearing, finalBearing};
 		
 	}
-	
+
 
 
 }

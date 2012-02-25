@@ -13,11 +13,16 @@ import kimononet.net.parcel.*;
  */
 public enum PacketType implements Parcelable{
 	
+	DATA((byte)0x00),
+	
 	BEACON((byte)0x01),
 	
-	BEACON_ACK((byte)0x02),
+	BEACON_ACK((byte)0x02);
 	
-	DATA((byte)0x03);
+	/**
+	 * Parcel size for the packet type parcel representation.
+	 */
+	private static final int PARCEL_SIZE = 1;
 	
 	/**
 	 * A unique byte representation of the enumeration.
@@ -74,4 +79,10 @@ public enum PacketType implements Parcelable{
 		
 		return null;
 	}
+	
+	@Override
+	public int getParcelSize(){
+		return PARCEL_SIZE;
+	}
+	
 }

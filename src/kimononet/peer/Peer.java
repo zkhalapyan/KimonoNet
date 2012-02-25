@@ -123,4 +123,8 @@ public class Peer implements Parcelable{
 	public void setAddress(PeerAddress address) {
 		this.address = address;
 	}
+	
+	public int getParcelSize(){
+		return PARCEL_SIZE;
+	}
 }

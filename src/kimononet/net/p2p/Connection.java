@@ -16,9 +16,11 @@ public interface Connection {
 	 */
 	public static final int MAX_PACKET_LENGTH = 1500;
 	
+	public static final String BROADCAST_ADDRESS = "255.255.255.255";
+	
 	public boolean connect();
 	public boolean disconnect();
 	public boolean send(byte[] data, int port, InetAddress address);
-	public boolean receive(byte[] data);	
+	public byte[] receive();	
 
 }

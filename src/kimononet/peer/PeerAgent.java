@@ -5,8 +5,10 @@ import java.util.HashMap;
 import kimononet.geo.DefaultGeoDevice;
 import kimononet.geo.GeoDevice;
 import kimononet.geo.GeoService;
-import kimononet.net.p2p.PeerDiscoveryService;
-import kimononet.net.p2p.PortConfiguration;
+import kimononet.net.p2p.BeaconService;
+import kimononet.net.p2p.port.PortConfiguration;
+import kimononet.net.p2p.port.PortConfigurationProvider;
+import kimononet.net.p2p.port.SimulationPortConfigurationProvider;
 
 /**
  * 
@@ -24,19 +26,12 @@ public class PeerAgent {
 	 * Peer discovery service associated with the current peer. Peer discovery
 	 * service is responsible for sending beacons and beacon acknowledgements.
 	 */
-	private PeerDiscoveryService discoveryService;
+	private BeaconService beaconService;
 	
 	/**
 	 * Stores current peer's environment information.
 	 */
 	private PeerEnvironment environment;
-	
-	/**
-	 * Current peer's port configuration. Includes information such as beacon
-	 * service port number, beacon acknowledgment port number, as well as port
-	 * number of the data service.
-	 */
-	private PortConfiguration portConfiguration;
 	
 	/**
 	 * Peer's GPS device.
@@ -48,6 +43,13 @@ public class PeerAgent {
 	 * frequency.
 	 */
 	private GeoService geoService;
+	
+	/**
+	 * Port configuration provider for the current peer. Services that need to 
+	 * create socket connections for various services will consult the provider
+	 * for configuring the correct port numbers. 
+	 */
+	private PortConfigurationProvider portConfigurationProvider;
 	
 	/**
 	 * Neighboring peer's mapped to a peer address. 
@@ -74,32 +76,55 @@ public class PeerAgent {
 	}
 	
 	/**
-	 * Creates a peer agent associated with the specified peer environment.
+	 * Creates a peer agent associated with the specified peer environment. 
 	 * 
 	 * @param peer The peer represented by the peer agent.
 	 * @param environment The peer's environment.
 	 * @param geoDevice The peer's GPS device.
 	 */
 	public PeerAgent(Peer peer, PeerEnvironment environment, GeoDevice geoDevice){
+		
+		this(peer, 
+		     environment, 
+		     new DefaultGeoDevice(), 
+		     new SimulationPortConfigurationProvider());
+	}
+	
+	/**
+	 * Creates a peer agent associated with the specified peer environment.
+	 * 
+	 * @param peer The peer represented by the peer agent.
+	 * @param environment The peer's environment.
+	 * @param geoDevice The peer's GPS device.
+	 * @param portConfigurationProvider Port configuration provider.
+	 */
+	public PeerAgent(Peer peer, 
+					 PeerEnvironment environment, 
+					 GeoDevice geoDevice, 
+					 PortConfigurationProvider portConfigurationProvider){
+		
 		this.peer = peer;
 		this.environment = environment;
 		this.geoDevice = geoDevice;
+		this.portConfigurationProvider = portConfigurationProvider;
 		
-		this.discoveryService = new PeerDiscoveryService(this);		
+		this.beaconService = new BeaconService(this);		
 		this.geoService = new GeoService(this);
+		
 		
 		this.peers = new HashMap<PeerAddress, Peer>();
 	}
 	
+	
 	public void startServices(){
 		this.geoService.startService();
-		this.discoveryService.startService();
+		this.beaconService.start();
 		
 	}
 	
 	public void shutdownServices(){
 		this.geoService.shutdown();
-		this.discoveryService.shutdownService();
+		this.beaconService.shutdown();
 	}
 	
 	/**
@@ -111,11 +136,11 @@ public class PeerAgent {
 	}
 	
 	/**
-	 * Returns peer's port configuration. 
-	 * @return Peer's port confgiuration. 
+	 * Returns current peer's port configuration. 
+	 * @return Peer's port configuration. 
 	 */
 	public PortConfiguration getPortConfiguration(){
-		return this.portConfiguration;
+		return this.portConfigurationProvider.getPortConfiguration(this);
 	}
 	
 	/**

@@ -64,8 +64,14 @@ public class Parcel implements Parcelable{
 		return parcel;
 	}
 	
+	@Override
 	public Parcel toParcel(){
 		return this;
+	}
+	
+	public void setParcel(Parcel parcel){
+		this.parcel = parcel.toByteArray();
+		this.offset = parcel.offset;
 	}
 	
 	/**
@@ -74,13 +80,14 @@ public class Parcel implements Parcelable{
 	 * 
 	 * @return The current size of the parcel.
 	 */
-	public int size(){
+	@Override
+	public int getParcelSize(){
 		return offset;
 	}
 	
 	/**
 	 * Returns the capacity of the current parcel. To get the current size of
-	 * the parcel, use {@link #size()}.
+	 * the parcel, use {@link #getParcelSize()}.
 	 * 
 	 * @return The capacity of the current parcel.
 	 */

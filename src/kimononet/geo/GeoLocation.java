@@ -194,7 +194,12 @@ public class GeoLocation implements Parcelable {
 	public float getAccuracy() {
 		return accuracy;
 	}
-
+	
+	@Override
+	public int getParcelSize(){
+		return PARCEL_SIZE;
+	}
+	
 	/**
 	 * Returns a string representation of the current location. The string will
 	 * contain the longitude, latitude, accuracy, and time stamp separated by 

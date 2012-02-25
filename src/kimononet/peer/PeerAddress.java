@@ -79,6 +79,7 @@ public class PeerAddress implements Parcelable{
 	 * Returns the Parcel representation of the address.
 	 * @return Parcel representation of the address.
 	 */
+	@Override
 	public Parcel toParcel(){
 		
 		//Pad and return the address parcel.
@@ -89,10 +90,19 @@ public class PeerAddress implements Parcelable{
 		 
 	}
 	
+	/**
+	 * Returns the address's parcel's size.
+	 * @return The address's parcel's size.
+	 */
+	@Override
+	public int getParcelSize(){
+		return PARCEL_SIZE;
+	}
 	
 	/**
 	 * Represents a string representation of the address.
 	 */
+	@Override
 	public String toString(){
 		
 		StringBuilder addressBuilder = new StringBuilder();

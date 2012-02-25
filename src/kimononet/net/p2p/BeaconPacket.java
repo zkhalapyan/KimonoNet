@@ -78,7 +78,7 @@ public class BeaconPacket extends Packet {
 		
 		//Calculate the checksum of the current packet parcel. 
 		CRC32 crc = new CRC32();
-		crc.update(packetParcel.toByteArray(), 0, packetParcel.size());
+		crc.update(packetParcel.toByteArray(), 0, packetParcel.getParcelSize());
 		
 		//Finally add the checksum to the end of the parcel packet.
 		packetParcel.add(crc.getValue());
