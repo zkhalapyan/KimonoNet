@@ -1,81 +1,104 @@
 package kimononet.test;
 
 import static org.junit.Assert.*;
+
+import java.lang.reflect.Field;
+
 import kimononet.geo.GeoLocation;
+import kimononet.geo.GeoVelocity;
 import kimononet.peer.Peer;
-import kimononet.peer.address.PeerAddress;
+import kimononet.peer.PeerAddress;
 
 import org.junit.Before;
 import org.junit.Test;
 
 public class PeerTest {
 
-	private final String nameDefault = "unnamed-peer";
+	private static final String nameDefault = "unnamed-peer";
 
-	private final String address = "01:23:45:67:89:AB";
-	private final String name = "Foo Bar Baz";
-	//private final GeoLocation location = null;
+	private static final String address = "01:23:45:67:89:AB";
+	private static final String name = "Foo Bar Baz";
+	//private static final GeoLocation location = null;
 
-	private final String address2 = "AB:CD:EF:01:23:45";
-	private final String name2 = "asdf zxcv";
-	private final GeoLocation location2 = new GeoLocation(-77.180555, 39.105480, 123.4567890);
+	private static final String address2 = "AB:CD:EF:01:23:45";
+	private static final String name2 = "asdf zxcv";
+	private static final GeoLocation location2 = new GeoLocation(-77.180555, 39.105480, (float)123.4567890);
 
-	private Peer peerFromAddress;
-	private Peer peerFromAddressAndName;
-
-	@Before
-	public void test_Peer_String() {
-		peerFromAddress = new Peer(address);
-	}
+	private static Peer peerString;
+	private static Peer peerPeerAddressString;
 
 	@Before
-	public void test_Peer_PeerAddressString() {
-		peerFromAddressAndName = new Peer(new PeerAddress(address), name);
+	public void testPeerString() {
+		peerString = new Peer(address);
 	}
 
-	private void test_getAddress(String addressExpected) {
-		assertEquals(addressExpected, peerFromAddress.getAddress().toString());
-		assertEquals(addressExpected, peerFromAddressAndName.getAddress().toString());
-	}
-
-	@Test
-	public void test_getAddress() {
-		test_getAddress(address);
+	@Before
+	public void testPeerPeerAddressString() {
+		peerPeerAddressString = new Peer(new PeerAddress(address), name);
 	}
 
 	@Test
-	public void test_getName() {
-		assertEquals(nameDefault, peerFromAddress.getName());
-		assertEquals(name, peerFromAddressAndName.getName());
+	public void testSetLocation() {
+		peerString.setLocation(location2);
+		peerPeerAddressString.setLocation(location2);
+		assertEquals(location2, peerString.getLocation());
+		assertEquals(location2, peerPeerAddressString.getLocation());
+		try {
+			Field field = GeoVelocity.class.getDeclaredField("currentLocation");
+			field.setAccessible(true);
+			assertEquals(location2, field.get(peerString.getVelocity()));
+			assertEquals(location2, field.get(peerPeerAddressString.getVelocity()));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Test
-	public void test_getLocation() {
-		assertNull(peerFromAddress.getLocation());
-		assertNull(peerFromAddressAndName.getLocation());
+	public void testGetVelocity() {
+		try {
+			Field field = GeoVelocity.class.getDeclaredField("currentLocation");
+			field.setAccessible(true);
+			assertNull(field.get(peerString.getVelocity()));
+			assertNull(field.get(peerPeerAddressString.getVelocity()));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Test
-	public void test_setAddress() {
-		peerFromAddress.setAddress(new PeerAddress(address2));
-		peerFromAddressAndName.setAddress(new PeerAddress(address2));
-		test_getAddress(address2);
+	public void testGetLocation() {
+		assertNull(peerString.getLocation());
+		assertNull(peerPeerAddressString.getLocation());
 	}
 
 	@Test
-	public void test_setName() {
-		peerFromAddress.setName(name2);
-		peerFromAddressAndName.setName(name2);
-		assertEquals(name2, peerFromAddress.getName());
-		assertEquals(name2, peerFromAddressAndName.getName());
+	public void testGetName() {
+		assertEquals(nameDefault, peerString.getName());
+		assertEquals(name, peerPeerAddressString.getName());
 	}
 
 	@Test
-	public void test_setLocation() {
-		peerFromAddress.setLocation(location2);
-		peerFromAddressAndName.setLocation(location2);
-		assertEquals(location2, peerFromAddress.getLocation());
-		assertEquals(location2, peerFromAddressAndName.getLocation());
+	public void testSetName() {
+		peerString.setName(name2);
+		peerPeerAddressString.setName(name2);
+		assertEquals(name2, peerString.getName());
+		assertEquals(name2, peerPeerAddressString.getName());
+	}
+
+	@Test
+	public void testGetAddress() {
+		assertEquals(address, peerString.getAddress().toString());
+		assertEquals(address, peerPeerAddressString.getAddress().toString());
+	}
+
+	@Test
+	public void testSetAddress() {
+		peerString.setAddress(new PeerAddress(address2));
+		peerPeerAddressString.setAddress(new PeerAddress(address2));
+		assertEquals(address2, peerString.getAddress().toString());
+		assertEquals(address2, peerPeerAddressString.getAddress().toString());
 	}
 
 }
