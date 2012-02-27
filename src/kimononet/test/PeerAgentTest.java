@@ -2,6 +2,7 @@ package kimononet.test;
 
 import static org.junit.Assert.*;
 import kimononet.geo.DefaultGeoDevice;
+import kimononet.net.p2p.port.PortConfiguration;
 import kimononet.net.p2p.port.SimulationPortConfigurationProvider;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAgent;
@@ -48,6 +49,23 @@ public class PeerAgentTest {
 
 	@Test
 	public void testGetPortConfiguration() {
+		PortConfiguration portConfiguration = peerAgentPeer.getPortConfiguration();
+		PortConfiguration portConfiguration2 = peerAgentPeerPeerEnvironment.getPortConfiguration();
+		PortConfiguration portConfiguration3 = peerAgentPeerPeerEnvironmentGeoDevice.getPortConfiguration();
+		PortConfiguration portConfiguration4 = peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider.getPortConfiguration();
+
+		assertEquals(5000, portConfiguration.getBeaconServicePort());
+		assertEquals(5001, portConfiguration.getDataSendingServicePort());
+		assertEquals(5002, portConfiguration.getDataReceivingServicePort());
+		assertEquals(5000, portConfiguration2.getBeaconServicePort());
+		assertEquals(5001, portConfiguration2.getDataSendingServicePort());
+		assertEquals(5002, portConfiguration2.getDataReceivingServicePort());
+		assertEquals(5000, portConfiguration3.getBeaconServicePort());
+		assertEquals(5001, portConfiguration3.getDataSendingServicePort());
+		assertEquals(5002, portConfiguration3.getDataReceivingServicePort());
+		assertEquals(5000, portConfiguration4.getBeaconServicePort());
+		assertEquals(5001, portConfiguration4.getDataSendingServicePort());
+		assertEquals(5002, portConfiguration4.getDataReceivingServicePort());
 	}
 
 	@Test
