@@ -184,6 +184,14 @@ public class Packet implements Parcelable{
 	public Peer getPeer(){
 		return peer;
 	}
+
+	public PacketType getType(){
+		return type;
+	}
+	
+	public void setType(PacketType type){
+		this.type = type;
+	}
 	
 	public String toString(){
 		return "--------------------------------------------- \n" +

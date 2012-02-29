@@ -57,6 +57,8 @@ public class PeerAgent {
 	 */
 	private HashMap<PeerAddress, Peer> peers;
 	
+	private HashMap<PeerAddress, HashMap<PeerAddress, Peer>> peers2;
+	
 	/**
 	 * Creates a peer agent with a default peer environment.
 	 * 
@@ -113,6 +115,7 @@ public class PeerAgent {
 		this.geoService    = new GeoService(this);
 		
 		this.peers = new HashMap<PeerAddress, Peer>();
+		this.peers2 = new HashMap<PeerAddress, HashMap<PeerAddress, Peer>>();
 	}
 	
 	
@@ -133,6 +136,10 @@ public class PeerAgent {
 	 */
 	public HashMap<PeerAddress, Peer> getPeers(){
 		return this.peers;
+	}
+	
+	public HashMap<PeerAddress, HashMap<PeerAddress, Peer>> getPeers2(){
+		return this.peers2;
 	}
 	
 	/**

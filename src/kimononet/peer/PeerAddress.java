@@ -1,5 +1,7 @@
 package kimononet.peer;
 
+import java.util.Arrays;
+
 import kimononet.net.parcel.Parcel;
 import kimononet.net.parcel.Parcelable;
 
@@ -127,5 +129,21 @@ public class PeerAddress implements Parcelable{
 		}
 		
 		return addressBuilder.toString();
+	}
+	
+	@Override
+	public boolean equals(Object obj){
+		
+		if(obj instanceof PeerAddress){
+			return Arrays.equals(address, ((PeerAddress)(obj)).address);  
+		}else{
+			return false;
+		}
+		
+	}
+	
+	@Override
+	public int hashCode(){
+		return this.toParcel().getInt();
 	}
 }

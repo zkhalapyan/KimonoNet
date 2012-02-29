@@ -25,10 +25,10 @@ public class Simulation {
 		
 		PeerAgent agentA = new PeerAgent(new Peer(addressA, locationA, velocityA)); 
 		
-		packetTest(agentA);
+	//	packetTest(agentA);
 	
 		
-		//agentA.startServices();
+		agentA.startServices();
 		
 		
 		

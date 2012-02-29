@@ -31,16 +31,31 @@ public class BeaconPacket extends Packet {
 	
 	private HashMap<PeerAddress, Peer> peers;
 	
+	public BeaconPacket(PeerAgent agent){
+		this(agent, false);
+	}
+	
 	/**
 	 * Creates a new beacon packet associated with the specified peer agent.
 	 * @param agent Peer agent to act as the source of the beacon packet.
 	 */
-	public BeaconPacket(PeerAgent agent){
+	public BeaconPacket(PeerAgent agent, boolean ack){
 		super(SUPPORTED_VERSION, PacketType.BEACON, agent.getPeer());
 		
-		this.peers = agent.getPeers();
+		this.peers = agent.getPeers();	
+	
+		setType((!ack)? PacketType.BEACON : PacketType.BEACON_ACK);
 		
 		setBeaconContents();
+	}
+	
+	public BeaconPacket(byte[] data){
+		this(new Parcel(data));
+	}
+	
+	public BeaconPacket(Parcel parcel){
+		super(parcel);
+		parse(parcel);
 	}
 	
 	public HashMap<PeerAddress, Peer> getPeers(){
@@ -48,8 +63,6 @@ public class BeaconPacket extends Packet {
 	}
 	
 	public void parse(Parcel parcel){
-		
-		super.parse(parcel);
 		
 		Parcel contents = getContents();
 		
