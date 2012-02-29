@@ -8,23 +8,43 @@ package kimononet.net.p2p.port;
  */
 public class PortConfiguration {
 	
+	/**
+	 * Local source address.
+	 */
+	private String address;
+	
+	/**
+	 * Indicates whether this port is a bound to a multicast socket.
+	 */
+	private boolean isMulticast;
+	
 	private int beaconServicePort;
 	
 	private int dataSendingServicePort;
 	
 	private int dataReceivingServicePort;
 	
-	public PortConfiguration(int beaconServicePort, 
+	public PortConfiguration(String address,
+							 int beaconServicePort, 
 							 int dataSendingServicePort,
-							 int dataReceivingServicePort){
-								 
-		this.beaconServicePort = beaconServicePort;
-		
-		this.dataSendingServicePort = dataSendingServicePort;
-		
+							 int dataReceivingServicePort, 
+							 boolean isMulticast){
+							
+		this.address                  = address;
+		this.beaconServicePort        = beaconServicePort;
+		this.dataSendingServicePort   = dataSendingServicePort;
 		this.dataReceivingServicePort = dataReceivingServicePort;
+		this.isMulticast              = isMulticast;
     }
+	
+	public String getAddress(){
+		return address;
+	}
 
+	public boolean isMulticast(){
+		return isMulticast;
+	}
+	
 	public int getBeaconServicePort() {
 		return beaconServicePort;
 	}

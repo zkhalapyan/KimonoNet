@@ -17,7 +17,7 @@ public enum PacketType implements Parcelable{
 	
 	BEACON((byte)0x01),
 	
-	BEACON_ACK((byte)0x02);
+	BEACON_ACK((byte)0x02); 
 	
 	/**
 	 * Parcel size for the packet type parcel representation.

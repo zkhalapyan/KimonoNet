@@ -2,24 +2,20 @@ package kimononet.net.p2p;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
+public class MulticastConnection implements Connection{
 
-public class UDPConnection implements Connection{
+	private MulticastSocket socket;
 	
 	/**
 	 * Buffer byte space for receiving data.
 	 */
 	private static final byte[] buffer = new byte[Connection.MAX_PACKET_LENGTH]; 
-		
-	/**
-	 * UDP connection socket.
-	 */
-	private DatagramSocket socket;
 	
 	/**
 	 * Indicates the state of the socket. From the user perspective, the socket
@@ -29,50 +25,24 @@ public class UDPConnection implements Connection{
 	 */
 	private boolean connected = false;
 	
-	public UDPConnection(int port){
-		
-		connected = true;
-		
-		try {
-			this.socket = new DatagramSocket(port);
-			
-		} catch (SocketException e) {
-			e.printStackTrace();
-			connected = false;
-		}
-	}
 	
-	/**
-	 * Creates a new connection with the specified port number and destination 
-	 * network address.
-	 * 
-	 * @param port Destination port address. 
-	 * @param address Destination network address.
-	 */
-	public UDPConnection(int port, String address){
-		
-		connected = true;
+	public MulticastConnection(int port, String address){
 		
 		try {
 			
-			InetAddress inetAddress = InetAddress.getByName(address);
-			this.socket = new DatagramSocket(port, inetAddress);
-			
-		} catch (SocketException e) {
+			System.out.println(address);
+			socket = new MulticastSocket(port);
+			socket.joinGroup(InetAddress.getByName(address));
+			connected = true;
+	
+		} catch (UnknownHostException e) {			
 			e.printStackTrace();
-			connected = false;
-		} catch (UnknownHostException e) {
+	
+		} catch (IOException e) {
 			e.printStackTrace();
-			connected = false;
 		}
+				
 	}
-	
-	
-	@Override
-	public boolean isConnected(){
-		return connected;
-	}
-	
 	/**
 	 * 
 	 * @param blocking New value to set.
@@ -82,63 +52,68 @@ public class UDPConnection implements Connection{
 		return setTimeout((blocking)? 0 : Connection.DEFAULT_TIMEOUT);
 	}
 	
+	@Override
 	public boolean setTimeout(int timeout){
 		
 		if(isConnected()){
 			try {
 				socket.setSoTimeout(timeout);
 				return true;
+				
 			} catch (SocketException e) {
+				e.printStackTrace();
 				return false;
 			}
 		}
 		
 		return false;
-		
 	}
 	
 	@Override
 	public boolean connect() {
 		return connected;
 	}
-
+	
+	@Override
+	public boolean isConnected(){
+		return connected;
+	}
+	
 	@Override
 	public boolean disconnect() {
 		
-		if(socket != null){
+		if(!isConnected())
+			return true;
+		
+		try {
+			
+			socket.leaveGroup(socket.getInetAddress());
 			socket.disconnect();
+			socket.close();
+			
+			connected = false;
+			
+			return true;
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
 		}
-		
-		this.connected = false;
-		
-		return true;
+	
 	}
 
 	@Override
 	public boolean send(byte[] data, int port, InetAddress address) {
-		
-		if(!connected){
-			return false;
-		}
+
+		DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
 		
 		try {
-			
-			DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
-			
 			socket.send(packet);
-			
 			return true;
 			
-		} catch(SocketTimeoutException ex){
-			
-			ex.printStackTrace();
-			return false;
-			
 		} catch (IOException e) {
-			
 			e.printStackTrace();
 			return false;
-			
 		}
 		
 	}
@@ -175,5 +150,4 @@ public class UDPConnection implements Connection{
         
 	}
 
-	
 }

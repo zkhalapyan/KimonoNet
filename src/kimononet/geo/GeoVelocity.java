@@ -29,7 +29,7 @@ public class GeoVelocity implements Parcelable {
 	/**
 	 * Indicates the number of bytes in a velocity parcel.
 	 */
-	public static final int PARCEL_SIZE = 12;
+	public static final int PARCEL_SIZE = 8;
 	
 	/**
 	 * Change in location over time in m/s.
@@ -65,7 +65,7 @@ public class GeoVelocity implements Parcelable {
 	 * {@link #getLatitudeComponent()} results.
 	 */
 	public GeoVelocity(){
-		this(null);
+		
 	}
 	
 	/**
@@ -79,6 +79,14 @@ public class GeoVelocity implements Parcelable {
 	 */
 	public GeoVelocity(GeoLocation currentLocation){
 		this.currentLocation = currentLocation;
+	}
+	
+	public GeoVelocity(Parcel parcel){
+		parse(parcel);
+	}	
+	
+	public float getInitialBearing(){
+		return initialBearing;
 	}
 	
 	public void update(GeoLocation newLocation){
@@ -132,13 +140,18 @@ public class GeoVelocity implements Parcelable {
 	 * Returns the current bearing.
 	 * @return Current bearing.
 	 */
-	public double getBearing(){
+	public float getBearing(){
 		return this.finalBearing;
+	}
+	
+	public void parse(Parcel parcel){
+		speed        = parcel.getFloat();
+		finalBearing = parcel.getFloat();
 	}
 	
 	public Parcel toParcel(){
 		
-		Parcel parcel = new Parcel(24);
+		Parcel parcel = new Parcel(getParcelSize());
 		
 		parcel.add(this.getSpeed());
 		parcel.add(this.getBearing());
@@ -152,10 +165,18 @@ public class GeoVelocity implements Parcelable {
 	 */
 	public String toString(){
 		
-		return "Speed: "            + getSpeed() + "\t" +
+		String time;
+		
+		if(currentLocation == null){
+			time = "unknown"; 
+		}else{
+			time = new Date(currentLocation.getLastUpdateTime() * 1000).toString();
+		}										  
+		
+ 		return "Speed: "            + getSpeed() + "\t" +
 			   "Bearing: "          + getBearing() + "\t" +
 	       	   "Average Accuracy: " + getAverageAccuracy() + "\t" +
-	       	   "Timestamp: "        + new Date(currentLocation.getLastUpdateTime() * 1000);
+	       	   "Timestamp: "        + time;
 	}
 	
 	public int getParcelSize(){

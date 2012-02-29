@@ -2,33 +2,87 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import kimononet.geo.GeoLocation;
-import kimononet.net.p2p.UDPConnection;
+import kimononet.geo.GeoVelocity;
+import kimononet.net.Packet;
+import kimononet.net.p2p.BeaconPacket;
+import kimononet.net.p2p.Connection;
+import kimononet.net.p2p.MulticastConnection;
+import kimononet.net.p2p.port.PortConfiguration;
+import kimononet.net.parcel.Parcel;
 import kimononet.peer.Peer;
+import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
-import kimononet.peer.address.PeerAddress;
 
 
 public class Simulation {
 
 	public static void main(String args[]){
-		System.out.println("Hello World");
+		System.out.println("Starting Simulation");
 		
-		PeerAgent agentA = new PeerAgent(new Peer("12:00:00:00:00:00")); 
+		PeerAddress addressA = new PeerAddress("12:00:00:00:00:00");
+		GeoLocation locationA = new GeoLocation(1.0, 2.0, 3.0f);
+		GeoVelocity velocityA = new GeoVelocity(locationA);
 		
-		agentA.startServices();
+		PeerAgent agentA = new PeerAgent(new Peer(addressA, locationA, velocityA)); 
+		
+		packetTest(agentA);
+	
+		
+		//agentA.startServices();
+		
 		
 		
 		//geoLocationTest();
 		//peerAddressTest();
-		//connectionTest();
+		//parcelTest();
+		
+		/* TESTS MULTICAST CONNECTIONS:
+		SimulationPortConfigurationProvider confProvider = new SimulationPortConfigurationProvider();
+		connectionTest(confProvider.getPortConfiguration(null));
+		connectionTest(confProvider.getPortConfiguration(null));
+		*/
+		
+	}
+	
+	public static void parcelTest(){
+		
+		Parcel parcel = new Parcel(16);
+		
+		System.out.println(parcel);
+		int a = 32;
+		int b = 64;
+		
+		parcel.add(a);
+		parcel.add(b);
+		
+		parcel.rewind();
+		
+		System.out.println(parcel.getInt());
+		System.out.println(parcel.getInt());
+
+	}
+	
+	public static void packetTest(PeerAgent agent){
+		Packet packet = new BeaconPacket(agent);
+		
+		System.out.println(packet);
+		
+		Parcel parcel = packet.toParcel();
+		
+		System.out.println("PACKET PARCEL: \t " + parcel);
+	
+		System.out.println("--PARSED PACKET--");
+		System.out.println(new Packet(parcel));
+		
 	}
 	
 	public static void geoLocationTest(){
-		GeoLocation location1 = new GeoLocation(1.0, 2.0, 3.0);		
-		GeoLocation location2 = new GeoLocation(4.0, 5.0, 6.0);
+		
+		GeoLocation location1 = new GeoLocation(1.0, 2.0, 3.0f);		
+		GeoLocation location2 = new GeoLocation(4.0, 5.0, 6.0f);
 		
 		System.out.println(location2);
-		location2.setLocation(location1.toByteArray());
+		location2.setLocation(location1.toParcel());
 		System.out.println(location2);
 	}
 	
@@ -39,26 +93,33 @@ public class Simulation {
 		System.out.println(address);
 	}
 	
-	public static void connectionTest(){
+	public static void connectionTest(PortConfiguration conf){
 		
-		final int clientPort = 43210;
-		final String hostAddress = "255.255.255.255";
-		final String clientAddress = "0.0.0.0";
+		final int serverPort = conf.getDataSendingServicePort();
+		final int clientPort = conf.getDataReceivingServicePort();
+		
+		final String serverAddress = conf.getAddress();
+		final String clientAddress = conf.getAddress();
+	
 		
 		Thread server = new Thread(){
 			public void run(){
 				
-				UDPConnection server = new UDPConnection(5443);
-				server.connect();
+				Connection server = new MulticastConnection(serverPort, serverAddress);
+				
+				if(!server.connect()){
+					System.out.println("Server socket could not connect!");
+					return;
+				}
 				
 				while(true){
 					
 					try {
 						
-						GeoLocation location = new GeoLocation(1.0, 2.0, 3.0);		
+						GeoLocation location = new GeoLocation(1.0, 2.0, 3.0f);		
 						
 						System.out.println("Sending data...");
-						server.send(location.toByteArray(), clientPort, InetAddress.getByName(hostAddress));
+						server.send(location.toParcel().toByteArray(), clientPort, InetAddress.getByName(serverAddress));
 						System.out.println("Sent data!");
 						
 						sleep(1000);
@@ -82,46 +143,43 @@ public class Simulation {
 			
 			public void run(){
 				
-				try {
-					
-					UDPConnection client = new UDPConnection(clientPort, InetAddress.getByName(clientAddress));
+			
+				Connection client = new MulticastConnection(clientPort, clientAddress);
+			
+				client.connect();
+				client.setBlocking(true);
+				byte[] buffer;
+				while(true){
 				
-					client.connect();
-					client.setBlocking(true);
-					while(true){
-					
-						try{
-							
-							System.out.println("Receiving data...");
-							byte[] buffer = new byte[32];
-							
-							if(client.receive(buffer)){
-								System.out.println("Data Received! \t" + new GeoLocation(buffer));
-							}else{
-								System.out.println("Data not received!");
-							}
-							
-							sleep(1000);
-							
-						}catch (InterruptedException e) {
-							e.printStackTrace();
-							break;
+					try{
+						
+						System.out.println("Receiving data...");
+						buffer = client.receive();
+						
+						//Check to see if the data was received.
+						if(buffer != null){
+							System.out.println("Data Received! \t" + new GeoLocation(buffer));
+						}else{
+							System.out.println("Data not received!");
 						}
-					
+						
+						sleep(1000);
+						
+					}catch (InterruptedException e) {
+						e.printStackTrace();
+						break;
 					}
-					
-				} catch (UnknownHostException e) {
-					
-					e.printStackTrace();
-					
-				} 
+				
+				}
+				
+				
 				
 				
 			}
 		};
 		
-		server.start();
-		client.start();
+	server.start();
+	client.start();
 		
 		
 		

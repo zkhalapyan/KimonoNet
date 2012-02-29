@@ -33,6 +33,21 @@ public class PeerAddress implements Parcelable{
 	private byte[] address = new byte[ADDRESS_LENGTH];
 	
 	/**
+	 * Creates a peer address from the relative {@link #PARCEL_SIZE} bytes of 
+	 * the provided parcel.
+	 * 
+	 * @param parcel
+	 */
+	public PeerAddress(Parcel parcel){
+		
+		parcel.getByteArray(address);
+		
+		//Discard the address padding.
+		parcel.getByteArray(new byte[ADDRESS_PADDING_LENGTH]);
+		
+	}
+	
+	/**
 	 * Creates a peer address from a byte array representation of a MAC-48 
 	 * address.
 	 * 

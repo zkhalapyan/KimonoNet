@@ -50,13 +50,23 @@ public class Peer implements Parcelable{
 	 */
 	private GeoVelocity velocity;
 	
+	public static final String DEFAULT_PEER_NAME = "unnamed-peer";
+	
+	public Peer(Parcel parcel){
+		parse(parcel);
+	}
+	
 	/**
 	 * Creates a peer with the specified unique address and default name.
 	 * 
 	 * @param address A peer address that uniquely identifies a peer.
 	 */
 	public Peer(String address){
-		this(new PeerAddress(address), "unnamed-peer");
+		this(new PeerAddress(address));
+	}
+	
+	public Peer(PeerAddress address){
+		this(address, DEFAULT_PEER_NAME);
 	}
 	
 	/**
@@ -71,8 +81,22 @@ public class Peer implements Parcelable{
 		this.velocity = new GeoVelocity();
 	}
 	
+	public Peer(PeerAddress address, GeoLocation location, GeoVelocity velocity){
+		this(address);
+		
+		this.location = location;
+		this.velocity = velocity;
+		
+	}
+	
 	public Parcel toParcel(){
 		return Parcel.combineParcelables(address, location, velocity);
+	}
+	
+	public void parse(Parcel parcel){
+		address = new PeerAddress(parcel);
+		location = new GeoLocation(parcel);
+		velocity = new GeoVelocity(parcel);
 	}
 	
 	/**
@@ -83,6 +107,7 @@ public class Peer implements Parcelable{
 		this.location = newLocation; 
 		this.velocity.update(newLocation);
 	}
+	
 	
 	/**
 	 * Returns peer's current velocity. 

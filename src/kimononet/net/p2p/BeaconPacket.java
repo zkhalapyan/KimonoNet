@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.zip.CRC32;
 
 import kimononet.net.Packet;
+import kimononet.net.PacketException;
 import kimononet.net.PacketType;
 import kimononet.net.parcel.Parcel;
 import kimononet.peer.Peer;
@@ -26,52 +27,52 @@ public class BeaconPacket extends Packet {
 	/**
 	 * Current supported beacon packet version.
 	 */
-	private static final byte VERSION = (byte) 0x01;
+	private static final byte SUPPORTED_VERSION = (byte) 0x01;
 	
-	/**
-	 * Peer agent associated with the current beacon packet.
-	 */
-	private PeerAgent agent;
+	private HashMap<PeerAddress, Peer> peers;
 	
 	/**
 	 * Creates a new beacon packet associated with the specified peer agent.
 	 * @param agent Peer agent to act as the source of the beacon packet.
 	 */
 	public BeaconPacket(PeerAgent agent){
-		super(VERSION, PacketType.BEACON, agent.getPeer());
+		super(SUPPORTED_VERSION, PacketType.BEACON, agent.getPeer());
+		
+		this.peers = agent.getPeers();
+		
+		setBeaconContents();
 	}
 	
-	public Parcel toParcel(){
+	public HashMap<PeerAddress, Peer> getPeers(){
+		return peers;
+	}
+	
+	public void parse(Parcel parcel){
 		
-		//Get the current peer's neighboring peers.
-		HashMap<PeerAddress, Peer> peers = agent.getPeers();
+		super.parse(parcel);
 		
-		//Calculate maximum number of peers that can be included in the packet
-		//content. The subtracted 8 bytes is to account for the peer count 
-		//parcel variable and also the CRC that will be added at the bottom of 
-		//the final Packet.
-		int maxNumPeers = (int)((Connection.MAX_PACKET_LENGTH - 8) / Peer.PARCEL_SIZE);
+		Parcel contents = getContents();
 		
-		//The actual number of peers to be included in the content is the 
-		//minimum of the calculated possible maximum number of peers that could
-		//be included and the actual number of peers.
-		int numPeers = Math.min(maxNumPeers, peers.size());
-		
-		//Compute the total number of bytes of a beacon parcel.
-		int beaconParcelLength = numPeers * Peer.PARCEL_SIZE + 8;
-		
-		Parcel beaconParcel = new Parcel(beaconParcelLength);
-		
-		beaconParcel.add(numPeers);
-		
-		//Add all the neighbor peers to the 
-		for(PeerAddress address : peers.keySet()){
-			beaconParcel.add(peers.get(address));
+		if(contents == null){
+			throw new PacketException("Malformed beacon packet. Missing contents.");
 		}
 		
-		super.setContents(beaconParcel.toByteArray());
+		int numPeers = (int)parcel.getFloat();
+		peers = new HashMap<PeerAddress, Peer>(numPeers);
 		
-		//Get the packet parcel which includes the common hader and the beacon
+		for(int i = 0; i < numPeers; i++){
+			Peer peer = new Peer(parcel);
+			peers.put(peer.getAddress(), peer);
+		}
+		
+		//ToDo: CRC Check.
+		//ToDo: Magic Check.
+		
+	}
+
+	public Parcel toParcel(){
+		
+		//Get the packet parcel which includes the common header and the beacon
 		//contents. Since space was allocated for a checksum, the last 4 bytes 
 		//are still empty.
 		Parcel packetParcel = super.toParcel();
@@ -80,18 +81,52 @@ public class BeaconPacket extends Packet {
 		CRC32 crc = new CRC32();
 		crc.update(packetParcel.toByteArray(), 0, packetParcel.getParcelSize());
 		
-		//Finally add the checksum to the end of the parcel packet.
-		packetParcel.add(crc.getValue());
+		//Finally add the checksum to the end of the parcel packet. This value
+		//has to be copied in since the byte array contents that was copied 
+		//already included the 'space' for the CRC. So if you call 
+		//packetParcel.add(crc.getValue()), the parcel will run out of space and
+		//throw an exception.
+		packetParcel.add(packetParcel.getParcelSize() - 8, crc.getValue());
 		
 		return packetParcel;
+	}
+	
+	private void setBeaconContents(){
+		
+		//Calculate maximum number of peers that can be included in the packet
+		//content. The subtracted 12 bytes is to account for the peer count 
+		//parcel variable and also the CRC that will be added at the bottom of 
+		//the final Packet.
+		int maxNumPeers = (int)((Connection.MAX_PACKET_LENGTH - 12) / Peer.PARCEL_SIZE);
+		
+		//The actual number of peers to be included in the content is the 
+		//minimum of the calculated possible maximum number of peers that could
+		//be included and the actual number of peers.
+		int numPeers = Math.min(maxNumPeers, peers.size());
+		
+		//Compute the total number of bytes of a beacon parcel.
+		int beaconParcelLength = numPeers * Peer.PARCEL_SIZE + 12;
+		
+		Parcel beaconParcel = new Parcel(beaconParcelLength);
+		
+		beaconParcel.add((short)numPeers);
+		
+		//Add all the neighbor peers to the beacon contents.
+		for(PeerAddress address : peers.keySet()){
+			beaconParcel.add(peers.get(address));
+		}
+		
+		//Add a long value 0 as a temporary checksum.
+		beaconParcel.add(0l);
+	
+		super.setContents(beaconParcel);
 	}
 	
 	/**
 	 * Returns a string representation of the current beacon packet.
 	 */
 	public String toString(){
-		return agent.getPeer().getName() + " - " + 
-			   agent.getPeer().getAddress() + " - " + 
-			   agent.getPeer().getLocation();
+		
+		return super.toString();
 	}
 }

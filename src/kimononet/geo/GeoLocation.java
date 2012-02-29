@@ -4,7 +4,6 @@ import java.util.Date;
 
 import kimononet.net.parcel.Parcel;
 import kimononet.net.parcel.Parcelable;
-import kimononet.util.ByteManipulation;
 
 /**
  * Object stores geolocation in terms of longitude, latitude, and accuracy as 
@@ -68,8 +67,12 @@ public class GeoLocation implements Parcelable {
 		setLocation(longitude, latitude, accuracy);
 	}
 	
-	public GeoLocation(byte[] location){
-		setLocation(location);
+	public GeoLocation(byte[] buffer){
+		this(new Parcel(buffer));
+	}
+	
+	public GeoLocation(Parcel parcel){
+		setLocation(parcel);
 	}
 	
 	/**
@@ -89,60 +92,20 @@ public class GeoLocation implements Parcelable {
 	}
 	
 	/**
-	 * Restores a GPS location from a byte array representation. The byte array
-	 * must have the following format:  
-	 *  
-	 * [0-8)  : UNIX time stamp representing last GPS location update (long).
-	 * [8-16) : GPS longitude (double).
-	 * [16-24): GPS latitude (double).
-	 * [24-28): GPS accuracy (float).
 	 * 
-	 * @param location A byte array representing a GPS location. 
 	 * 
 	 * @see {@link #toByteArray()}
 	 */
-	public void setLocation(byte[] location){
+	public void setLocation(Parcel parcel){
 		
-		//Create byte arrays to store the extracted byte arrays.
-		byte[] tim = new byte[ByteManipulation.getLength(this.timestamp)];
-		byte[] lon = new byte[ByteManipulation.getLength(this.longitude)];
-		byte[] lat = new byte[ByteManipulation.getLength(this.latitude)];
-		byte[] acc = new byte[ByteManipulation.getLength(this.accuracy)];
-		
-		//Offset position with the provided location byte array. 
-		int srcPos = 0;
-		
-		//Extract information from the location byte array.
-		System.arraycopy(location, srcPos, lon, 0, lon.length);
-		srcPos += lon.length;
-		
-		System.arraycopy(location, srcPos, lat, 0, lat.length);
-		srcPos += lat.length;
-		
-		System.arraycopy(location, srcPos, acc, 0, acc.length);
-		srcPos += acc.length;
-		
-		System.arraycopy(location, srcPos, tim, 0, tim.length);
-		srcPos += tim.length;
-		
-		//Convert byte array to actual values.
-		this.timestamp = ByteManipulation.toInt(tim);
-		this.longitude = ByteManipulation.toDouble(lon);
-		this.latitude = ByteManipulation.toDouble(lat);
-		this.accuracy = ByteManipulation.toFloat(acc);
-		
+		this.longitude = parcel.getDouble();
+		this.latitude  = parcel.getDouble();
+		this.accuracy  = parcel.getFloat();
+		this.timestamp = parcel.getInt();	
 	}
 	
 	/**
-	 * Converts this GPS location to a parcel. The final parcel will have the 
-	 * following structure:
-	 * 
-	 * -GPS longitude (double/8).
-	 * -GPS latitude (double/8).
-	 * -GPS accuracy (float/4).
-	 * -UNIX time stamp (int/4)
-	 *   
-	 * @return A byte array representation of the current GPS location.
+	 * @return A parcel representation of the current GPS location.
 	 */
 	public Parcel toParcel(){
 		
@@ -155,6 +118,14 @@ public class GeoLocation implements Parcelable {
 		
 		return parcel;
 	}	
+	
+	/**
+	 * 
+	 * @param parcel
+	 */
+	public void parse(Parcel parcel){
+		this.setLocation(parcel);
+	}
 	
 	/**
 	 * Resets the time stamp to the current system's time. 
@@ -199,6 +170,7 @@ public class GeoLocation implements Parcelable {
 	public int getParcelSize(){
 		return PARCEL_SIZE;
 	}
+	
 	
 	/**
 	 * Returns a string representation of the current location. The string will

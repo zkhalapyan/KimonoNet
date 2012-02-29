@@ -52,7 +52,8 @@ public class PeerAgent {
 	private PortConfigurationProvider portConfigurationProvider;
 	
 	/**
-	 * Neighboring peer's mapped to a peer address. 
+	 * Neighboring peer's mapped to a peer address. This is ROUTING_TABLE_1 
+	 * described in the protocol documentation.
 	 */
 	private HashMap<PeerAddress, Peer> peers;
 	
@@ -86,7 +87,7 @@ public class PeerAgent {
 		
 		this(peer, 
 		     environment, 
-		     new DefaultGeoDevice(), 
+		     geoDevice, 
 		     new SimulationPortConfigurationProvider());
 	}
 	
@@ -103,14 +104,13 @@ public class PeerAgent {
 					 GeoDevice geoDevice, 
 					 PortConfigurationProvider portConfigurationProvider){
 		
-		this.peer = peer;
-		this.environment = environment;
-		this.geoDevice = geoDevice;
+		this.peer                      = peer;
+		this.environment               = environment;
+		this.geoDevice                 = geoDevice;
 		this.portConfigurationProvider = portConfigurationProvider;
 		
 		this.beaconService = new BeaconService(this);		
-		this.geoService = new GeoService(this);
-		
+		this.geoService    = new GeoService(this);
 		
 		this.peers = new HashMap<PeerAddress, Peer>();
 	}

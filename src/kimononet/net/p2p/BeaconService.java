@@ -40,7 +40,7 @@ public class BeaconService extends Thread {
 		shutdown = false;
 		
 		int servicePort = agent.getPortConfiguration().getBeaconServicePort();
-		UDPConnection connection = new UDPConnection(servicePort);
+		Connection connection = new UDPConnection(servicePort);
 		connection.setTimeout(frequency);
 		
 		BeaconPacket beacon = new BeaconPacket(agent);

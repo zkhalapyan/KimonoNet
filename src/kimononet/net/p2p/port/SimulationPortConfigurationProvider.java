@@ -1,8 +1,5 @@
 package kimononet.net.p2p.port;
 
-import java.util.HashMap;
-
-import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
 
 
@@ -10,28 +7,35 @@ public class SimulationPortConfigurationProvider
 	   				implements PortConfigurationProvider {
 
 	
-	private static final int INITIAL_PORT_NUMBER = 5000;
+	/**
+	 * Default local source address during simulation mode.
+	 */
+	private String ADDRESS = "235.1.1.1"; 
 	
-	private int currentPortNumber;
+	/**
+	 * 
+	 */
+	private boolean IS_MULTICAST = true;
 	
-	private HashMap<PeerAddress, PortConfiguration> portMap;
+	private static final int BEACON_SERVICE_PORT = 5000;
+	
+	private static final int DATA_SENDING_SERVICE_PORT = 5001;
+	
+	private static final int DATA_RECEIVING_SERVICE_PORT = 5002;
+	
+	private static PortConfiguration portConfiguration;
 	
 	public SimulationPortConfigurationProvider(){
-		currentPortNumber = INITIAL_PORT_NUMBER;
+		portConfiguration = new PortConfiguration(ADDRESS,
+				 								  BEACON_SERVICE_PORT,
+				 								  DATA_SENDING_SERVICE_PORT,
+				 								  DATA_RECEIVING_SERVICE_PORT,
+				 								  IS_MULTICAST);
 	}
 	
 	@Override
 	public PortConfiguration getPortConfiguration(PeerAgent agent) {
-
-		PeerAddress address = agent.getPeer().getAddress();
-		
-		if(!portMap.containsKey(address)){
-			portMap.put(address, new PortConfiguration(currentPortNumber++,
-				       currentPortNumber++,
-					   currentPortNumber++));
-		}
-		
-		return portMap.get(address);
+		return portConfiguration;
 	}
 
 

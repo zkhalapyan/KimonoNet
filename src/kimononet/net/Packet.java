@@ -1,19 +1,24 @@
 package kimononet.net;
 
+import kimononet.geo.GeoLocation;
+import kimononet.geo.GeoVelocity;
 import kimononet.net.parcel.Parcel;
 import kimononet.net.parcel.Parcelable;
 import kimononet.peer.Peer;
-import kimononet.util.ByteManipulation;
+import kimononet.peer.PeerAddress;
 
 /**
  * Each packet has to a header section and a content section. Header section 
  * consists of the following fields:
  * 
- * -magic (2)
- * -version (1)
- * -type (1)
- * -timestamp (4)
- * -source peer (44)
+ * HDR-MAGIC (2)
+ * HDR-VERSION (1)
+ * HDR-TYPE (1)
+ * HDR-SRC-ID (8)
+ * HDR-SRC-LOC (24)
+ * HDR-SRC-VEC (8)
+ * 
+ * Total Length: 44.
  * 
  * The content field has variable length: 
  * -content (*)
@@ -24,9 +29,11 @@ import kimononet.util.ByteManipulation;
 public class Packet implements Parcelable{
 
 	/**
-	 * The length of the header section.
+	 * The length of the header section. 
 	 */
-	private static final int HEADER_LENGTH = 48;
+	private static final int HEADER_LENGTH = 4 + PeerAddress.PARCEL_SIZE 
+											   + GeoLocation.PARCEL_SIZE  
+											   + GeoVelocity.PARCEL_SIZE;
 	
 	/**
 	 * Default magic sequence.
@@ -44,37 +51,29 @@ public class Packet implements Parcelable{
 	private PacketType type;
 	
 	/**
-	 * The UNIX timestamp of the packet. This value usually indicates when the 
-	 * packet was created. 
+	 * Source peer of the packet - information includes peer address, 
+	 * location, and velocity.
 	 */
-	private int timestamp;
+	private Peer peer;
 	
 	/**
-	 * Source peer of the packet - information includes peer address, location, 
-	 * and velocity.
+	 * A variable length parcel of the packet.
 	 */
-	private Peer sourcePeer;
-	
-	/**
-	 * A variable length content of the packet.
-	 */
-	private byte[] contents;
+	private Parcel contents;
 	
 	/**
 	 * Constructs a new packet with the provided version, packet type, 
-	 * and source peer.
+	 * and source peer agent.
 	 * 
 	 * @param version The version of the packet structure. 
 	 * @param type The type of the packet.
-	 * @param sourcePeer The source of the packet.
+	 * @param agent The source peer agent of the packet.
 	 */
-	public Packet(byte version, PacketType type, Peer sourcePeer ){
+	public Packet(byte version, PacketType type, Peer peer ){
 		
 		this.version = version;
-		this.type = type;
-		this.sourcePeer = sourcePeer;
-		
-		this.timestamp = (int)(System.currentTimeMillis() / 1000);
+		this.type    = type;
+		this.peer    = peer;
 	}
 	
 	/**
@@ -83,7 +82,11 @@ public class Packet implements Parcelable{
 	 * @param packet A byte representation of a packet.
 	 */
 	public Packet(byte[] packet){
-		parse(packet);
+		this(new Parcel(packet));
+	}
+	
+	public Packet(Parcel parcel){
+		parse(parcel);
 	}
 	
 	/**
@@ -92,7 +95,7 @@ public class Packet implements Parcelable{
 	 * 
 	 * @param contents Contents to set.
 	 */
-	public void setContents(byte[] contents){
+	public void setContents(Parcel contents){
 		this.contents = contents;
 	}
 	
@@ -100,44 +103,34 @@ public class Packet implements Parcelable{
 	 * Return's current packet's contents.
 	 * @return Current packet's contents.
 	 */
-	public byte[] getContents(){
+	public Parcel getContents(){
 		return this.contents;
 	}
 	
 	/**
-	 * Parses a byte representation of a packet to an actual packet object.
+	 * Parses a parcel representation of a packet to an actual packet object.
 	 * 
-	 * @param packet Byte array representation of a packet.
+	 * @param packet Parcel representation of a packet.
 	 */
-	public void parse(byte[] packet){
+	public void parse(Parcel parcel){
 	
-		//The packet must contain the header section.
-		if(packet.length < HEADER_LENGTH){
+		//The packet must have at least enough bytes to contain 
+		//the header section.
+		if(parcel.getParcelSize() < HEADER_LENGTH){
 			throw new PacketException("Malformed or missing packet header.");
 		}
 		
-		int srsPos = 0;
+		//This should only be done at the top of the parsing hierarchy. 
+		parcel.rewind();
 		
-		//Extract the magic byte sequence.
-		System.arraycopy(packet, srsPos, magic, 0,  magic.length);
-		srsPos += magic.length;
+		parcel.getByteArray(magic);
+		version = parcel.getByte();
+		type = PacketType.parse(parcel.getByte());
+		peer = new Peer(parcel);
 		
-		//Extract the version and packet type.
-		version = packet[srsPos++];
-		type = PacketType.parse(packet[srsPos++]);
-		
-		//Extract the timestamp.
-		byte[] timestampBytes = new byte[4];
-		System.arraycopy(timestampBytes, srsPos, timestampBytes, 0, 4);
-		this.timestamp = ByteManipulation.toInt(timestampBytes);
-		srsPos+= 8;
-		
-		//Now extract the contents, if any. 
-		if(packet.length > HEADER_LENGTH){
-			this.contents = new byte[packet.length - HEADER_LENGTH];
-			System.arraycopy(packet, srsPos, contents, 0, contents.length);
-		}else{
-			this.contents = null;
+		if(parcel.getParcelSize() > 0){
+			contents = parcel.slice();
+			System.out.println(contents);
 		}
 		
 	}
@@ -150,7 +143,7 @@ public class Packet implements Parcelable{
 	 */
 	@Override
 	public int getParcelSize(){
-		return HEADER_LENGTH + ((contents == null)? 0 : contents.length);
+		return HEADER_LENGTH + getContentsLength();
 	}
 	
 	/**
@@ -164,15 +157,45 @@ public class Packet implements Parcelable{
 	public Parcel toParcel(){
 		
 		Parcel parcel = new Parcel(getParcelSize());
-		
+	
 		parcel.add(magic);
 		parcel.add(version);
 		parcel.add(type);
-		parcel.add(timestamp);
-		parcel.add(sourcePeer);
-		parcel.add(contents);
+		parcel.add(peer);
+		
+		if(contents != null)
+			parcel.add(contents);
 		
 		return parcel;
+	}
+	
+	/**
+	 * Returns the length of the contents attached to this packet. If the packet
+	 * doesn't have any contents, then 0 will be returned. To get the entire
+	 * length of the packet, use {@link #getParcelSize()}. Note that the method
+	 * returns content's capacity as opposed to the current size. 
+	 * 
+	 * @return The length of the contents attached to this packet.
+	 */
+	public int getContentsLength(){
+		return (contents == null)? 0 : contents.capacity();
+	}
+	
+	public Peer getPeer(){
+		return peer;
+	}
+	
+	public String toString(){
+		return "--------------------------------------------- \n" +
+			   "Packet Type:     \t" + type.toString()     + "\n" +  
+			   "Source Address:  \t" + peer.getAddress()   + "\n" + 
+			   "Source Location: \t" + peer.getLocation()  + "\n" +
+			   "Source Velocity: \t" + peer.getVelocity()  + "\n" + 
+			   "Header Length:   \t" + HEADER_LENGTH       + "\n" + 
+			   "Contents Length: \t" + getContentsLength() + "\n" + 
+			   "Total Length:    \t" + getParcelSize()     + "\n" + 
+			   "---------------------------------------------";
+			   
 	}
 
 }

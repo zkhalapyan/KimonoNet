@@ -1,16 +1,17 @@
 package kimononet.net.parcel;
 
-import kimononet.util.ByteManipulation;
-
+import java.nio.ByteBuffer;
 
 public class Parcel implements Parcelable{
 
-	private byte[] parcel;
+	private ByteBuffer buffer;
 	
-	private int offset;
+	public Parcel(ByteBuffer buffer){
+		this.buffer = buffer;
+	}
 	
 	public Parcel(int length){
-		parcel = new byte[length];
+		buffer = ByteBuffer.allocate(length);
 	}
 	
 	public Parcel(byte parcel){
@@ -18,50 +19,80 @@ public class Parcel implements Parcelable{
 	}
 	
 	public Parcel(byte[] parcel){
-		this.parcel = parcel;
-		this.offset = parcel.length;
+		this(parcel.length);
+		add(parcel);
 	}
 	
 	public void add(byte data){
-		parcel[offset++] = data;
+		buffer.put(data);
 	}
 	
 	public void add(double data){
-		add(ByteManipulation.toByteArray(data));
+		buffer.putDouble(data);
+	}
+	
+	public void add(char data){
+		buffer.putChar(data);
 	}
 	
 	public void add(int data){
-		add(ByteManipulation.toByteArray(data));
+		buffer.putInt(data);
 	}
 	
 	public void add(float data){
-		add(ByteManipulation.toByteArray(data));
+		buffer.putFloat(data);
 	}
 	
 	public void add(long data){
-		add(ByteManipulation.toByteArray(data));
+		buffer.putLong(data);
 	}
 	
 	public void add(String data){
-		add(ByteManipulation.toByteArray(data));
+		buffer.put(data.getBytes());
 	}
 	
 	public void add(byte[] data){
-		
-		if(data != null){
-			System.arraycopy(data, 0, parcel, offset, data.length);
-			offset += data.length;	
-		}
-		
-		
+		buffer.put(data);
 	}
 	
-	public void add(Parcelable parcelable){
-		add(parcelable.toParcel());
+	public void add(int index, long data){
+		buffer.putLong(index, data);
+	}
+	
+	public long getLong(){
+		return buffer.getLong();
+	}
+	
+	public double getDouble(){
+		return buffer.getDouble();
+	}
+	
+	public int getInt(){
+		return buffer.getInt();
+	}
+	
+	public char getChar(){
+		return buffer.getChar();
+	}
+	
+	public float getFloat(){
+		return buffer.getFloat();
+	}
+	
+	public byte getByte(){
+		return buffer.get();
+	}
+	
+	public void getByteArray(byte[] data){
+		buffer.get(data);
 	}
 	
 	public byte[] toByteArray(){
-		return parcel;
+		return buffer.array();
+	}
+	
+	public void add(Parcelable parcelable){
+		add(parcelable.toParcel().toByteArray());
 	}
 	
 	@Override
@@ -70,8 +101,11 @@ public class Parcel implements Parcelable{
 	}
 	
 	public void setParcel(Parcel parcel){
-		this.parcel = parcel.toByteArray();
-		this.offset = parcel.offset;
+		this.buffer = parcel.buffer;
+	}
+	
+	public void copy(byte[] data, int offset, int length){
+		this.buffer.put(data, offset, length);
 	}
 	
 	/**
@@ -82,8 +116,10 @@ public class Parcel implements Parcelable{
 	 */
 	@Override
 	public int getParcelSize(){
-		return offset;
+		return buffer.position();
 	}
+	
+
 	
 	/**
 	 * Returns the capacity of the current parcel. To get the current size of
@@ -92,7 +128,19 @@ public class Parcel implements Parcelable{
 	 * @return The capacity of the current parcel.
 	 */
 	public int capacity(){
-		return parcel.length;
+		return buffer.capacity();
+	}
+	
+	public void rewind(){
+		this.buffer.rewind();
+	}
+	
+	public Parcel slice(){
+		return new Parcel(buffer.slice());
+	}
+	
+	public Parcel compact(){
+		return new Parcel(buffer.compact());
 	}
 	
 	/**
@@ -119,9 +167,13 @@ public class Parcel implements Parcelable{
 		}
 		
 		return parcel; 
-
+		
 		
 	}
 	
-	
+	@Override
+	public String toString(){
+		return "Current Length: " + getParcelSize() + 
+				"\t Total Capacity: " + capacity();
+	}
 }
