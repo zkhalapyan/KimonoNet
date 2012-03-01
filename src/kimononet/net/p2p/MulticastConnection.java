@@ -103,17 +103,24 @@ public class MulticastConnection implements Connection{
 	}
 
 	@Override
-	public boolean send(byte[] data, int port, InetAddress address) {
+	public boolean send(byte[] data, int port, String address) {
 
-		DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
+		if(!connected){
+			return false;
+		}
 		
 		try {
-			socket.send(packet);
+			
+			socket.send(new DatagramPacket(data, 
+										   data.length, 
+										   InetAddress.getByName(address), 
+										   port));
 			return true;
 			
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
+			
 		}
 		
 	}

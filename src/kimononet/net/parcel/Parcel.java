@@ -173,7 +173,7 @@ public class Parcel implements Parcelable{
 	
 	@Override
 	public String toString(){
-		return "Current Length: " + getParcelSize() + 
+		return "Current Offset: " + getParcelSize() + 
 				"\t Total Capacity: " + capacity();
 	}
 }

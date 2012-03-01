@@ -5,7 +5,7 @@ import java.util.HashMap;
 import kimononet.geo.DefaultGeoDevice;
 import kimononet.geo.GeoDevice;
 import kimononet.geo.GeoService;
-import kimononet.net.p2p.BeaconService;
+import kimononet.net.beacon.BeaconService;
 import kimononet.net.p2p.port.PortConfiguration;
 import kimononet.net.p2p.port.PortConfigurationProvider;
 import kimononet.net.p2p.port.SimulationPortConfigurationProvider;
@@ -119,19 +119,32 @@ public class PeerAgent {
 	}
 	
 	
+	/**
+	 * Starts beacon service and also geo-service. Beacon service is responsible
+	 * for sending beacons and responding to beacons, while geo-service is 
+	 * responsible for fetching the peer's current GPS location via a GPS 
+	 * enabled device and update velocity information. To shutdown the services,
+	 * use {@link #shutdownServices()}.
+	 */
 	public void startServices(){
 		this.geoService.startService();
 		this.beaconService.start();
 		
 	}
 	
+	/**
+	 * 
+	 */
 	public void shutdownServices(){
 		this.geoService.shutdown();
 		this.beaconService.shutdown();
 	}
 	
 	/**
-	 * Returns the current peer's peers.
+	 * Returns the current peer's peers. These are single-hop peers that were
+	 * learned about via beacon service. To get the second-hop peers, use 
+	 * {@link #getPeers2()}.
+	 * 
 	 * @return The current peer's peers.
 	 */
 	public HashMap<PeerAddress, Peer> getPeers(){

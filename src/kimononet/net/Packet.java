@@ -61,6 +61,10 @@ public class Packet implements Parcelable{
 	 */
 	private Parcel contents;
 	
+	public Packet(){
+		
+	}
+	
 	/**
 	 * Constructs a new packet with the provided version, packet type, 
 	 * and source peer agent.
@@ -130,7 +134,6 @@ public class Packet implements Parcelable{
 		
 		if(parcel.getParcelSize() > 0){
 			contents = parcel.slice();
-			System.out.println(contents);
 		}
 		
 	}

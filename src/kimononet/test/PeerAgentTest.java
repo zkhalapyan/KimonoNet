@@ -2,8 +2,6 @@ package kimononet.test;
 
 import static org.junit.Assert.*;
 import kimononet.geo.DefaultGeoDevice;
-import kimononet.net.p2p.port.PortConfiguration;
-import kimononet.net.p2p.port.SimulationPortConfigurationProvider;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAgent;
 import kimononet.peer.PeerEnvironment;
@@ -13,99 +11,62 @@ import org.junit.Test;
 
 public class PeerAgentTest {
 
-	private static Peer peer = new Peer("01:23:45:67:89:AB");
-	private static PeerEnvironment environment = new PeerEnvironment();
-	private static DefaultGeoDevice geoDevice = new DefaultGeoDevice();
-	private static SimulationPortConfigurationProvider portConfigurationProvider = new SimulationPortConfigurationProvider();
+	private Peer peer = new Peer("01:23:45:67:89:AB");
+	private PeerEnvironment environment = new PeerEnvironment();
+	private DefaultGeoDevice geoDevice = new DefaultGeoDevice();
 
-	private static PeerAgent peerAgentPeer;
-	private static PeerAgent peerAgentPeerPeerEnvironment;
-	private static PeerAgent peerAgentPeerPeerEnvironmentGeoDevice;
-	private static PeerAgent peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider;
+	private PeerAgent agentFromPeer;
+	private PeerAgent agentFromPeerAndPeerEnvironment;
+	private PeerAgent agentFromPeerAndPeerEnvironmentAndGeoDevice;
 
 	@Before
-	public void testPeerAgentPeer() {
-		peerAgentPeer = new PeerAgent(peer);
+	public void test_PeerAgent_Peer() {
+		agentFromPeer = new PeerAgent(peer);
 	}
 
 	@Before
-	public void testPeerAgentPeerPeerEnvironment() {
-		peerAgentPeerPeerEnvironment = new PeerAgent(peer, environment);
+	public void test_PeerAgent_PeerPeerEnvironment() {
+		agentFromPeerAndPeerEnvironment = new PeerAgent(peer, environment);
 	}
 
 	@Before
-	public void testPeerAgentPeerPeerEnvironmentGeoDevice() {
-		peerAgentPeerPeerEnvironmentGeoDevice = new PeerAgent(peer, environment, geoDevice);
-	}
-
-	@Before
-	public void testPeerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider() {
-		peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider = new PeerAgent(peer, environment, geoDevice, portConfigurationProvider);
+	public void test_PeerAgent_PeerPeerEnvironmentGeoDevice() {
+		agentFromPeerAndPeerEnvironmentAndGeoDevice = new PeerAgent(peer, environment, geoDevice);
 	}
 
 	@Test
-	public void testGetPeers() {
+	public void test_getPeer() {
+		assertEquals(agentFromPeer.getPeer(), peer);
+		assertEquals(agentFromPeerAndPeerEnvironment.getPeer(), peer);
+		assertEquals(agentFromPeerAndPeerEnvironmentAndGeoDevice.getPeer(), peer);
 	}
 
 	@Test
-	public void testGetPortConfiguration() {
-		PortConfiguration portConfiguration = peerAgentPeer.getPortConfiguration();
-		PortConfiguration portConfiguration2 = peerAgentPeerPeerEnvironment.getPortConfiguration();
-		PortConfiguration portConfiguration3 = peerAgentPeerPeerEnvironmentGeoDevice.getPortConfiguration();
-		PortConfiguration portConfiguration4 = peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider.getPortConfiguration();
-
-		assertEquals(5000, portConfiguration.getBeaconServicePort());
-		assertEquals(5001, portConfiguration.getDataSendingServicePort());
-		assertEquals(5002, portConfiguration.getDataReceivingServicePort());
-		assertEquals(5000, portConfiguration2.getBeaconServicePort());
-		assertEquals(5001, portConfiguration2.getDataSendingServicePort());
-		assertEquals(5002, portConfiguration2.getDataReceivingServicePort());
-		assertEquals(5000, portConfiguration3.getBeaconServicePort());
-		assertEquals(5001, portConfiguration3.getDataSendingServicePort());
-		assertEquals(5002, portConfiguration3.getDataReceivingServicePort());
-		assertEquals(5000, portConfiguration4.getBeaconServicePort());
-		assertEquals(5001, portConfiguration4.getDataSendingServicePort());
-		assertEquals(5002, portConfiguration4.getDataReceivingServicePort());
+	public void test_getEnvironment() {
+		//assertEquals(agentFromPeer.getEnvironment(), environment);
+		assertEquals(agentFromPeerAndPeerEnvironment.getEnvironment(), environment);
+		assertEquals(agentFromPeerAndPeerEnvironmentAndGeoDevice.getEnvironment(), environment);
 	}
 
 	@Test
-	public void testGetGeoDevice() {
-		//assertEquals(geoDevice, peerAgentPeer.getGeoDevice());
-		//assertEquals(geoDevice, peerAgentPeerPeerEnvironment.getGeoDevice());
-		assertEquals(geoDevice, peerAgentPeerPeerEnvironmentGeoDevice.getGeoDevice());
-		assertEquals(geoDevice, peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider.getGeoDevice());
+	public void test_getGeoDevice() {
+		//assertEquals(agentFromPeer.getGeoDevice(), geoDevice);
+		//assertEquals(agentFromPeerAndPeerEnvironment.getGeoDevice(), geoDevice);
+		assertEquals(agentFromPeerAndPeerEnvironmentAndGeoDevice.getGeoDevice(), geoDevice);
 	}
 
 	@Test
-	public void testGetPeer() {
-		assertEquals(peer, peerAgentPeer.getPeer());
-		assertEquals(peer, peerAgentPeerPeerEnvironment.getPeer());
-		assertEquals(peer, peerAgentPeerPeerEnvironmentGeoDevice.getPeer());
-		assertEquals(peer, peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider.getPeer());
-	}
-
-	@Test
-	public void testGetEnvironment() {
-		//assertEquals(environment, peerAgentPeer.getEnvironment());
-		assertEquals(environment, peerAgentPeerPeerEnvironment.getEnvironment());
-		assertEquals(environment, peerAgentPeerPeerEnvironmentGeoDevice.getEnvironment());
-		assertEquals(environment, peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider.getEnvironment());
-	}
-
-	@Test
-	public void testSetEnvironment() {
+	public void test_setEnvironment() {
 		PeerEnvironment environment2 = new PeerEnvironment();
 		environment2.set("key", "value");
 
-		peerAgentPeer.setEnvironment(environment2);
-		peerAgentPeerPeerEnvironment.setEnvironment(environment2);
-		peerAgentPeerPeerEnvironmentGeoDevice.setEnvironment(environment2);
-		peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider.setEnvironment(environment2);
+		agentFromPeer.setEnvironment(environment2);
+		agentFromPeerAndPeerEnvironment.setEnvironment(environment2);
+		agentFromPeerAndPeerEnvironmentAndGeoDevice.setEnvironment(environment2);
 
-		assertEquals(environment2, peerAgentPeer.getEnvironment());
-		assertEquals(environment2, peerAgentPeerPeerEnvironment.getEnvironment());
-		assertEquals(environment2, peerAgentPeerPeerEnvironmentGeoDevice.getEnvironment());
-		assertEquals(environment2, peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider.getEnvironment());
+		assertEquals(agentFromPeer.getEnvironment(), environment2);
+		assertEquals(agentFromPeerAndPeerEnvironment.getEnvironment(), environment2);
+		assertEquals(agentFromPeerAndPeerEnvironmentAndGeoDevice.getEnvironment(), environment2);
 	}
 
 }

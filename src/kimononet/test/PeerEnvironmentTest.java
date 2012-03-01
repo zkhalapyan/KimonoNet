@@ -8,7 +8,7 @@ import org.junit.Test;
 public class PeerEnvironmentTest {
 
 	@Test
-	public void testPeerEnvironment() {
+	public void test_PeerEnvironment() {
 		PeerEnvironment environment = new PeerEnvironment();
 		environment.set("key", "value");
 		assertEquals("value", environment.get("key"));

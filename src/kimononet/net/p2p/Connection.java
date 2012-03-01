@@ -1,6 +1,5 @@
 package kimononet.net.p2p;
 
-import java.net.InetAddress;
 
 /**
  * The interface represents a peer-to-peer connection. The implementation might
@@ -35,7 +34,7 @@ public interface Connection {
 	public boolean connect();
 	public boolean setBlocking(boolean blocking);
 	public boolean disconnect();
-	public boolean send(byte[] data, int port, InetAddress address);
+	public boolean send(byte[] data, int port, String address);
 	public byte[] receive();	
 
 }
