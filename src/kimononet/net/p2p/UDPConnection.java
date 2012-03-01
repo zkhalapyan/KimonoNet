@@ -115,7 +115,7 @@ public class UDPConnection implements Connection{
 	}
 
 	@Override
-	public boolean send(byte[] data, int port, InetAddress address) {
+	public boolean send(byte[] data, int port, String address) {
 		
 		if(!connected){
 			return false;
@@ -123,19 +123,22 @@ public class UDPConnection implements Connection{
 		
 		try {
 			
-			DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
-			
-			socket.send(packet);
+			socket.send(new DatagramPacket(data, 
+					                       data.length, 
+					                       InetAddress.getByName(address), 
+					                       port));
 			
 			return true;
 			
 		} catch(SocketTimeoutException ex){
-			
 			ex.printStackTrace();
 			return false;
 			
-		} catch (IOException e) {
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			return false;
 			
+		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
 			

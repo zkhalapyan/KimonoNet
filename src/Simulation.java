@@ -1,10 +1,7 @@
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoVelocity;
 import kimononet.net.Packet;
-import kimononet.net.p2p.BeaconPacket;
+import kimononet.net.beacon.BeaconPacket;
 import kimononet.net.p2p.Connection;
 import kimononet.net.p2p.MulticastConnection;
 import kimononet.net.p2p.port.PortConfiguration;
@@ -25,7 +22,7 @@ public class Simulation {
 		
 		PeerAgent agentA = new PeerAgent(new Peer(addressA, locationA, velocityA)); 
 		
-	//	packetTest(agentA);
+		//packetTest(agentA);
 	
 		
 		agentA.startServices();
@@ -72,7 +69,7 @@ public class Simulation {
 		System.out.println("PACKET PARCEL: \t " + parcel);
 	
 		System.out.println("--PARSED PACKET--");
-		System.out.println(new Packet(parcel));
+		System.out.println(new BeaconPacket(parcel));
 		
 	}
 	
@@ -119,7 +116,7 @@ public class Simulation {
 						GeoLocation location = new GeoLocation(1.0, 2.0, 3.0f);		
 						
 						System.out.println("Sending data...");
-						server.send(location.toParcel().toByteArray(), clientPort, InetAddress.getByName(serverAddress));
+						server.send(location.toParcel().toByteArray(), clientPort,serverAddress);
 						System.out.println("Sent data!");
 						
 						sleep(1000);
@@ -128,9 +125,6 @@ public class Simulation {
 						e.printStackTrace();
 						break;
 						
-					} catch (UnknownHostException e) {
-						e.printStackTrace();
-						break;
 					}
 					
 					
