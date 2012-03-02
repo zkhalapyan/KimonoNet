@@ -26,7 +26,7 @@ import kimononet.peer.PeerAddress;
  * @author Zorayr Khalapyan
  *
  */
-public class Packet implements Parcelable{
+public class Packet implements Parcelable {
 
 	/**
 	 * The length of the header section. 

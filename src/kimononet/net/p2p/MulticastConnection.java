@@ -25,13 +25,17 @@ public class MulticastConnection implements Connection{
 	 */
 	private boolean connected = false;
 	
+	/**
+	 * Default hop count for the multicast connection.
+	 */
+	private static final int DEFAULT_HOP_COUNT = 1;
 	
 	public MulticastConnection(int port, String address){
 		
 		try {
 			
-			System.out.println(address);
 			socket = new MulticastSocket(port);
+			socket.setTimeToLive(DEFAULT_HOP_COUNT);
 			socket.joinGroup(InetAddress.getByName(address));
 			connected = true;
 	

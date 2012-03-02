@@ -2,6 +2,14 @@ package kimononet.util;
 
 import java.util.ArrayList;
 
+/**
+ * Byte manipulation allows converting Java primitive types into byte arrays
+ * and vice versa. However, be careful with the use of this class. It his highly 
+ * encouraged to use {@link kimononet.net.parcel.Parcel} instead.
+ * 
+ * @author Zorayr Khalapyan
+ *
+ */
 public class ByteManipulation {
 	
 	public static byte[] toByteArray(ArrayList<Byte> byteList){
