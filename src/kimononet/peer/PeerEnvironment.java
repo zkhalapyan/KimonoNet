@@ -31,7 +31,7 @@ public class PeerEnvironment {
 	/**
 	 * Returns 
 	 * @param key The key mapped to the value to be returned.
-	 * @return
+	 * @return 
 	 */
 	public String get(String key){
 		return map.get(key);

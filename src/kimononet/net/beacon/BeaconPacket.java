@@ -13,6 +13,7 @@ import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
 
 /**
+ * A subclass of Packet that represents a beacon packet.
  * 
  * @author Zorayr Khalapyan
  *
@@ -30,12 +31,21 @@ public class BeaconPacket extends Packet {
 	private HashMap<PeerAddress, Peer> peers;
 	
 	/**
+	 * Maximum number of peers to include in the beacon. Depending on if the
+	 * environment variable for controlling this value was set, this variable
+	 * might either be a valid integer value or null. 
+	 */
+	private Integer maxBeaconPeers;
+	
+	
+	/**
 	 * Creates a new beacon packet associated with the specified peer agent.
 	 * @param agent Peer agent to act as the source of the beacon packet.
 	 */
 	public BeaconPacket(PeerAgent agent){
 		super(SUPPORTED_VERSION, PacketType.BEACON, agent.getPeer());
 		
+		this.maxBeaconPeers = Integer.decode(agent.getEnvironment().get("max-beacon-peers"));
 		this.peers = agent.getPeers();	
 		
 		setBeaconContents();
@@ -123,6 +133,13 @@ public class BeaconPacket extends Packet {
 		//minimum of the calculated possible maximum number of peers that could
 		//be included and the actual number of peers.
 		int numPeers = Math.min(maxNumPeers, peers.size());
+		
+		//If the maximum number of peers to be included in the beacon was 
+		//specified by an environment variable, then take the minimum of the 
+		//calculated value and the set value.
+		if(maxBeaconPeers != null){
+			numPeers = Math.min(numPeers, maxBeaconPeers);
+		}
 		
 		//Compute the total number of bytes of a beacon parcel.
 		int beaconParcelLength = numPeers * Peer.PARCEL_SIZE + 12;

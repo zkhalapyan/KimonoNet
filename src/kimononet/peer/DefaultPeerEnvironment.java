@@ -5,7 +5,7 @@ public class DefaultPeerEnvironment extends PeerEnvironment{
 	public DefaultPeerEnvironment()
 	{
 		set("beacon-frequency", "100");
-		set("beacon-port", "54321");
+		set("max-beacon-peers", "34");
 		
 		
 	}

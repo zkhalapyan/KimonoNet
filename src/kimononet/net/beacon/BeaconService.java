@@ -10,6 +10,12 @@ import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
 
+/**
+ * Service for sending and receiving beacon packets. 
+ * 
+ * @author Zorayr Khalapyan
+ *
+ */
 public class BeaconService extends Thread {
 
 	private static final int DEFAULT_FREQUENCY = 30;
