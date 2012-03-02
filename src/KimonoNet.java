@@ -11,7 +11,7 @@ import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
 
 
-public class Simulation {
+public class KimonoNet {
 
 	public static void main(String args[]){
 		System.out.println("Starting Simulation");
