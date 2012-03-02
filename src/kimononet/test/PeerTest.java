@@ -14,18 +14,23 @@ import org.junit.Test;
 
 public class PeerTest {
 
-	private static final String nameDefault = "unnamed-peer";
+	private final String nameDefault = "unnamed-peer";
 
-	private static final String address = "01:23:45:67:89:AB";
-	private static final String name = "Foo Bar Baz";
-	//private static final GeoLocation location = null;
+	private final String address = "01:23:45:67:89:AB";
+	private final String name = "Foo Bar Baz";
+	//private final GeoLocation location = null;
 
-	private static final String address2 = "AB:CD:EF:01:23:45";
-	private static final String name2 = "asdf zxcv";
-	private static final GeoLocation location2 = new GeoLocation(-77.180555, 39.105480, (float)123.4567890);
+	private final String address2 = "AB:CD:EF:01:23:45";
+	private final String name2 = "asdf zxcv";
+	private final GeoLocation location2 = new GeoLocation(-77.180555, 39.105480, (float)123.4567890);
 
-	private static Peer peerString;
-	private static Peer peerPeerAddressString;
+	private Peer peerString;
+	private Peer peerPeerAddressString;
+
+	public PeerTest() {
+		testPeerString();
+		testPeerPeerAddressString();
+	}
 
 	@Before
 	public void testPeerString() {

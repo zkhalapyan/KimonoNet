@@ -13,15 +13,22 @@ import org.junit.Test;
 
 public class PeerAgentTest {
 
-	private static Peer peer = new Peer("01:23:45:67:89:AB");
-	private static PeerEnvironment environment = new PeerEnvironment();
-	private static DefaultGeoDevice geoDevice = new DefaultGeoDevice();
-	private static SimulationPortConfigurationProvider portConfigurationProvider = new SimulationPortConfigurationProvider();
+	private Peer peer = new Peer("01:23:45:67:89:AB");
+	private PeerEnvironment environment = new PeerEnvironment();
+	private DefaultGeoDevice geoDevice = new DefaultGeoDevice();
+	private SimulationPortConfigurationProvider portConfigurationProvider = new SimulationPortConfigurationProvider();
 
-	private static PeerAgent peerAgentPeer;
-	private static PeerAgent peerAgentPeerPeerEnvironment;
-	private static PeerAgent peerAgentPeerPeerEnvironmentGeoDevice;
-	private static PeerAgent peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider;
+	private PeerAgent peerAgentPeer;
+	private PeerAgent peerAgentPeerPeerEnvironment;
+	private PeerAgent peerAgentPeerPeerEnvironmentGeoDevice;
+	private PeerAgent peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider;
+
+	public PeerAgentTest() {
+		testPeerAgentPeer();
+		testPeerAgentPeerPeerEnvironment();
+		testPeerAgentPeerPeerEnvironmentGeoDevice();
+		testPeerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider();
+	}
 
 	@Before
 	public void testPeerAgentPeer() {

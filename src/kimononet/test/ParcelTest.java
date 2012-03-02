@@ -8,9 +8,15 @@ import org.junit.Test;
 
 public class ParcelTest {
 
-	private static Parcel parcelInt;
-	private static Parcel parcelByte;
-	private static Parcel parcelByteArray;
+	private Parcel parcelInt;
+	private Parcel parcelByte;
+	private Parcel parcelByteArray;
+
+	public ParcelTest() {
+		testParcelInt();
+		testParcelByte();
+		testParcelByteArray();
+	}
 
 	@Before
 	public void testParcelInt() {

@@ -1,6 +1,5 @@
 package kimononet.simulation;
 
-import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -14,6 +13,7 @@ import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 
+import java.awt.EventQueue;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -25,9 +25,13 @@ public class Simulation {
 	private JTable table;
 
 	/**
-	 * Launch the application.
+	 * Create the application.
 	 */
-	public static void main(String[] args) {
+	public Simulation() {
+		initialize();
+	}
+
+	public void start() {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -37,14 +41,7 @@ public class Simulation {
 					e.printStackTrace();
 				}
 			}
-		});
-	}
-
-	/**
-	 * Create the application.
-	 */
-	public Simulation() {
-		initialize();
+		});		
 	}
 
 	/**

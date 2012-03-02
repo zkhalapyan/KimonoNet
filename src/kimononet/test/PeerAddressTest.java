@@ -8,14 +8,19 @@ import org.junit.Test;
 
 public class PeerAddressTest {
 
-	private static final String addressString = "01:23:45:67:89:AB";
-	private static final byte[] addressByteArray  = {(byte)0x01, (byte)0x23, (byte)0x45, (byte)0x67, (byte)0x89, (byte)0xAB};
+	private final String addressString = "01:23:45:67:89:AB";
+	private final byte[] addressByteArray  = {(byte)0x01, (byte)0x23, (byte)0x45, (byte)0x67, (byte)0x89, (byte)0xAB};
 
-	private static final String addressString2 = "AB:CD:EF:01:23:45";
-	//private static final byte[] addressByteArray2 = {(byte)0xAB, (byte)0xCD, (byte)0xEF, (byte)0x01, (byte)0x23, (byte)0x45};
+	private final String addressString2 = "AB:CD:EF:01:23:45";
+	//private final byte[] addressByteArray2 = {(byte)0xAB, (byte)0xCD, (byte)0xEF, (byte)0x01, (byte)0x23, (byte)0x45};
 
-	private static PeerAddress peerAddressByteArray;
-	private static PeerAddress peerAddressString;
+	private PeerAddress peerAddressByteArray;
+	private PeerAddress peerAddressString;
+
+	public PeerAddressTest() {
+		testPeerAddressByteArray();
+		testPeerAddressString();
+	}
 
 	@Before
 	public void testPeerAddressByteArray() {

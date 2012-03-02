@@ -8,7 +8,7 @@ import org.junit.Test;
 
 public class PortConfigurationTest {
 
-	static private PortConfiguration portConfiguration;
+	private PortConfiguration portConfiguration;
 
 	@Before
 	public void testPortConfiguration() {
