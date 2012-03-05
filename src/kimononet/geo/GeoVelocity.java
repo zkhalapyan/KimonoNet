@@ -37,9 +37,17 @@ public class GeoVelocity implements Parcelable {
 	private float speed;
 	
 	/**
-	 * Average accuracy of all considered locations in feet.
+	 * A sum of all accuracy values (in feet) considered. This value will be 
+	 * used for calculating average accuracy in {@link #getAverageAccuracy()}.
 	 */
-	private float averageAccuracy = 0;
+	private float accuracySum;
+	
+	/**
+	 * The number of points considered for calculating the velocity. This value
+	 * will be used to calculate average accuracy in 
+	 * {@link #getAverageAccuracy()}. 
+	 */
+	private int pointCount;
 	
 	/**
 	 * Last reported location.
@@ -111,8 +119,9 @@ public class GeoVelocity implements Parcelable {
 		this.initialBearing = inverseFormulaResults[1];
 		this.finalBearing   = inverseFormulaResults[2];
 		
-		//Update the average accuracy.
-		this.averageAccuracy = (averageAccuracy + newLocation.getAccuracy()) / 2;
+		//Update the values to be used in calculating average accuracy.
+		this.accuracySum += newLocation.getAccuracy();
+		this.pointCount ++;
 	    
 		//Save the provided location as the new current location. This location 
 		//will be used for future speed and bearing updates.
@@ -125,7 +134,7 @@ public class GeoVelocity implements Parcelable {
 	 * @return the average accuracy in feet of all considered points.
 	 */
 	public double getAverageAccuracy(){
-		return this.averageAccuracy;
+		return (pointCount == 0) ? 0 : accuracySum / pointCount;
 	}
 	
 	/**
