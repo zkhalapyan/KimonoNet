@@ -67,10 +67,6 @@ public class GeoLocation implements Parcelable {
 		setLocation(longitude, latitude, accuracy);
 	}
 	
-	public GeoLocation(byte[] buffer){
-		this(new Parcel(buffer));
-	}
-	
 	public GeoLocation(Parcel parcel){
 		setLocation(parcel);
 	}
