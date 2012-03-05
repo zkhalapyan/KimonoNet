@@ -9,20 +9,9 @@ import kimononet.net.parcel.Parcel;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
-import kimononet.simulation.Simulation;
-import kimononet.test.TestManager;
+
 
 public class KimonoNet {
-
-	private static void startSimulation() {
-		Simulation simulation = new Simulation();
-		simulation.start();
-	}
-
-	public static void startUnitTests() {
-		TestManager testManager = new TestManager();
-		testManager.startTesting();
-	}
 
 	public static void main(String args[]){
 		System.out.println("Starting Simulation");
@@ -49,12 +38,7 @@ public class KimonoNet {
 		connectionTest(confProvider.getPortConfiguration(null));
 		connectionTest(confProvider.getPortConfiguration(null));
 		*/
-
-		// For unit tests, uncomment the code below.
-		//startUnitTests();
-
-		// To start the simulation, uncomment the code below.
-		//startSimulation();
+		
 	}
 	
 	public static void parcelTest(){
@@ -168,7 +152,7 @@ public class KimonoNet {
 						
 						//Check to see if the data was received.
 						if(buffer != null){
-							System.out.println("Data Received! \t" + new GeoLocation(buffer));
+							System.out.println("Data Received! \t" + new GeoLocation(new Parcel(buffer)));
 						}else{
 							System.out.println("Data not received!");
 						}
