@@ -26,54 +26,81 @@ import kimononet.net.parcel.Parcelable;
  *  
  * @author Zorayr Khalapyan
  * @since 2/9/2012
+ * @version 3/6/2012
  *
  */
 public class GeoLocation implements Parcelable {
 
 	/**
 	 * Indicates the number of bytes in a location parcel.
+	 * @see #getParcelSize()
 	 */
 	public static final int PARCEL_SIZE = 24;
 	
 	/**
 	 * Stores the longitude of the current GPS location.
+	 * @see #getLongitude()
 	 */
 	private double longitude;
 	
 	/**
 	 * Stores the latitude of the current GPS location. 
+	 * @see #getLatitude()
 	 */
 	private double latitude;
 	
 	/**
 	 * Stores the accuracy of the current GPS location.
+	 * @see #getAccuracy()
 	 */
 	private float accuracy;
 	
 	/**
 	 * Stores the UNIX time of last GPS location update in seconds.
+	 * @see #getTimestamp()
 	 */
 	private int timestamp;
+
 	
 	/**
 	 * Creates a new GPS location with the specified longitude, latitude, and
-	 * accuracy. Time stamp will be set to the current System's timestamp. 
+	 * accuracy. Timestamp will be set to the current System's timestamp. 
 	 * 
-	 * @param longitude Longitude to set.
-	 * @param latitude Latitude to set.
-	 * @param accuracy Accuracy to set.
+	 * @param longitude Longitude of the current location.
+	 * @param latitude Latitude of the current location.
+	 * @param accuracy Accuracy (in feet) of the current geo location.
 	 */
 	public GeoLocation(double longitude, double latitude, float accuracy){
 		setLocation(longitude, latitude, accuracy);
+		this.timestamp = (int)(System.currentTimeMillis() / 1000);
 	}
 	
+	/**
+	 * Creates a new GPS location with the specified longitude, latitude,
+	 * accuracy, and timestamp.
+	 * 
+	 * @param longitude Longitude of the current location.
+	 * @param latitude Latitude of the current location.
+	 * @param accuracy Accuracy (in feet) of the current geo location.
+	 * @param timestamp Timestamp when the location was fetched.
+	 */
+	public GeoLocation(double longitude, double latitude, float accuracy, int timestamp){
+		setLocation(longitude, latitude, accuracy);
+		this.timestamp = timestamp;
+	}
+	
+	/**
+	 * Creates a new location utilizing a parcel.
+	 * 
+	 * @param parcel Parcel constructed according to protocol specification.
+	 */
 	public GeoLocation(Parcel parcel){
 		setLocation(parcel);
 	}
 	
 	/**
-	 * Sets GPS longitude, latitude, and accuracy, and also updates the current
-	 * timestamp. 
+	 * Sets GPS longitude, latitude, and accuracy. Timestamp does not change 
+	 * after setting a location. 
 	 * 
 	 * @param longitude Longitude to set.
 	 * @param latitude Latitude to set.
@@ -83,12 +110,10 @@ public class GeoLocation implements Parcelable {
 		this.longitude = longitude;
 		this.latitude = latitude;
 		this.accuracy = accuracy;
-		
-		updateTimestamp();
 	}
 	
 	/**
-	 * 
+	 * Parses a location from a parcel. 
 	 * 
 	 * @see {@link #toByteArray()}
 	 */
@@ -116,28 +141,35 @@ public class GeoLocation implements Parcelable {
 	}	
 	
 	/**
-	 * 
-	 * @param parcel
+	 * Sets the current location values according to the values stored in the 
+	 * specified parcel.
+	 * @param parcel The parcel to parse.
+	 * @see #setLocation(Parcel)
 	 */
 	public void parse(Parcel parcel){
 		this.setLocation(parcel);
 	}
 	
-	/**
-	 * Resets the time stamp to the current system's time. 
-	 */
-	private void updateTimestamp(){
-		this.timestamp = (int)(System.currentTimeMillis() / 1000);
-	}
-	
+
 	/**
 	 * Returns the UNIX time stamp of the last location update.
 	 * @return The UNIX time stamp of the last location update.
+	 * @see #getTimestamp()
 	 */
-	public int getLastUpdateTime(){
+	public int getTimestamp(){
 		return this.timestamp;
 	}
 
+	/**
+	 * Sets the current timestamp.
+	 * @param timestamp The timestamp for this location.
+	 * @see #GeoLocation(double, double, float, int)
+	 * @see #getTimestamp()
+	 */
+	public void setTimestamp(int timestamp){
+		this.timestamp = timestamp;
+	}
+	
 	/**
 	 * Returns current GPS longitude.
 	 * @return Current GPS longitude.
@@ -162,11 +194,15 @@ public class GeoLocation implements Parcelable {
 		return accuracy;
 	}
 	
+	/**
+	 * Returns the current parcel size.
+	 * @return Parcel size.
+	 * @see #PARCEL_SIZE
+	 */
 	@Override
 	public int getParcelSize(){
 		return PARCEL_SIZE;
 	}
-	
 	
 	/**
 	 * Returns a string representation of the current location. The string will

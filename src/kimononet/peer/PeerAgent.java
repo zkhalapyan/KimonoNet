@@ -9,8 +9,13 @@ import kimononet.net.beacon.BeaconService;
 import kimononet.net.p2p.port.PortConfiguration;
 import kimononet.net.p2p.port.PortConfigurationProvider;
 import kimononet.net.p2p.port.SimulationPortConfigurationProvider;
+import kimononet.time.SystemTimeProvider;
+import kimononet.time.TimeProvider;
 
 /**
+ * Peer agent represents a peer associated with a specific environment. Agent is
+ * also responsible for managing services such {@link BeaconService} and
+ * {@link DataService}, and storing common data exchanged by these services. 
  * 
  * @author Zorayr Khalapyan
  *
@@ -24,7 +29,7 @@ public class PeerAgent {
 	
 	/**
 	 * Peer discovery service associated with the current peer. Peer discovery
-	 * service is responsible for sending beacons and beacon acknowledgements.
+	 * service is responsible for sending beacons and beacon acknowledgments.
 	 */
 	private BeaconService beaconService;
 	
@@ -53,11 +58,22 @@ public class PeerAgent {
 	
 	/**
 	 * Neighboring peer's mapped to a peer address. This is ROUTING_TABLE_1 
-	 * described in the protocol documentation.
+	 * described in the protocol documentation. To access the peers table, use
+	 * method {@link #getPeers()}.
 	 */
 	private HashMap<PeerAddress, Peer> peers;
 	
+	/**
+	 * Stores second-hop neighbors: given a peer address, it will get the peers
+	 * map of that peer if it exists. This is ROUTING_TABLE_2 specified in the 
+	 * protocol documentation. 
+	 */
 	private HashMap<PeerAddress, HashMap<PeerAddress, Peer>> peers2;
+	
+	/**
+	 * Time provider for the current Peer 
+	 */
+	private TimeProvider timeProvider;
 	
 	/**
 	 * Creates a peer agent with a default peer environment.
@@ -79,7 +95,9 @@ public class PeerAgent {
 	}
 	
 	/**
-	 * Creates a peer agent associated with the specified peer environment. 
+	 * Creates a peer agent associated with the specified peer environment. The
+	 * constructor utilizes {@link SimulationPortConfigurationProvider} to set
+	 * up port configuration. 
 	 * 
 	 * @param peer The peer represented by the peer agent.
 	 * @param environment The peer's environment.
@@ -95,6 +113,7 @@ public class PeerAgent {
 	
 	/**
 	 * Creates a peer agent associated with the specified peer environment.
+	 * Time provider will be set to {@link SystemTimeProvider}.
 	 * 
 	 * @param peer The peer represented by the peer agent.
 	 * @param environment The peer's environment.
@@ -106,17 +125,44 @@ public class PeerAgent {
 					 GeoDevice geoDevice, 
 					 PortConfigurationProvider portConfigurationProvider){
 		
+			this(peer, 
+			     environment, 
+			     geoDevice, 
+			     portConfigurationProvider,
+			     new SystemTimeProvider());
+	}
+	
+	/**
+	 * Creates a peer agent associated with the specified peer environment.
+	 * 
+	 * @param peer The peer represented by the peer agent.
+	 * @param environment The peer's environment.
+	 * @param geoDevice The peer's GPS device.
+	 * @param portConfigurationProvider Port configuration provider.
+	 * @param timeProvider Time provider for the current peer agent.
+	 */
+	public PeerAgent(Peer peer, 
+					 PeerEnvironment environment, 
+					 GeoDevice geoDevice, 
+					 PortConfigurationProvider portConfigurationProvider,
+					 TimeProvider timeProvider){
+		
+		//Save the parameters specified by the constructor.
 		this.peer                      = peer;
 		this.environment               = environment;
 		this.geoDevice                 = geoDevice;
 		this.portConfigurationProvider = portConfigurationProvider;
+		this.timeProvider 			   = timeProvider;
 		
+		//Create the services used by the agent.
 		this.beaconService = new BeaconService(this);		
 		this.geoService    = new GeoService(this);
 		
+		//Create any data structures used by the agent.
 		this.peers = new HashMap<PeerAddress, Peer>();
 		this.peers2 = new HashMap<PeerAddress, HashMap<PeerAddress, Peer>>();
 	}
+	
 	
 	
 	/**
@@ -151,6 +197,12 @@ public class PeerAgent {
 		return this.peers;
 	}
 	
+	/**
+	 * Returns the second hop neighbor's table. For further documentation, read
+	 * comments on {@link #peers2} or protocol documentation.
+	 * 
+	 * @return Second hop neighbor's table.
+	 */
 	public HashMap<PeerAddress, HashMap<PeerAddress, Peer>> getPeers2(){
 		return this.peers2;
 	}
@@ -193,5 +245,37 @@ public class PeerAgent {
 	 */
 	public void setEnvironment(PeerEnvironment environment) {
 		this.environment = environment;
+	}
+	
+	/**
+	 * Returns {@link TimeProvider} associated with this agent. The time 
+	 * provider should be used in any situation where the peers's time is 
+	 * required. 
+	 * 
+	 * @return Time provider for this peer agent.
+	 */
+	public TimeProvider getTimeProvider(){
+		return this.timeProvider;
+	}
+	
+	/**
+	 * Sets the time provider for the current peer agent. To get the time 
+	 * provider or the peer's current time, use either 
+	 * {@link #getTimeProvider()} or {@link #getTime()} respectively. 
+	 * 
+	 * @param timeProvider The time provider to set.
+	 */
+	public void setTimeProvider(TimeProvider timeProvider){
+		this.timeProvider = timeProvider;
+	}
+	
+	/**
+	 * Shortcut method for accessing time using the {@link #getTimeProvider()}. 
+	 * 0 will be returned, if the time provider for the current agent is null. 
+	 * 
+	 * @return Current peer time as specified by the time provider.
+	 */
+	public long getTime(){
+		return (this.timeProvider == null)? 0 : this.timeProvider.getTime();
 	}
 }

@@ -12,7 +12,7 @@ public class PortConfigurationTest {
 
 	@Before
 	public void testPortConfiguration() {
-		portConfiguration = new PortConfiguration(123, 456, 789);
+		//portConfiguration = new PortConfiguration(123, 456, 789);
 	}
 
 	@Test

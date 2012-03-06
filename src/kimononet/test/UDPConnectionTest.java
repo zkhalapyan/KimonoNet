@@ -27,24 +27,21 @@ public class UDPConnectionTest {
 				while (true) {
 					try {
 						System.out.println("Sending data...");
-						assertTrue(server.send(location.toParcel().toByteArray(), clientPort, InetAddress.getByName(hostAddress)));
+						assertTrue(server.send(location.toParcel().toByteArray(), clientPort, hostAddress));
 						System.out.println("Sent data!");
 						sleep(1000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 						break;
-					} catch (UnknownHostException e) {
-						e.printStackTrace();
-						break;
-					}
+					} 
 				}
 			}
 		};
 
 		Thread client = new Thread() {
 			public void run() {
-				try {
-					UDPConnection client = new UDPConnection(clientPort, InetAddress.getByName(clientAddress));
+
+					UDPConnection client = new UDPConnection(clientPort, clientAddress);
 					assertTrue(client.connect());
 					client.setBlocking(true);
 
@@ -53,7 +50,7 @@ public class UDPConnectionTest {
 							System.out.println("Receiving data...");
 							byte[] buffer = client.receive();
 							assertArrayEquals(location.toParcel().toByteArray(), buffer);
-							System.out.println("Data Received! \t" + new GeoLocation(buffer));
+							System.out.println("Data Received! \t");
 							sleep(1000);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
@@ -61,10 +58,8 @@ public class UDPConnectionTest {
 						}
 					}
 				}
-				catch (UnknownHostException e) {
-					e.printStackTrace();
-				} 
-			}
+			
+			
 		};
 
 		server.start();

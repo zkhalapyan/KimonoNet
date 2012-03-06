@@ -1,5 +1,7 @@
 package kimononet.geo;
 
+import kimononet.time.TimeProvider;
+
 /**
  * Interface that represents a GPS enabled device. 
  * 
@@ -13,4 +15,7 @@ public interface GeoDevice {
 	 * @return Current GPS location.
 	 */
 	public GeoLocation getLocation();
+	
+	public void setTimeProvider(TimeProvider timeProvider);
+	
 }

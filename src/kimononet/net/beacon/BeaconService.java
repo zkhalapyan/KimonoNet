@@ -139,10 +139,10 @@ public class BeaconService extends Thread {
 	private void updatePeer(HashMap<PeerAddress, Peer> peers, Peer peer){
 		
 		PeerAddress address = peer.getAddress();
-		int updateTime = peer.getLocation().getLastUpdateTime();
+		int updateTime = peer.getLocation().getTimestamp();
 		
 		if(!peers.containsKey(address) 
-	      || peers.get(address).getLocation().getLastUpdateTime() > updateTime){
+	      || peers.get(address).getLocation().getTimestamp() > updateTime){
 			peers.put(address, peer);
 		}
 	}

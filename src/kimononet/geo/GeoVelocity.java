@@ -111,7 +111,7 @@ public class GeoVelocity implements Parcelable {
 		float[] inverseFormulaResults = computeDistanceAndBearing(newLocation);
 		
 		//Compute change in time in order to compute speed from distance.
-		int dTime = newLocation.getLastUpdateTime() - currentLocation.getLastUpdateTime();
+		int dTime = newLocation.getTimestamp() - currentLocation.getTimestamp();
 
 		//Save speed, initial and final bearings as calculated by the inverse
 		//formula.
@@ -179,7 +179,7 @@ public class GeoVelocity implements Parcelable {
 		if(currentLocation == null){
 			time = "unknown"; 
 		}else{
-			time = new Date(currentLocation.getLastUpdateTime() * 1000).toString();
+			time = new Date(currentLocation.getTimestamp() * 1000).toString();
 		}										  
 		
  		return "Speed: "            + getSpeed() + "\t" +
