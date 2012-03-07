@@ -50,14 +50,30 @@ public class Peer implements Parcelable{
 	 */
 	private GeoVelocity velocity;
 	
+	/**
+	 * Default name of a peer. 
+	 */
 	public static final String DEFAULT_PEER_NAME = "unnamed-peer";
 	
+	/**
+	 * Constructs a peer from a parcel. Since the name of the peer is not 
+	 * contained within the parcel, the parsed peer's name will be set to
+	 * the value specified by {@link #DEFAULT_PEER_NAME}.
+	 * 
+	 * @param parcel The parcel that represents a peer.
+	 * @see #parse(Parcel)
+	 */
 	public Peer(Parcel parcel){
 		parse(parcel);
+		
+		//Since the parcel doesn't contain the peer's name, set it to the 
+		//default value.
+		this.name = DEFAULT_PEER_NAME;
 	}
 	
 	/**
-	 * Creates a peer with the specified unique address and default name.
+	 * Creates a peer with the specified unique address and default name 
+	 * specified by {@link #DEFAULT_PEER_NAME}.
 	 * 
 	 * @param address A peer address that uniquely identifies a peer.
 	 */
@@ -93,6 +109,12 @@ public class Peer implements Parcelable{
 		return Parcel.combineParcelables(address, location, velocity);
 	}
 	
+	/**
+	 * Parses a peer from the provided parcel. Affected values include peer's 
+	 * address, location, and velocity. Peer's name will remain unchanged.
+	 * 
+	 * @param parcel The parcel representation of a peer.
+	 */
 	public void parse(Parcel parcel){
 		address = new PeerAddress(parcel);
 		location = new GeoLocation(parcel);
