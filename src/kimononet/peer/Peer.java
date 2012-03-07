@@ -3,6 +3,7 @@ package kimononet.peer;
 import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoVelocity;
 import kimononet.net.parcel.Parcel;
+import kimononet.net.parcel.ParcelException;
 import kimononet.net.parcel.Parcelable;
 
 /**
@@ -93,7 +94,7 @@ public class Peer implements Parcelable{
 	 */
 	public Peer(PeerAddress address, String name){
 		this.name = name;
-		this.address = address;
+		this.address = address;		
 		this.velocity = new GeoVelocity();
 	}
 	
@@ -105,7 +106,32 @@ public class Peer implements Parcelable{
 		
 	}
 	
+	/**
+	 * Converts the current peer to a parcel representation. The final parcel
+	 * will include the peer's address, location, and velocity. A new 
+	 * {@link ParcelException} will be thrown in case any of these values have 
+	 * not been specified.
+	 * 
+	 * @return A parcel representation of the current peer.
+	 * @throws ParcelException
+	 */
+	@Override
 	public Parcel toParcel(){
+		
+		String error = null;
+		
+		if(address == null){
+			error = "Peer's address is not specified or is null.";
+		} else if(location == null){
+			error = "Peer's location is not specified or is null.";
+		} else if(velocity == null){
+			error = "Peer's velocity is not specified or is null.";
+		}
+		
+		if(error != null){
+			throw new ParcelException("Unable to convert object to parcel. " + error);
+		}
+		
 		return Parcel.combineParcelables(address, location, velocity);
 	}
 	
