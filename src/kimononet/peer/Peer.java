@@ -145,6 +145,10 @@ public class Peer implements Parcelable{
 		address = new PeerAddress(parcel);
 		location = new GeoLocation(parcel);
 		velocity = new GeoVelocity(parcel);
+		
+		//Since a parceled version of velocity does not include a current 
+		//location value, this needs to be manually set.
+		velocity.update(location);
 	}
 	
 	/**
@@ -189,6 +193,11 @@ public class Peer implements Parcelable{
 		this.name = name;
 	}
 
+	/**
+	 * Returns the current peer's address.
+	 * 
+	 * @return Peer's address.
+	 */
 	public PeerAddress getAddress() {
 		return address;
 	}
