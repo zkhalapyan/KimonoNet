@@ -31,7 +31,7 @@ public class Packet implements Parcelable {
 	/**
 	 * The length of the header section. 
 	 */
-	private static final int HEADER_LENGTH = 4 + PeerAddress.PARCEL_SIZE 
+	protected static final int HEADER_LENGTH = 4 + PeerAddress.PARCEL_SIZE 
 											   + GeoLocation.PARCEL_SIZE  
 											   + GeoVelocity.PARCEL_SIZE;
 	
