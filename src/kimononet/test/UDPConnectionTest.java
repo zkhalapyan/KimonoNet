@@ -2,10 +2,8 @@ package kimononet.test;
 
 import static org.junit.Assert.*;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 import kimononet.geo.GeoLocation;
+import kimononet.net.p2p.Connection;
 import kimononet.net.p2p.UDPConnection;
 
 import org.junit.Test;
@@ -15,9 +13,9 @@ public class UDPConnectionTest {
 	@Test
 	public void testUDPConnection() {
 		final int clientPort = 43210;
-		final String hostAddress = "255.255.255.255";
-		final String clientAddress = "0.0.0.0";
-		final GeoLocation location = new GeoLocation(1.0, 2.0, (float)3.0);
+		final String hostAddress = Connection.BROADCAST_ADDRESS;
+		final String clientAddress = Connection.WILDCARD_ADDRESS;
+		final GeoLocation location = new GeoLocation(1.0, 2.0, 3.0f);
 
 		Thread server = new Thread() {
 			public void run() {
