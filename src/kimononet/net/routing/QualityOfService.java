@@ -5,9 +5,9 @@ import kimononet.net.parcel.Parcelable;
 
 public enum QualityOfService implements Parcelable{
 	
-	HIGH((byte)0x01),
-	MEDIUM((byte)0x02),
-	LOW((byte)0x03);
+	CONTROL((byte)0x01),
+	COMMUNICATION((byte)0x02),
+	REGULAR((byte)0x03);
 	
 	private static final int PARCEL_SIZE = 1;
 	
