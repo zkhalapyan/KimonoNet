@@ -99,6 +99,14 @@ public class GeoVelocity implements Parcelable {
 	
 	public void update(GeoLocation newLocation){
 		
+		if(newLocation == null){
+			return;
+		}
+		
+		//Update the values to be used in calculating average accuracy.
+		this.accuracySum += newLocation.getAccuracy();
+		this.pointCount ++;
+	    
 		//If an initial location has not been specified, save the new location 
 		//as the current location and exit.
 		if(currentLocation == null){
@@ -119,10 +127,6 @@ public class GeoVelocity implements Parcelable {
 		this.initialBearing = inverseFormulaResults[1];
 		this.finalBearing   = inverseFormulaResults[2];
 		
-		//Update the values to be used in calculating average accuracy.
-		this.accuracySum += newLocation.getAccuracy();
-		this.pointCount ++;
-	    
 		//Save the provided location as the new current location. This location 
 		//will be used for future speed and bearing updates.
 		this.currentLocation = newLocation;

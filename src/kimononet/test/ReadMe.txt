@@ -8,3 +8,8 @@ For existing projects:
 1. In Package Explorer, right-click project and select Properties.
 2. In the list at the left, select Java Build Path.
 3. Follow steps 1-5 above.
+
+How to run JUnit tests:
+1. Open src/kimomonet.test/AllTests.java.
+2. Click the Run button on the toolbar.
+3. Double-click JUnit Test.

@@ -59,6 +59,10 @@ public class Parcel implements Parcelable{
 		buffer.putLong(index, data);
 	}
 	
+	public short getShort(){
+		return buffer.getShort();
+	}
+	
 	public long getLong(){
 		return buffer.getLong();
 	}
