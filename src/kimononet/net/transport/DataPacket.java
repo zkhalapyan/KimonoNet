@@ -55,7 +55,7 @@ import kimononet.peer.PeerAgent;
  * @author Wade Norris
  * 
  */
-public class DataPacket extends Packet {
+public class DataPacket extends Packet implements Comparable<DataPacket> {
 
 	/**
 	 * Currently supported data packet version.
@@ -330,12 +330,31 @@ public class DataPacket extends Packet {
 		return hdr_dst;
 	}
 
+	public PeerAddress getHdr_fwd_dst_id() {
+		return hdr_fwd_dst_id;
+	}
+
+	public void setHdr_fwd_dst_id(PeerAddress hdr_fwd_dst_id) {
+		this.hdr_fwd_dst_id = hdr_fwd_dst_id;
+	}
+
+	public byte getQOS() {
+		return this.hdr_qos;
+	}
+
 	/**
 	 * Getter for payload of this data packet
 	 * @return byte[] Payload for this data packet
 	 */
 	public byte[] getPayload() {
 		return payload;
+	}
+
+	@Override
+	public int compareTo(DataPacket compare) {
+		
+		return this.hdr_qos - compare.getQOS();
+		
 	}
 	
 	/**
