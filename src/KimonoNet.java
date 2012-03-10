@@ -9,12 +9,17 @@ import kimononet.net.parcel.Parcel;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
+import kimononet.simulation.Simulation;
 
 
 public class KimonoNet {
 
 	public static void main(String args[]){
-		System.out.println("Starting Simulation");
+
+		Simulation simulation = new Simulation();
+		simulation.start();
+
+		/*System.out.println("Starting Simulation");
 		
 		PeerAddress addressA = new PeerAddress("12:00:00:00:00:00");
 		GeoLocation locationA = new GeoLocation(1.0, 2.0, 3.0f);
