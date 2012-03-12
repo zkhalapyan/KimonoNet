@@ -85,6 +85,11 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	 * Holds address of the next hop for this data packet.
 	 */
 	private PeerAddress hdr_fwd_dst_id;
+	
+	/**
+	 * Boolean to indicate if hdr_fwd_dst_id has been set yet or not.
+	 */
+	private boolean fwd_dst_set;
 
 	/**
 	 * Flag that indicates the forwarding mode, can be GREEDY or PERIMETER.
@@ -139,10 +144,11 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		super(SUPPORTED_VERSION, PacketType.DATA, agent.getPeer());
 		
 		this.hdr_dst = peer;
-		this.hdr_fwd_dst_id = new PeerAddress("");
+		this.fwd_dst_set = false;
 		this.hdr_fwd_mode = ForwardMode.GREEDY.getFlag();
 		this.hdr_qos = qos;
 		this.hdr_hdr_chk = 0x0;
+		this.payload = new byte[payload.length];
 		this.payload = payload;
 		
 		setDataPacketContents();
@@ -203,6 +209,7 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		
 		// HDR-FWD-DST-ID (8)
 		this.hdr_fwd_dst_id = new PeerAddress(parcel);
+		this.fwd_dst_set = true;
 		
 		// HDR-FWD-MODE (1)
 		this.hdr_fwd_mode = parcel.getByte();
@@ -233,8 +240,9 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		parcel.getByteArray(data);
 		this.payload = data;
 		
+		/*
+		// TODO FIX CRC CHECK
 		// CRC Check for Type 0 Header Fields (Data Header and Extended Data Header)
-		parcel.rewind();
 		parcel.add(Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE - 4, (int)0x0);
 		
 		CRC32 crc = new CRC32();
@@ -242,9 +250,9 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		
 		if(((int)crc.getValue()) != this.hdr_hdr_chk){
 			throw new PacketException("Invalid data packet checksum.\nPacket checksum: "+this.hdr_hdr_chk+"\nComputed checksum: "+((int)crc.getValue()));
-		}
+		}*/
 		
-		//ToDo: Magic Check?
+		//TODO: Magic Check?
 		
 	}
 
@@ -253,16 +261,14 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		Parcel packetParcel = super.toParcel();
 		
 		// Set checksum to 0 initially
-		packetParcel.rewind(); // This line may not be necessary
 		packetParcel.add(Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE - 4, (int)0x0);
 		
 		// Generate checksum of common header, data header, and extended data header
 		CRC32 crc = new CRC32();
-		crc.update(packetParcel.toByteArray(), 0, Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE+DataPacket.DATA_XHDR_SIZE);
+		crc.update(packetParcel.toByteArray(), 0, Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE + DataPacket.DATA_XHDR_SIZE);
 		
 		// Add checksum value to data header
 		this.hdr_hdr_chk = (int) crc.getValue();
-		packetParcel.rewind(); // This line may not be necessary
 		packetParcel.add(Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE - 4, this.hdr_hdr_chk);
 		
 		return packetParcel;
@@ -286,7 +292,11 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		
 		// HDR-FWD-DST-ID (8)
 		// Next Hop ID initially set to 0
-		dataParcel.add(this.hdr_fwd_dst_id);
+		if(this.fwd_dst_set)
+			dataParcel.add(this.hdr_fwd_dst_id);
+		else
+			for(int i=0; i<8; i++)
+				dataParcel.add((byte)0x0);
 		
 		// HDR-FWD-MODE (1)
 		dataParcel.add(this.hdr_fwd_mode);
@@ -331,10 +341,12 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	}
 
 	public PeerAddress getHdr_fwd_dst_id() {
+		//TODO what if not set???
 		return hdr_fwd_dst_id;
 	}
 
 	public void setHdr_fwd_dst_id(PeerAddress hdr_fwd_dst_id) {
+		this.fwd_dst_set = true;
 		this.hdr_fwd_dst_id = hdr_fwd_dst_id;
 	}
 
@@ -363,19 +375,19 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	public String toString(){
 		
 		return super.toString() + 
-				   "\n--------------------------------------------- \n" +
-				   "Data Packet Header\n" +  
-				   "HDR-DST-ID:  \t" + this.hdr_dst.getAddress() + "\n" + 
-				   "HDR-DST-LOC: \t" + this.hdr_dst.getLocation() + "\n" +
-				   "HDR-FWD-DST-ID: \t" + this.hdr_fwd_dst_id + "\n" + 
-				   "HDR-FWD-MODE:   \t" + this.hdr_fwd_mode + "\n" + 
-				   "HDR-DATA-LEN: \t" + this.payload.length + "\n" + 
-				   "HDR-QOS:    \t" + this.hdr_qos + "\n" +  
-				   "HDR-HDR-CHK:    \t" + this.hdr_hdr_chk + "\n" +
+				   "\nData Packet Header\n" +  
+				   "HDR-DST-ID:  \t\t" + this.hdr_dst.getAddress() + "\n" + 
+				   "HDR-DST-LOC: \t\t" + this.hdr_dst.getLocation() + "\n" +
+				   "HDR-FWD-DST-ID:\t\t" + this.hdr_fwd_dst_id + "\n" + 
+				   "HDR-FWD-MODE:\t\t" + (this.hdr_fwd_mode==ForwardMode.GREEDY.getFlag()?"GREEDY":"PERIMETER") + "\n" + 
+				   "HDR-DATA-LEN: \t\t" + this.payload.length + "\n" + 
+				   "HDR-QOS:    \t\t" + (this.hdr_qos==QualityOfService.CONTROL.getFlag()?"CONTROL":
+						(this.hdr_qos==QualityOfService.COMMUNICATION.getFlag()?"COMMUNICATION":"REGULAR") ) + "\n" +  
+				   "HDR-HDR-CHK:\t\t" + this.hdr_hdr_chk + "\n" +
 				   "--------------------------------------------- \n" +
 				   "Data Packet Extended Header\n" +  
-				   "XHDR-ENTERED-LOC:  \t" + this.xhdr_entered_loc + "\n" + 
-				   "XHDR-FACE-ENTERED-LOC: \t" + this.xhdr_face_entered_loc + "\n" +
+				   "XHDR-ENTERED-LOC:\t\t" + this.xhdr_entered_loc + "\n" + 
+				   "XHDR-FACE-ENTERED-LOC:\t\t" + this.xhdr_face_entered_loc + "\n" +
 				   "XHDR-FACE-FIRST-EDGE-SRC: \t" + this.xhdr_face_first_edge_src + "\n" + 
 				   "XHDR-FACE-FIRST-EDGE-DST:   \t" + this.xhdr_face_first_edge_dst + "\n" + 
 				   "---------------------------------------------";

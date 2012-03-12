@@ -6,6 +6,7 @@ import kimononet.net.p2p.Connection;
 import kimononet.net.p2p.MulticastConnection;
 import kimononet.net.p2p.port.PortConfiguration;
 import kimononet.net.parcel.Parcel;
+import kimononet.net.transport.DataPacket;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
@@ -16,21 +17,28 @@ public class KimonoNet {
 
 	public static void main(String args[]){
 
-		Simulation simulation = new Simulation();
-		simulation.start();
+		//Simulation simulation = new Simulation();
+		//simulation.start();
 
-		/*System.out.println("Starting Simulation");
+		System.out.println("Starting Simulation");
 		
 		PeerAddress addressA = new PeerAddress("12:00:00:00:00:00");
 		GeoLocation locationA = new GeoLocation(1.0, 2.0, 3.0f);
 		GeoVelocity velocityA = new GeoVelocity(locationA);
 		
-		PeerAgent agentA = new PeerAgent(new Peer(addressA, locationA, velocityA)); 
+		PeerAddress addressB = new PeerAddress("12:00:00:00:00:01");
+		GeoLocation locationB = new GeoLocation(3.0, 2.0, 1.0f);
+		GeoVelocity velocityB = new GeoVelocity(locationB);
+		
+		PeerAgent agentA = new PeerAgent(new Peer(addressA, locationA, velocityA));
+		Peer peerB = new Peer(addressB, locationB, velocityB);
 		
 		//packetTest(agentA);
+		
+		dataPacketTest(agentA, peerB);
 	
 		
-		agentA.startServices();
+		//agentA.startServices();
 		
 		
 		
@@ -46,6 +54,24 @@ public class KimonoNet {
 		
 	}
 	
+	private static void dataPacketTest(PeerAgent agentA, Peer peerB) {
+		
+		byte[] payload = {0x0, 0x1, 0x2, 0x3, 0x4};
+		
+		Packet packet = new DataPacket(agentA, peerB, payload);
+		
+		System.out.println("Data Packet after construction.");
+		System.out.println(packet);
+		
+		Parcel parcel = packet.toParcel();
+		
+		System.out.println("PACKET PARCEL: \t " + parcel);
+	
+		System.out.println("Data Packet after being parsed from parcel.");
+		System.out.println(new DataPacket(parcel));
+		
+	}
+
 	public static void parcelTest(){
 		
 		Parcel parcel = new Parcel(16);
