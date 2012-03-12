@@ -73,12 +73,27 @@ public class PeerAddress implements Parcelable{
 		setAddress(address);
 	}
 	
+	/**
+	 * Sets the address of the current peer from the provided address string.
+	 * The address string should be 6 two digit values separated by a colon or a
+	 * dash. For example:
+	 * 
+	 *  <pre>
+	 *  	address.setAddress("12:00:00:00:00:00);
+	 *  <pre>
+	 * 
+	 * @param address String representation of a peer address.
+	 */
 	public void setAddress(String address){
 		
-		String[] hex = address.split("(\\:|\\-)");
+		if(address == null){
+			throw new PeerAddressException("Cannot process null addres. Please specify address in the format dd:dd:dd:dd:dd:dd.");
+		}
 		
+		String[] hex = address.split("(\\:|\\-)");
+
 		if (hex.length != this.address.length) {
-			throw new PeerAddressException("Invalid address legth: " + address);
+			throw new PeerAddressException("Invalid address [" + address + "], length = " + hex.length);
 		}
 		
 		try {
@@ -110,6 +125,7 @@ public class PeerAddress implements Parcelable{
 	/**
 	 * Returns the address's parcel's size.
 	 * @return The address's parcel's size.
+	 * @see #PARCEL_SIZE
 	 */
 	@Override
 	public int getParcelSize(){
@@ -117,7 +133,8 @@ public class PeerAddress implements Parcelable{
 	}
 	
 	/**
-	 * Represents a string representation of the address.
+	 * Returns a string representation of the address.
+	 * @return A string representation of the current address.
 	 */
 	@Override
 	public String toString(){
@@ -144,7 +161,7 @@ public class PeerAddress implements Parcelable{
 	
 	/**
 	 * Returns an integer representation of the current peer address.
-	 * @return Unique int representing the peer.
+	 * @return Unique integer representing the peer.
 	 */
 	@Override
 	public int hashCode(){
