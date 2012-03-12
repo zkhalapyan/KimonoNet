@@ -86,7 +86,7 @@ public class GeoVelocity implements Parcelable {
 	 * @param currentLocation The current location of the vector. 
 	 */
 	public GeoVelocity(GeoLocation currentLocation){
-		this.currentLocation = currentLocation;
+		update(currentLocation);
 	}
 	
 	public GeoVelocity(Parcel parcel){
