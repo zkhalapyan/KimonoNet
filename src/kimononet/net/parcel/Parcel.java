@@ -47,6 +47,10 @@ public class Parcel implements Parcelable{
 		buffer.putLong(data);
 	}
 	
+	public void add(short data){
+		buffer.putShort(data);
+	}
+	
 	public void add(String data){
 		buffer.put(data.getBytes());
 	}
