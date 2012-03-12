@@ -46,42 +46,98 @@ public class DataService extends Thread{
 	private PeerAgent agent;
 	
 	/**
-	 * Amount of time that the data service will block for before timing out
-	 * when listening for incoming packets.
-	 */
-	private int timeout;
-	
-	/**
-	 * Amount of time between checks for incoming packets in data service.
-	 */
-	private int frequency;
-	
-	/**
-	 * Amount of time the sending thread will sleep between trying to clear the
-	 * packet queue.
-	 */
-	private int sleepTime;
-	
-	/**
 	 * If set to true, the core loop will exit in the next cycle.
 	 */
 	private boolean shutdown;
 
 	Thread sendDataService = new Thread(){
 		
+		/**
+		 * Amount of time that the data service will block for before timing out
+		 * when sending outgoing packets.
+		 */
+		private int sendServiceTimeout;
+		
+		/**
+		 * Amount of time the sending thread will sleep between trying to clear the
+		 * packet queue.
+		 */
+		private int sendServiceFrequency;
+		
+		/**
+		 * Connection for sending packets from the send data service.
+		 */
+		private Connection connection;
+		
+		private void deliverPacket(DataPacket packet){
+			
+			System.out.println("Packet delivered to destination!\n" + packet);
+			
+		}
+		
+		private boolean handlePacket(DataPacket packet){
+			
+			Peer peer = packet.getPeer();
+			PeerAddress address = peer.getAddress();
+			
+			// Deliver packets destined for this node
+			if(agent.getPeer().getAddress().equals(address)){
+				deliverPacket(packet);
+				return true;
+			}
+			else{
+				//TODO send packet to routing protocol
+			
+				byte[] packetByteArray = packet.toParcel().toByteArray();
+				
+				if(packetByteArray != null){
+					
+					//Send the beacon packet.
+					return connection.send(packetByteArray, 
+										   agent.getPortConfiguration().getBeaconServicePort(), 
+										   Connection.BROADCAST_ADDRESS);
+				}
+					
+			}
+			
+			return false;
+			
+		}
+		
 		public void run(){
 			
-			while(!shutdown)
-			{
-				if(packetQueue.isEmpty())
-				{
-					try {
-						sleep(sleepTime);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
+			sendServiceTimeout = DEFAULT_TIMEOUT;
+			sendServiceFrequency = DEFAULT_SLEEP;
+			
+			//Get port and address configuration information.
+			PortConfiguration conf = agent.getPortConfiguration();
+			String serviceAddress = conf.getAddress();
+			int servicePort = conf.getDataSendingServicePort();
+			
+			if(conf.isMulticast()){
+				connection = new MulticastConnection(servicePort, serviceAddress);
+			}else{
+				connection = new UDPConnection(servicePort, serviceAddress);
+			}
+			
+			connection.setTimeout(sendServiceTimeout);
+		
+			if(!connection.connect()){
+				return;
+			}
+			
+			while(!shutdown){
 				
+				if(!packetQueue.isEmpty()){
+					DataPacket topPriorityPacket = packetQueue.poll();
+					handlePacket(topPriorityPacket);
+				}
+
+				try {
+					sleep(sendServiceFrequency);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 				
 			}
 			
@@ -90,7 +146,27 @@ public class DataService extends Thread{
 
 	Thread receiveDataService = new Thread(){
 		
+		/**
+		 * Amount of time that the data service will block for before timing out
+		 * when listening for incoming packets.
+		 */
+		private int receiveServiceTimeout;
+		
+		/**
+		 * Amount of time between checks for incoming packets in data service.
+		 */
+		private int receiveServiceFrequency;
+		
+		private void addPacketToQueue(DataPacket packet){
+			
+			packetQueue.add(packet);
+			
+		}
+		
 		public void run(){
+			
+			receiveServiceTimeout = DEFAULT_TIMEOUT;
+			receiveServiceFrequency = DEFAULT_SLEEP;
 			
 			//Get port and address configuration information.
 			PortConfiguration conf = agent.getPortConfiguration();
@@ -105,7 +181,7 @@ public class DataService extends Thread{
 				connection = new UDPConnection(servicePort, serviceAddress);
 			}
 			
-			connection.setTimeout(timeout);
+			connection.setTimeout(receiveServiceTimeout);
 		
 			if(!connection.connect()){
 				return;
@@ -138,40 +214,27 @@ public class DataService extends Thread{
 					
 					addPacketToQueue(packet);
 					sendDataService.notify();
-					
-					try {
-						sleep(frequency);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+				}
+				
+				try {
+					sleep(receiveServiceFrequency);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 				
 			}
 			
 		}
 	};
-	
-	public DataService(PeerAgent agent)
-	{
-		this(agent, DEFAULT_FREQUENCY);
-	}
-	
-	private void addPacketToQueue(DataPacket packet) {
-		
-		packetQueue.add(packet);
-		
-	}
 
-	public DataService(PeerAgent agent, int frequency){
+	public DataService(PeerAgent agent){
+		
 		this.agent = agent;
-		this.timeout = DEFAULT_TIMEOUT;
-		this.sleepTime = DEFAULT_SLEEP;
-		this.frequency = frequency;
 		this.packetQueue = new PriorityBlockingQueue<DataPacket>();
+		
 	}
 	
-	public void run()
-	{
+	public void run(){
 		
 		shutdown = false;
 		
@@ -180,9 +243,10 @@ public class DataService extends Thread{
 	
 	}
 	
-	public void shutdown()
-	{
+	public void shutdown(){
+		
 		shutdown = true;
+		
 	}
 	
 }
