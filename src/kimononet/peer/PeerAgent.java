@@ -9,6 +9,8 @@ import kimononet.net.beacon.BeaconService;
 import kimononet.net.p2p.port.PortConfiguration;
 import kimononet.net.p2p.port.PortConfigurationProvider;
 import kimononet.net.p2p.port.SimulationPortConfigurationProvider;
+import kimononet.net.transport.DataService;
+import kimononet.stat.StatMonitor;
 import kimononet.time.SystemTimeProvider;
 import kimononet.time.TimeProvider;
 
@@ -18,6 +20,7 @@ import kimononet.time.TimeProvider;
  * {@link DataService}, and storing common data exchanged by these services. 
  * 
  * @author Zorayr Khalapyan
+ * @version 3/12/2012
  *
  */
 public class PeerAgent {
@@ -56,28 +59,38 @@ public class PeerAgent {
 	 */
 	private PortConfigurationProvider portConfigurationProvider;
 	
-/**
- * Neighboring peer's mapped to a peer address. This is ROUTING_TABLE_1 
- * described in the protocol documentation. To access the peers table, use
- * method {@link #getPeers()}.
- * 
- * @see #getPeers()
- */
-private HashMap<PeerAddress, Peer> peers;
-
-/**
- * Stores second-hop neighbors: given a peer address, it will get the peers
- * map of that peer if it exists. This is ROUTING_TABLE_2 specified in the 
- * protocol documentation. 
- * 
- * @see #getPeers2()
- */
-private HashMap<PeerAddress, HashMap<PeerAddress, Peer>> peers2;
+	/**
+	 * Neighboring peer's mapped to a peer address. This is ROUTING_TABLE_1 
+	 * described in the protocol documentation. To access the peers table, use
+	 * method {@link #getPeers()}.
+	 * 
+	 * @see #getPeers()
+	 */
+	private HashMap<PeerAddress, Peer> peers;
 	
 	/**
-	 * Time provider for the current Peer 
+	 * Stores second-hop neighbors: given a peer address, it will get the peers
+	 * map of that peer if it exists. This is ROUTING_TABLE_2 specified in the 
+	 * protocol documentation. 
+	 * 
+	 * @see #getPeers2()
+	 */
+	private HashMap<PeerAddress, HashMap<PeerAddress, Peer>> peers2;
+	
+	/**
+	 * Time provider for the current Peer. 
 	 */
 	private TimeProvider timeProvider;
+	
+	/**
+	 * Service for gathering statistical information for the peer represented
+	 * by this agent. All packets sent or received by this peer should be 
+	 * reported to this monitor.
+	 * 
+	 * @see #getStatMonitor()
+	 * @see #setStatMonitor(StatMonitor)
+	 */
+	private StatMonitor statMonitor;
 	
 	/**
 	 * Creates a peer agent with a default peer environment.
@@ -167,6 +180,13 @@ private HashMap<PeerAddress, HashMap<PeerAddress, Peer>> peers2;
 		this.peers2 = new HashMap<PeerAddress, HashMap<PeerAddress, Peer>>();
 	}
 	
+	public StatMonitor getStatMonitor(){
+		return this.statMonitor;
+	}
+	
+	public void setStatMonitor(StatMonitor statMonitor){
+		this.statMonitor = statMonitor;
+	}
 	
 	
 	/**
@@ -175,6 +195,8 @@ private HashMap<PeerAddress, HashMap<PeerAddress, Peer>> peers2;
 	 * responsible for fetching the peer's current GPS location via a GPS 
 	 * enabled device and update velocity information. To shutdown the services,
 	 * use {@link #shutdownServices()}.
+	 * 
+	 * @see #shutdownServices()
 	 */
 	public void startServices(){
 		this.geoService.startService();
@@ -183,11 +205,15 @@ private HashMap<PeerAddress, HashMap<PeerAddress, Peer>> peers2;
 	}
 	
 	/**
+	 * Stops services associated with this peer agent. Current implementation 
+	 * includes services for sending beacons, and service for updating peer's
+	 * GPS location.
 	 * 
+	 * @see #startServices()
 	 */
 	public void shutdownServices(){
-		this.geoService.shutdown();
-		this.beaconService.shutdown();
+		this.geoService.shutdownService();
+		this.beaconService.shutdownService();
 	}
 	
 	/**
