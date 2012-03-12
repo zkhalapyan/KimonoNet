@@ -82,6 +82,11 @@ public class Peer implements Parcelable{
 		this(new PeerAddress(address));
 	}
 	
+	/**
+	 * Creates a new peer with the specified peer address and the default name.
+	 * 
+	 * @param address The address of the peer.
+	 */
 	public Peer(PeerAddress address){
 		this(address, DEFAULT_PEER_NAME);
 	}

@@ -1,8 +1,9 @@
 package kimononet.geo;
 
 import kimononet.peer.PeerAgent;
+import kimononet.service.Service;
 
-public class GeoService extends Thread {
+public class GeoService extends Thread implements Service {
 	
 	/**
 	 * Peer agent associated with the current service. GPS updates will be 
@@ -45,7 +46,7 @@ public class GeoService extends Thread {
 	 * Stops the current service. To start the service use 
 	 * {@link #startService()}.
 	 */
-	public void shutdown(){
+	public void shutdownService(){
 		shutdown = true;
 	}
 	

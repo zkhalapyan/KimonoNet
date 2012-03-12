@@ -9,16 +9,23 @@ import kimononet.net.p2p.port.PortConfiguration;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
+import kimononet.service.Service;
 
 /**
  * Service for sending and receiving beacon packets. 
  * 
  * @author Zorayr Khalapyan
+ * @version 3/12/2012
  *
  */
-public class BeaconService extends Thread {
+public class BeaconService extends Thread implements Service{
 
-	private static final int DEFAULT_FREQUENCY = 30;
+	/**
+	 * Default timeout for sending beacon packets. This value dictates how 
+	 * long in seconds a beacon service waits for receiving a beacon from a 
+	 * neighbor before sending out its own beacon.
+	 */
+	private static final int DEFAULT_TIMEOUT = 30;
 	
 	/**
 	 * Peer agent associated with this peer discovery service.
@@ -26,24 +33,41 @@ public class BeaconService extends Thread {
 	private PeerAgent agent;
 	
 	/**
-	 * Beacon frequency in seconds. The variable indicates 
+	 * This value indicates how long in seconds a beacon service waits for 
+	 * receiving a beacon from a neighbor before sending out its own beacon.
 	 */
-	private int frequency;
+	private int timeout;
 	
 	/**
 	 * If set to true, the core loop will exit in the next cycle.
 	 */
 	private boolean shutdown;
 	
-	
-	public BeaconService(PeerAgent agent)
-	{
-		this(agent, DEFAULT_FREQUENCY);
+	/**
+	 * Creates a beacon service associated with the specified peer agent with
+	 * a default timeout value indicated by {@link #DEFAULT_TIMEOUT}.
+	 * 
+	 * @param agent Agent representing the peer associated with the sent 
+	 * 				beacons.
+	 */
+	public BeaconService(PeerAgent agent){
+		this(agent, DEFAULT_TIMEOUT);
 	}
 	
-	public BeaconService(PeerAgent agent, int frequency){
-		this.agent = agent;
-		this.frequency = frequency;
+	/**
+	 * Creates a new beacon service associated with the specified peer agent and 
+	 * with a set frequency for sending out beacon packets.
+	 * 
+	 * @param agent Agent representing the peer associated with the sent 
+	 * 				beacons.
+	 * 
+	 * @param timeout This value indicates how long in seconds a 
+	 * 				  beacon service waits for receiving a beacon from a 
+	 * 				  neighbor before sending out its own beacon.
+	 */
+	public BeaconService(PeerAgent agent, int timeout){
+		this.agent   = agent;
+		this.timeout = timeout;
 	}
 	
 	public void run()
@@ -63,7 +87,7 @@ public class BeaconService extends Thread {
 			connection = new UDPConnection(servicePort, serviceAddress);
 		}
 		
-		connection.setTimeout(frequency);
+		connection.setTimeout(timeout);
 	
 		if(!connection.connect()){
 			return;
@@ -120,8 +144,6 @@ public class BeaconService extends Thread {
 					sendBeacon(connection);
 				}
 				
-			
-				
 				
 			}
 			
@@ -173,15 +195,25 @@ public class BeaconService extends Thread {
 	}
 	
 	/**
-	 * Sets beacon frequency.
-	 * @param frequency The new beacon frequency.
+	 * Sets beacon timeout value.
+	 * @param timeout The new beacon service timeout value.
+	 * @see #timeout
+	 * @see #DEFAULT_TIMEOUT
 	 */
-	public void setFrequency(int frequency){
-		this.frequency = frequency;
+	public void setTimeout(int timeout){
+		this.timeout = timeout;
 	}
 	
-	public void shutdown(){
+	@Override
+	public void shutdownService(){
 		shutdown = true;
+	}
+	
+	@Override
+	public void startService(){
+		shutdown = false;
+		
+		this.start();
 	}
 		
 }
