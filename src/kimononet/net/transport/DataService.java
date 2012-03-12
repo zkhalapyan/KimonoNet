@@ -18,21 +18,6 @@ import kimononet.peer.PeerAgent;
  */
 
 public class DataService extends Thread{
-
-	/**
-	 * Default data service timeout in seconds.
-	 */
-	private static final int DEFAULT_TIMEOUT = 1;
-	
-	/**
-	 * Default data service frequency in seconds.
-	 */
-	private static final int DEFAULT_FREQUENCY = 1;
-	
-	/**
-	 * Default sleep time for the sending thread.
-	 */
-	private static final int DEFAULT_SLEEP = 1;
 	
 	/**
 	 * Blocking priority queue is used to keep track of
@@ -57,12 +42,14 @@ public class DataService extends Thread{
 		 * when sending outgoing packets.
 		 */
 		private int sendServiceTimeout;
+		private static final int DEFAULT_SEND_TIMEOUT = 1;
 		
 		/**
 		 * Amount of time the sending thread will sleep between trying to clear the
 		 * packet queue.
 		 */
 		private int sendServiceFrequency;
+		private static final int DEFAULT_SEND_FREQUENCY = 1;
 		
 		/**
 		 * Connection for sending packets from the send data service.
@@ -71,7 +58,7 @@ public class DataService extends Thread{
 		
 		private void deliverPacket(DataPacket packet){
 			
-			System.out.println("Packet delivered to destination!\n" + packet);
+			System.out.println("Packet delivered to destination!\n" + packet.toString());
 			
 		}
 		
@@ -106,8 +93,8 @@ public class DataService extends Thread{
 		
 		public void run(){
 			
-			sendServiceTimeout = DEFAULT_TIMEOUT;
-			sendServiceFrequency = DEFAULT_SLEEP;
+			sendServiceTimeout = DEFAULT_SEND_TIMEOUT;
+			sendServiceFrequency = DEFAULT_SEND_FREQUENCY;
 			
 			//Get port and address configuration information.
 			PortConfiguration conf = agent.getPortConfiguration();
@@ -151,22 +138,18 @@ public class DataService extends Thread{
 		 * when listening for incoming packets.
 		 */
 		private int receiveServiceTimeout;
+		private static final int DEFAULT_RECEIVE_TIMEOUT = 1;
 		
 		/**
 		 * Amount of time between checks for incoming packets in data service.
 		 */
 		private int receiveServiceFrequency;
-		
-		private void addPacketToQueue(DataPacket packet){
-			
-			packetQueue.add(packet);
-			
-		}
+		private static final int DEFAULT_RECEIVE_FREQUENCY = 1;
 		
 		public void run(){
 			
-			receiveServiceTimeout = DEFAULT_TIMEOUT;
-			receiveServiceFrequency = DEFAULT_SLEEP;
+			receiveServiceTimeout = DEFAULT_RECEIVE_TIMEOUT;
+			receiveServiceFrequency = DEFAULT_RECEIVE_FREQUENCY;
 			
 			//Get port and address configuration information.
 			PortConfiguration conf = agent.getPortConfiguration();
@@ -231,6 +214,12 @@ public class DataService extends Thread{
 		
 		this.agent = agent;
 		this.packetQueue = new PriorityBlockingQueue<DataPacket>();
+		
+	}
+	
+	public void addPacketToQueue(DataPacket packet){
+		
+		packetQueue.add(packet);
 		
 	}
 	
