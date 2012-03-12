@@ -28,4 +28,9 @@ public enum QualityOfService implements Parcelable{
 	public int getParcelSize(){
 		return PARCEL_SIZE;
 	}
+	
+	public String toString(){
+		return (flag==CONTROL.getFlag()?"CONTROL":
+			(flag==COMMUNICATION.getFlag()?"COMMUNICATION":"REGULAR") );
+	}
 }
