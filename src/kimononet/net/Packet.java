@@ -169,6 +169,10 @@ public class Packet implements Parcelable {
 	@Override
 	public Parcel toParcel(){
 		
+		if(peer == null){
+			throw new PacketException("Cannot parcel a packet with a null source peer.");
+		}
+		
 		Parcel parcel = new Parcel(getParcelSize());
 	
 		parcel.add(magic);
