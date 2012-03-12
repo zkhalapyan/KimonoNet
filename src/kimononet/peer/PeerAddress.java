@@ -142,8 +142,12 @@ public class PeerAddress implements Parcelable{
 		
 	}
 	
+	/**
+	 * Returns an integer representation of the current peer address.
+	 * @return Unique int representing the peer.
+	 */
 	@Override
 	public int hashCode(){
-		return this.toParcel().getInt();
+		return this.toParcel().rewind().getInt();
 	}
 }

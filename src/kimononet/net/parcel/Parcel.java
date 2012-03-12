@@ -139,8 +139,25 @@ public class Parcel implements Parcelable{
 		return buffer.capacity();
 	}
 	
-	public void rewind(){
+	/**
+	 * Rewinds this parcel and sets the position to 0. 
+	 * 
+	 * Invoke this method before a sequence of channel-write or get operations, 
+	 * assuming that the limit has already been set appropriately. 
+	 * 
+	 * For example:
+	 * <pre>
+	 *   int i = 0;
+ 	 *   parcel.add(i);     // Add data.
+ 	 *   buf.rewind();      // Rewind the parcel.
+ 	 *   buf.getInt();      // Read the added data.
+ 	 * </pre>
+ 	 * 
+	 * @return Return the current parcel for chained invocation.
+	 */
+	public Parcel rewind(){
 		this.buffer.rewind();
+		return this;
 	}
 	
 	public Parcel slice(){
