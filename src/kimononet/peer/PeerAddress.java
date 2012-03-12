@@ -14,6 +14,11 @@ import kimononet.net.parcel.Parcelable;
 public class PeerAddress implements Parcelable{
 
 	/**
+	 * Address used for broadcasting packets to multiple peers.
+	 */
+	public static final String BROADCAST_ADDRESS = "00:00:00:00:00:00"; 
+		
+	/**
 	 * Peer address length in bytes.
 	 */
 	public static final int ADDRESS_LENGTH = 6;
@@ -71,6 +76,14 @@ public class PeerAddress implements Parcelable{
 	 */
 	public PeerAddress(String address){
 		setAddress(address);
+	}
+	
+	/**
+	 * Creates a new broadcast address as specified by 
+	 * {@link #BROADCAST_ADDRESS}.
+	 */
+	public PeerAddress(){
+		setAddress(PeerAddress.BROADCAST_ADDRESS);
 	}
 	
 	/**
