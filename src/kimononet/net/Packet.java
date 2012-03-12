@@ -61,6 +61,11 @@ public class Packet implements Parcelable {
 	 */
 	private Parcel contents;
 	
+	/** 
+	 * Creates a new empty packet. All values will be initilaized to their 
+	 * defaults.
+	 * 
+	 */
 	public Packet(){
 		
 	}
@@ -89,6 +94,11 @@ public class Packet implements Parcelable {
 		this(new Parcel(packet));
 	}
 	
+	/**
+	 * Parses a packet from the specified parcel. 
+	 * @param parcel A parcel representation of the packet.
+	 * @see #parse(Parcel)
+	 */
 	public Packet(Parcel parcel){
 		parse(parcel);
 	}
@@ -184,24 +194,52 @@ public class Packet implements Parcelable {
 		return (contents == null)? 0 : contents.capacity();
 	}
 	
+	/**
+	 * Returns the source peer associated with the current packet. The returned 
+	 * peer may be a null reference. 
+	 * 
+	 * @return Source peer associated with the current packet.
+	 */
 	public Peer getPeer(){
 		return peer;
 	}
 
+	/**
+	 * Returns the type of the packet.
+	 * @return The type of the current packet.
+	 */
 	public PacketType getType(){
 		return type;
 	}
 	
+	/**
+	 * Sets the type of the current packet.
+	 * @param type Thew new type of the packet.
+	 */
 	public void setType(PacketType type){
 		this.type = type;
 	}
 	
+	/**
+	 * Returns a string representation of the current packet.
+	 * @return String representation of the current packet.
+	 */
+	@Override
 	public String toString(){
+		
+		String peerString = "";
+		
+		if(peer != null){
+			peerString = "Source Address:  \t" + peer.getAddress()   + "\n" + 
+			   		     "Source Location: \t" + peer.getLocation()  + "\n" +
+			   		     "Source Velocity: \t" + peer.getVelocity()  + "\n"; 
+		}else{
+			peerString = "Source Peer:     \t Is null or invalid.       \n";
+		}
+		
 		return "--------------------------------------------- \n" +
 			   "Packet Type:     \t" + type.toString()     + "\n" +  
-			   "Source Address:  \t" + peer.getAddress()   + "\n" + 
-			   "Source Location: \t" + peer.getLocation()  + "\n" +
-			   "Source Velocity: \t" + peer.getVelocity()  + "\n" + 
+			   						   peerString                 + 
 			   "Header Length:   \t" + HEADER_LENGTH       + "\n" + 
 			   "Contents Length: \t" + getContentsLength() + "\n" + 
 			   "Total Length:    \t" + getParcelSize()     + "\n" + 
