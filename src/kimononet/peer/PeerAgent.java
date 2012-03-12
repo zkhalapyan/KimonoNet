@@ -56,19 +56,23 @@ public class PeerAgent {
 	 */
 	private PortConfigurationProvider portConfigurationProvider;
 	
-	/**
-	 * Neighboring peer's mapped to a peer address. This is ROUTING_TABLE_1 
-	 * described in the protocol documentation. To access the peers table, use
-	 * method {@link #getPeers()}.
-	 */
-	private HashMap<PeerAddress, Peer> peers;
-	
-	/**
-	 * Stores second-hop neighbors: given a peer address, it will get the peers
-	 * map of that peer if it exists. This is ROUTING_TABLE_2 specified in the 
-	 * protocol documentation. 
-	 */
-	private HashMap<PeerAddress, HashMap<PeerAddress, Peer>> peers2;
+/**
+ * Neighboring peer's mapped to a peer address. This is ROUTING_TABLE_1 
+ * described in the protocol documentation. To access the peers table, use
+ * method {@link #getPeers()}.
+ * 
+ * @see #getPeers()
+ */
+private HashMap<PeerAddress, Peer> peers;
+
+/**
+ * Stores second-hop neighbors: given a peer address, it will get the peers
+ * map of that peer if it exists. This is ROUTING_TABLE_2 specified in the 
+ * protocol documentation. 
+ * 
+ * @see #getPeers2()
+ */
+private HashMap<PeerAddress, HashMap<PeerAddress, Peer>> peers2;
 	
 	/**
 	 * Time provider for the current Peer 
