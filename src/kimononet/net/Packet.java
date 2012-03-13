@@ -1,5 +1,7 @@
 package kimononet.net;
 
+import java.util.Arrays;
+
 import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoVelocity;
 import kimononet.net.parcel.Parcel;
@@ -38,7 +40,13 @@ public class Packet implements Parcelable {
 	/**
 	 * Default magic sequence.
 	 */
-	private byte[] magic = new byte[] {(byte)0xBE, (byte)0xC0};
+	private static final byte[] DEFAULT_MAGIC = new byte[] {(byte)0xBE, (byte)0xC0};
+	
+	/**
+	 * Magic byte array for the current packet. By default its set to equal to
+	 * {@link #DEFAULT_MAGIC}.
+	 */
+	private byte[] magic = DEFAULT_MAGIC;
 	
 	/**
 	 * Version of the packet. 
@@ -62,7 +70,7 @@ public class Packet implements Parcelable {
 	private Parcel contents;
 	
 	/** 
-	 * Creates a new empty packet. All values will be initilaized to their 
+	 * Creates a new empty packet. All values will be initialized to their 
 	 * defaults.
 	 * 
 	 */
@@ -138,6 +146,11 @@ public class Packet implements Parcelable {
 		parcel.rewind();
 		
 		parcel.getByteArray(magic);
+		
+		if(!magicCheck()){
+			throw new PacketException("Byte stream has different magic value.");
+		}
+		
 		version = parcel.getByte();
 		type = PacketType.parse(parcel.getByte());
 		peer = new Peer(parcel);
@@ -171,6 +184,10 @@ public class Packet implements Parcelable {
 		
 		if(peer == null){
 			throw new PacketException("Cannot parcel a packet with a null source peer.");
+		}
+		
+		if(magic == null){
+			throw new PacketException("Cannot parcel a packet with a null magic byte array.");
 		}
 		
 		Parcel parcel = new Parcel(getParcelSize());
@@ -225,6 +242,20 @@ public class Packet implements Parcelable {
 	}
 	
 	/**
+	 * Checks whether the packet's {@link #magic} matches against 
+	 * {@link #DEFAULT_MAGIC}.
+	 * 
+	 * @return True if the current packet's magic byte sequence is equal to 
+	 * 		   {@link #DEFAULT_MAGIC}.
+	 * 
+	 * @see {@link #magic}
+	 * @see #DEFAULT_MAGIC
+	 */
+	public boolean magicCheck(){
+		return Arrays.equals(magic, Packet.DEFAULT_MAGIC);
+	}
+	
+	/**
 	 * Returns a string representation of the current packet.
 	 * @return String representation of the current packet.
 	 */
@@ -250,5 +281,6 @@ public class Packet implements Parcelable {
 			   "---------------------------------------------";
 			   
 	}
+
 
 }
