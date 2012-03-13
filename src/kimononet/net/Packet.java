@@ -130,7 +130,7 @@ public class Packet implements Parcelable {
 	
 		//The packet must have at least enough bytes to contain 
 		//the header section.
-		if(parcel.capacity() < HEADER_LENGTH){
+		if(parcel.getParcelSize() < HEADER_LENGTH){
 			throw new PacketException("Malformed or missing packet header.");
 		}
 		
@@ -218,7 +218,7 @@ public class Packet implements Parcelable {
 	
 	/**
 	 * Sets the type of the current packet.
-	 * @param type Thew new type of the packet.
+	 * @param type The new type of the packet.
 	 */
 	public void setType(PacketType type){
 		this.type = type;
@@ -242,7 +242,7 @@ public class Packet implements Parcelable {
 		}
 		
 		return "--------------------------------------------- \n" +
-			   "Packet Type:     \t" + type.toString()     + "\n" +  
+			   "Packet Type:     \t" + ((type != null)?type.toString():"null") + "\n" +  
 			   						   peerString                 + 
 			   "Header Length:   \t" + HEADER_LENGTH       + "\n" + 
 			   "Contents Length: \t" + getContentsLength() + "\n" + 
