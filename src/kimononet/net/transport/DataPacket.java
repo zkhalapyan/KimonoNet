@@ -20,6 +20,7 @@ import kimononet.peer.PeerAgent;
  * a general data header, an extended data header for when in perimeter mode,
  * and a content section. Data packet consists of the following fields:
  * 
+ * <pre>
  * COMMON HEADER
  * HDR-MAGIC (2)
  * HDR-VERSION (1)
@@ -51,6 +52,7 @@ import kimononet.peer.PeerAgent;
  * 
  * The content field has variable length: 
  * -content (*)
+ * </pre>
  * 
  * @author Wade Norris
  * 
@@ -94,12 +96,12 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	/**
 	 * Flag that indicates the forwarding mode, can be GREEDY or PERIMETER.
 	 */
-	private byte hdr_fwd_mode;
+	private ForwardMode hdr_fwd_mode;
 
 	/**
 	 * Flag that indicates the quality of service, can be CONTROL, COMMUNICATION, or REGULAR.
 	 */
-	private byte hdr_qos;
+	private QualityOfService hdr_qos;
 	
 	/**
 	 * Integer that holds the CRC32 checksum for the data packet header.
@@ -140,15 +142,14 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	 * @param qos Quality of Service for this data packet.
 	 * @param payload Byte data that is the data to be sent in this packet.
 	 */
-	public DataPacket(PeerAgent agent, Peer peer, byte qos, byte[] payload){
+	public DataPacket(PeerAgent agent, Peer peer, QualityOfService qos, byte[] payload){
 		super(SUPPORTED_VERSION, PacketType.DATA, agent.getPeer());
 		
 		this.hdr_dst = peer;
 		this.fwd_dst_set = false;
-		this.hdr_fwd_mode = ForwardMode.GREEDY.getFlag();
+		this.hdr_fwd_mode = ForwardMode.GREEDY;
 		this.hdr_qos = qos;
 		this.hdr_hdr_chk = 0x0;
-		this.payload = new byte[payload.length];
 		this.payload = payload;
 		
 		setDataPacketContents();
@@ -162,7 +163,7 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	 */
 	public DataPacket(PeerAgent agent, Peer peer, byte[] payload){
 		
-		this(agent, peer, QualityOfService.REGULAR.getFlag(), payload);
+		this(agent, peer, QualityOfService.REGULAR, payload);
 
 	}
 
@@ -212,19 +213,29 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		this.fwd_dst_set = true;
 		
 		// HDR-FWD-MODE (1)
-		this.hdr_fwd_mode = parcel.getByte();
+		byte fwd_mode = parcel.getByte();
+		if(fwd_mode == ForwardMode.GREEDY.getFlag())
+		    this.hdr_fwd_mode = ForwardMode.GREEDY;
+		else
+		    this.hdr_fwd_mode = ForwardMode.PERIMETER;
 		
 		// HDR-DATA-LEN (2)
-		int datalength = parcel.getShort();
+		parcel.getShort();
 		
 		// HDR-QOS (1)
-		this.hdr_qos = parcel.getByte();
+		byte qos = parcel.getByte();
+		if(qos == QualityOfService.CONTROL.getFlag())
+		    this.hdr_qos = QualityOfService.CONTROL;
+		else if(qos == QualityOfService.COMMUNICATION.getFlag())
+		    this.hdr_qos = QualityOfService.COMMUNICATION;
+		else
+		    this.hdr_qos = QualityOfService.REGULAR;
 		
 		// HDR-HDR-CHK (4)
 		this.hdr_hdr_chk = parcel.getInt();
 		
 		// XHDR (96)
-		if(this.hdr_fwd_mode == ForwardMode.PERIMETER.getFlag()){
+		if(this.hdr_fwd_mode == ForwardMode.PERIMETER){
 			this.xhdr_entered_loc = new PeerAddress(parcel);
 			this.xhdr_face_entered_loc = new PeerAddress(parcel);
 			this.xhdr_face_first_edge_src = new PeerAddress(parcel);
@@ -236,9 +247,7 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		}
 		
 		// Extract payload
-		byte[] data = new byte[datalength];
-		parcel.getByteArray(data);
-		this.payload = data;
+		parcel.getByteArray(this.payload);
 		
 		/*
 		// TODO FIX CRC CHECK
@@ -251,8 +260,6 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		if(((int)crc.getValue()) != this.hdr_hdr_chk){
 			throw new PacketException("Invalid data packet checksum.\nPacket checksum: "+this.hdr_hdr_chk+"\nComputed checksum: "+((int)crc.getValue()));
 		}*/
-		
-		//TODO: Magic Check?
 		
 	}
 
@@ -312,7 +319,7 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		dataParcel.add(this.hdr_hdr_chk);
 		
 		// XHDR (96)
-		if(this.hdr_fwd_mode == ForwardMode.GREEDY.getFlag()){
+		if(this.hdr_fwd_mode == ForwardMode.GREEDY){
 			for(int i=0; i<DATA_XHDR_SIZE; i++) {
 				dataParcel.add(((byte)0x0));
 			}
@@ -350,7 +357,7 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		this.hdr_fwd_dst_id = hdr_fwd_dst_id;
 	}
 
-	public byte getQOS() {
+	public QualityOfService getQOS() {
 		return this.hdr_qos;
 	}
 
@@ -365,7 +372,7 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	@Override
 	public int compareTo(DataPacket compare) {
 		
-		return this.hdr_qos - compare.getQOS();
+		return this.hdr_qos.getFlag() - compare.getQOS().getFlag();
 		
 	}
 	
@@ -379,10 +386,9 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 				   "HDR-DST-ID:  \t\t" + this.hdr_dst.getAddress() + "\n" + 
 				   "HDR-DST-LOC: \t\t" + this.hdr_dst.getLocation() + "\n" +
 				   "HDR-FWD-DST-ID:\t\t" + this.hdr_fwd_dst_id + "\n" + 
-				   "HDR-FWD-MODE:\t\t" + (this.hdr_fwd_mode==ForwardMode.GREEDY.getFlag()?"GREEDY":"PERIMETER") + "\n" + 
+				   "HDR-FWD-MODE:\t\t" + this.hdr_fwd_mode + "\n" + 
 				   "HDR-DATA-LEN: \t\t" + this.payload.length + "\n" + 
-				   "HDR-QOS:    \t\t" + (this.hdr_qos==QualityOfService.CONTROL.getFlag()?"CONTROL":
-						(this.hdr_qos==QualityOfService.COMMUNICATION.getFlag()?"COMMUNICATION":"REGULAR") ) + "\n" +  
+				   "HDR-QOS:    \t\t" + this.hdr_qos + "\n" +  
 				   "HDR-HDR-CHK:\t\t" + this.hdr_hdr_chk + "\n" +
 				   "--------------------------------------------- \n" +
 				   "Data Packet Extended Header\n" +  
