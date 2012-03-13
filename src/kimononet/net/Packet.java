@@ -135,13 +135,13 @@ public class Packet implements Parcelable {
 	/**
 	 * Parses a parcel representation of a packet to an actual packet object.
 	 * 
-	 * @param packet Parcel representation of a packet.
+	 * @param parcel Parcel representation of a packet.
 	 */
 	public void parse(Parcel parcel){
 	
 		//The packet must have at least enough bytes to contain 
 		//the header section.
-		if(parcel.getParcelSize() < HEADER_LENGTH){
+		if(parcel.capacity() < HEADER_LENGTH){
 			throw new PacketException("Malformed or missing packet header.");
 		}
 		
@@ -158,8 +158,13 @@ public class Packet implements Parcelable {
 		type = PacketType.parse(parcel.getByte());
 		peer = new Peer(parcel);
 		
-		if(parcel.capacity() > 0){
-			contents = parcel.slice();
+		if(parcel.capacity() > HEADER_LENGTH){
+			
+			byte[] contentBytes = new byte[parcel.capacity() - HEADER_LENGTH];
+			parcel.getByteArray(contentBytes);
+			contents = new Parcel(contentBytes);
+			contents.rewind();
+			
 		}
 		
 	}

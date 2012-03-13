@@ -26,6 +26,11 @@ public class BeaconPacket extends Packet {
 	private static final byte SUPPORTED_VERSION = (byte) 0x01;
 	
 	/**
+	 * 
+	 */
+	private static final int DEFAULT_MAX_BEACON_PEERS = 34;
+	
+	/**
 	 * Stores the list of peers advertised by this beacon packet. 
 	 */
 	private HashMap<PeerAddress, Peer> peers;
@@ -45,7 +50,12 @@ public class BeaconPacket extends Packet {
 	public BeaconPacket(PeerAgent agent){
 		super(SUPPORTED_VERSION, PacketType.BEACON, agent.getPeer());
 		
-		this.maxBeaconPeers = Integer.decode(agent.getEnvironment().get("max-beacon-peers"));
+		
+		String maxBeaconPeers = agent.getEnvironment().get("max-beacon-peers");
+		this.maxBeaconPeers = (maxBeaconPeers != null)? 
+									Integer.decode(maxBeaconPeers):
+								    DEFAULT_MAX_BEACON_PEERS;
+									
 		this.peers = agent.getPeers();	
 		
 		setBeaconContents();
@@ -82,16 +92,16 @@ public class BeaconPacket extends Packet {
 		super.parse(parcel);
 		
 		Parcel contents = getContents();
-			
+		
 		if(contents == null){
 			throw new PacketException("Malformed beacon packet. Missing contents.");
 		}
 		
-		int numPeers = (int)parcel.getFloat();
+		int numPeers = (int)contents.getFloat();
 		peers = new HashMap<PeerAddress, Peer>(numPeers);
 		
 		for(int i = 0; i < numPeers; i++){
-			Peer peer = new Peer(parcel);
+			Peer peer = new Peer(contents);
 			peers.put(peer.getAddress(), peer);
 		}
 		
