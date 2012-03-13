@@ -28,7 +28,4 @@ public enum ForwardMode implements Parcelable{
 		return PARCEL_SIZE;
 	}
 	
-	public String toString(){
-		return (flag==GREEDY.getFlag()?"GREEDY":"PERIMETER");
-	}
 }
