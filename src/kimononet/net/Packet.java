@@ -242,7 +242,7 @@ public class Packet implements Parcelable {
 		}
 		
 		return "--------------------------------------------- \n" +
-			   "Packet Type:     \t" + ((type != null)?type.toString():"null") + "\n" +  
+			   "Packet Type:     \t" + ((type != null)?type.toString():"unknown") + "\n" +  
 			   						   peerString                 + 
 			   "Header Length:   \t" + HEADER_LENGTH       + "\n" + 
 			   "Contents Length: \t" + getContentsLength() + "\n" + 
