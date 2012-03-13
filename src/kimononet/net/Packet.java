@@ -13,6 +13,7 @@ import kimononet.peer.PeerAddress;
  * Each packet has to a header section and a content section. Header section 
  * consists of the following fields:
  * 
+ * <pre>
  * HDR-MAGIC (2)
  * HDR-VERSION (1)
  * HDR-TYPE (1)
@@ -24,8 +25,10 @@ import kimononet.peer.PeerAddress;
  * 
  * The content field has variable length: 
  * -content (*)
+ * </pre>
  * 
  * @author Zorayr Khalapyan
+ * @version 3/12/2012
  *
  */
 public class Packet implements Parcelable {
