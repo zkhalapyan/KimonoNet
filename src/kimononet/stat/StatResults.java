@@ -78,11 +78,11 @@ public class StatResults {
 					   int greedyCount, 
 					   int parameterCount){
 		
-		this.lostPackets      = lostPackets;
-		this.sentPackets      = sentPackets;
-		this.beaconPackets    = beaconPackets;
-		this.greedyCount      = greedyCount;
-		this.parameterCount   = parameterCount;
+		this.lostPackets    = lostPackets;
+		this.sentPackets    = sentPackets;
+		this.beaconPackets  = beaconPackets;
+		this.greedyCount    = greedyCount;
+		this.parameterCount = parameterCount;
 	}
 	
 
@@ -161,6 +161,19 @@ public class StatResults {
 	public int getParameterCount() {
 		return parameterCount;
 	}
+	
+	/**
+	 * Combines the specified results with the current results.
+	 * @param results The results to combine.
+	 */
+	public void combine(StatResults results){
+		this.lostPackets    += results.lostPackets;
+		this.sentPackets    += results.sentPackets;
+		this.beaconPackets  += results.beaconPackets;
+		this.greedyCount    += results.greedyCount;
+		this.parameterCount += results.parameterCount;
+	}
+	
 	
 	
 	
