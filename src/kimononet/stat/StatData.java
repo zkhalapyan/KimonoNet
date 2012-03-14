@@ -3,6 +3,7 @@ package kimononet.stat;
 import java.util.ArrayList;
 
 import kimononet.net.Packet;
+import kimononet.net.PacketType;
 import kimononet.peer.PeerAddress;
 
 /**
@@ -13,7 +14,7 @@ import kimononet.peer.PeerAddress;
  * 
  * @author Zorayr Khalapyan
  * @since 3/12/2012
- * @version 3/12/2012
+ * @version 3/14/2012
  *
  */
 public class StatData {
@@ -68,18 +69,67 @@ public class StatData {
 	}
 	
 	/**
-	 * ToDo:Implemnet this method.
-	 * 
-	 * @param sourceAddress
-	 * @param destinationAddress
-	 * @return
 	 */
-	public int getLostPackets(PeerAddress sourceAddress, PeerAddress destinationAddress){
+	public StatResults getStatResults(PeerAddress sourceAddress, PeerAddress destinationAddress){
 		
-		int lostPackets = 0;
+		int receivedPacketCount = 0;
+		int sentPacketCount     = 0;
+		int beaconPacketCount   = 0;
+		int dataPacketCount     = 0;
 		
 		
-		return lostPackets;
+		int greedyCount      = 0;
+		int perimeterCount   = 0;
+		
+
+		for(StatPacket packet : sentPackets){
+			
+			if(packet.getType() == PacketType.BEACON){
+				beaconPacketCount ++;
+				
+			}else if(packet.getType() == PacketType.DATA){
+				
+				dataPacketCount ++;
+				
+				switch(packet.getMode()){
+					case GREEDY:
+						greedyCount ++;
+						break;
+					case PERIMETER:
+						perimeterCount ++;
+						
+				}
+			}
+			
+			if(packet.isSource() 
+			   && packet.getSource().equals(sourceAddress)
+			   && packet.getDestination().equals(destinationAddress)){
+				
+				sentPacketCount ++;
+				
+			}
+			
+			
+		}
+		
+		for(StatPacket packet : receivedPackets){
+			
+			if(packet.isSink() 
+			   && packet.getSource().equals(sourceAddress)
+			   && packet.getDestination().equals(destinationAddress)){
+				
+				receivedPacketCount ++;
+			}
+				
+		}
+		
+		return new StatResults(receivedPacketCount, 
+							   sentPacketCount, 
+							   beaconPacketCount, 
+							   dataPacketCount,
+							   greedyCount, 
+							   perimeterCount);
+		
 	}
 	
 }

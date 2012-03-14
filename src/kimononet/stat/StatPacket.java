@@ -2,6 +2,7 @@ package kimononet.stat;
 
 import kimononet.net.PacketType;
 import kimononet.net.beacon.BeaconPacket;
+import kimononet.net.routing.ForwardMode;
 import kimononet.net.transport.DataPacket;
 import kimononet.peer.PeerAddress;
 
@@ -15,7 +16,7 @@ import kimononet.peer.PeerAddress;
  * 
  * @author Zorayr Khalapyan
  * @since 3/12/2012
- * @version 3/12/2012
+ * @version 3/14/2012
  *
  */
 public class StatPacket {
@@ -45,6 +46,12 @@ public class StatPacket {
 	private final PeerAddress node;
 	
 	/**
+	 * In case the packet is a data node, it will be associated with a routing 
+	 * mode which is either GREEDY or PERIMETER;
+	 */
+	private final ForwardMode mode;
+	
+	/**
 	 * Creates a new packet with the specified values.
 	 * 
 	 * @param type        The type of the packet.
@@ -52,16 +59,20 @@ public class StatPacket {
 	 *                    be constant across the life cycle of the packet.
 	 * @param destination The destination address of the packet. 
 	 * @param node        The node handling the packet.
+	 * @param mode		  Mode of forwarding. If the packet is not a data 
+	 *                    packet,this value should be null.
 	 */
 	public StatPacket(PacketType type, 
 					  PeerAddress source, 
 					  PeerAddress destination, 
-					  PeerAddress node){
+					  PeerAddress node,
+					  ForwardMode mode){
 		
 		this.type        = type;
 		this.source      = source;
 		this.destination = destination;
 		this.node        = node;
+		this.mode 		 = mode;
 		
 	}
 	
@@ -79,7 +90,8 @@ public class StatPacket {
 		this(beaconPacket.getType(), 
 		     beaconPacket.getPeer().getAddress(),
 		     null,
-		     beaconPacket.getPeer().getAddress());
+		     beaconPacket.getPeer().getAddress(),
+		     null);
 	}
 	
 	/**
@@ -92,13 +104,14 @@ public class StatPacket {
 	 *                   
 	 * @param node The node handling the packet. This might be either the 
 	 * 			   source, the destination, or an intermediary node.
-	 * 
+	 * @param mode The mode of forwarding used. 
 	 */
-	public StatPacket(DataPacket dataPacket, PeerAddress node){
+	public StatPacket(DataPacket dataPacket, PeerAddress node, ForwardMode mode){
 		this(dataPacket.getType(), 
 			 dataPacket.getPeer().getAddress(),
 			 dataPacket.getDestinationPeer().getAddress(),
-			 node);
+			 node,
+			 mode);
 	}
 
 	/**
@@ -154,6 +167,13 @@ public class StatPacket {
 		return node;
 	}
 
+	/**
+	 * Returns the mode of forwarding.
+	 * @return The mode of forwarding.
+	 */
+	public ForwardMode getMode(){
+		return mode;
+	}
 
 	
 

@@ -29,19 +29,24 @@ package kimononet.stat;
 public class StatResults {
 
 	/**
-	 * Number of packets that were lost in the path from source to destination.
-	 */
-	private int lostPackets;
-	
-	/**
 	 * Number of packets sent from the source.
 	 */
 	private int sentPackets;
 	
 	/**
-	 * Number of beacon packets sent.
+	 * Number of packets received at the destination.
+	 */
+	private int receivedPackets;
+	
+	/**
+	 * Number of sent beacon packets.
 	 */
 	private int beaconPackets;
+	
+	/**
+	 * Number of sent data packets.
+	 */
+	private int dataPackets;
 	
 	/**
 	 * Number of packets that were forwarded using the greedy algorithm.
@@ -52,37 +57,42 @@ public class StatResults {
 	 * Number of packets that were forwarded using the parameter routing 
 	 * algorithm.
 	 */
-	private int parameterCount;
+	private int perimeterCount;
 	
 
 	/**
 	 * Creates a new results package given various count values.
 	 * 
-	 * @param lostPackets    The total number of packets lost sent from a single 
-	 *                       source to a single destination.
 	 *                       
-	 * @param sentPackets    The total number of sent packets from the sink to 
-	 * 						 the source.
+	 * @param sentPackets      The total number of sent packets from the sink to 
+	 * 						   the source.
 	 * 
-	 * @param beaconPackets  The total number of beacon packets sent.
+	 * @param recievedPackets The total number of packets received at the sink 
+	 *                        sent from a single source.
 	 * 
-	 * @param greedyCount    The total number of packets that used greedy 
-	 * 						 routing algorithm.
+	 * @param beaconPackets   The total number of beacon packets sent.
 	 * 
-	 * @param parameterCount The total number of packets that used the parameter
-	 *  					 routing algorithm.
+	 * @param dataPackets     The total number of data packets sent.
+	 * 
+	 * @param greedyCount     The total number of packets that used greedy 
+	 * 						  routing algorithm.
+	 * 
+	 * @param perimeterCount  The total number of packets that used the parameter
+	 *  					  routing algorithm.
 	 */
-	public StatResults(int lostPackets, 
-					   int sentPackets, 
+	public StatResults(int sentPackets,
+					   int receivedPackets,
 					   int beaconPackets, 
+					   int dataPackets,
 					   int greedyCount, 
-					   int parameterCount){
+					   int perimeterCount){
 		
-		this.lostPackets    = lostPackets;
-		this.sentPackets    = sentPackets;
-		this.beaconPackets  = beaconPackets;
-		this.greedyCount    = greedyCount;
-		this.parameterCount = parameterCount;
+		this.sentPackets     = sentPackets;
+		this.receivedPackets = receivedPackets;
+		this.beaconPackets   = beaconPackets;
+		this.dataPackets     = dataPackets;
+		this.greedyCount     = greedyCount;
+		this.perimeterCount  = perimeterCount;
 	}
 	
 
@@ -95,7 +105,7 @@ public class StatResults {
 	public double getPacketDeliveryRatio(){
 		return (sentPackets == 0)? 
 					0.0 : 
-					(sentPackets - lostPackets) / (double)sentPackets;
+					(receivedPackets) / (double)sentPackets;
 	}
 	
 	/**
@@ -117,9 +127,9 @@ public class StatResults {
 	 * @return Greedy ratio.
 	 */
 	public double getGreedyRatio(){
-		return (parameterCount == 0)? 
+		return (dataPackets == 0)? 
 					0.0 : 
-					greedyCount / (double)parameterCount;
+					greedyCount / (double)dataPackets;
 	}
 	
 	
@@ -130,7 +140,7 @@ public class StatResults {
 	 * @return The number of packets lost.
 	 */
 	public int getLostPackets() {
-		return lostPackets;
+		return sentPackets - receivedPackets;
 	}
 
 	/**
@@ -156,10 +166,10 @@ public class StatResults {
 	}
 
 	/**
-	 * @return the parameterCount
+	 * @return the perimeterCount
 	 */
-	public int getParameterCount() {
-		return parameterCount;
+	public int getPerimeterCount() {
+		return perimeterCount;
 	}
 	
 	/**
@@ -167,11 +177,12 @@ public class StatResults {
 	 * @param results The results to combine.
 	 */
 	public void combine(StatResults results){
-		this.lostPackets    += results.lostPackets;
-		this.sentPackets    += results.sentPackets;
-		this.beaconPackets  += results.beaconPackets;
-		this.greedyCount    += results.greedyCount;
-		this.parameterCount += results.parameterCount;
+		this.receivedPackets += results.receivedPackets;
+		this.sentPackets     += results.sentPackets;
+		this.beaconPackets   += results.beaconPackets;
+		this.dataPackets     += results.dataPackets;
+		this.greedyCount     += results.greedyCount;
+		this.perimeterCount  += results.perimeterCount;
 	}
 	
 	
