@@ -195,6 +195,30 @@ public class GeoLocation implements Parcelable {
 	}
 	
 	/**
+	 * Uses Haversine formula to accurately calculate the distance to another GeoLocation.
+	 * @param GeoLocation of second location to use in calculating distance.
+	 * @return Returns double precision float with distance to other GeoLocation
+	 */
+	public double distanceTo(GeoLocation loc2)
+	{
+		double lo1 = this.getLongitude();
+		double la1 = this.getLatitude();
+		
+		double lo2 = loc2.getLongitude();
+		double la2 = loc2.getLatitude();
+		
+		double radius = 6367;
+		
+		double distance = Math.sin((la2-la1)/2)*Math.sin((la2-la1)/2);
+		distance += Math.cos(la2-la1);
+		distance += Math.cos(la1)*Math.cos(la2)*Math.sin((lo2-lo1)/2)*Math.sin((lo2-lo1)/2);
+		distance = Math.asin(Math.sqrt(distance));
+		distance = 2*radius*distance;
+		
+		return distance;
+	}
+	
+	/**
 	 * Returns the current parcel size.
 	 * @return Parcel size.
 	 * @see #PARCEL_SIZE

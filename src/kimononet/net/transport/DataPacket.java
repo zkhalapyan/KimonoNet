@@ -112,22 +112,22 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	 * If the data packet is in perimeter then this extended header field contains
 	 * the location that it entered into perimeter forwarding.
 	 */
-	private PeerAddress xhdr_entered_loc;
+	private GeoLocation xhdr_entered_loc;
 	
 	/**
 	 * TODO: Figure out what this variable is.
 	 */
-	private PeerAddress xhdr_face_entered_loc;
+	private GeoLocation xhdr_face_entered_loc;
 	
 	/**
 	 * TODO: Figure out what this variable is.
 	 */
-	private PeerAddress xhdr_face_first_edge_src;
+	private GeoLocation xhdr_face_first_edge_src;
 	
 	/**
 	 * TODO: Figure out what this variable is.
 	 */
-	private PeerAddress xhdr_face_first_edge_dst;
+	private GeoLocation xhdr_face_first_edge_dst;
 	
 	/**
 	 * Holds data payload of this data packet.
@@ -236,10 +236,10 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		
 		// XHDR (96)
 		if(this.hdr_fwd_mode == ForwardMode.PERIMETER){
-			this.xhdr_entered_loc = new PeerAddress(parcel);
-			this.xhdr_face_entered_loc = new PeerAddress(parcel);
-			this.xhdr_face_first_edge_src = new PeerAddress(parcel);
-			this.xhdr_face_first_edge_dst = new PeerAddress(parcel);
+			this.xhdr_entered_loc = new GeoLocation(parcel);
+			this.xhdr_face_entered_loc = new GeoLocation(parcel);
+			this.xhdr_face_first_edge_src = new GeoLocation(parcel);
+			this.xhdr_face_first_edge_dst = new GeoLocation(parcel);
 		}
 		else{
 			for(int i=0; i<DataPacket.DATA_XHDR_SIZE; i++)
@@ -359,6 +359,31 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 
 	public QualityOfService getQOS() {
 		return this.hdr_qos;
+	}
+
+	public ForwardMode getForwardMode() {
+		return this.hdr_fwd_mode;
+	}
+
+	public void setForwardMode(ForwardMode mode) {
+		this.hdr_fwd_mode = mode;
+	}
+	
+	public void setXHDRFields(GeoLocation entered, GeoLocation faceEntered,
+							  GeoLocation faceEdgeSrc, GeoLocation faceEdgeDst)
+	{
+		this.xhdr_entered_loc = entered;
+		this.xhdr_face_entered_loc = faceEntered;
+		this.xhdr_face_first_edge_src = faceEdgeSrc;
+		this.xhdr_face_first_edge_dst = faceEdgeDst;
+	}
+
+	public GeoLocation getGreedyEnteredLocation() {
+		return this.xhdr_face_entered_loc;
+	}
+
+	public GeoLocation getGreedyEnteredFaceLocation() {
+		return this.xhdr_face_entered_loc;
 	}
 
 	/**

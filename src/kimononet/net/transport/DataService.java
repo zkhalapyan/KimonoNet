@@ -6,9 +6,10 @@ import kimononet.net.p2p.Connection;
 import kimononet.net.p2p.MulticastConnection;
 import kimononet.net.p2p.UDPConnection;
 import kimononet.net.p2p.port.PortConfiguration;
-import kimononet.peer.Peer;
-import kimononet.peer.PeerAddress;
+import kimononet.net.routing.ForwardMode;
+import kimononet.net.routing.RoutingLogic;
 import kimononet.peer.PeerAgent;
+import kimononet.service.Service;
 
 /**
  * Service for sending and receiving data packets. 
@@ -17,7 +18,7 @@ import kimononet.peer.PeerAgent;
  *
  */
 
-public class DataService extends Thread{
+public class DataService extends Thread implements Service{
 	
 	/**
 	 * Blocking priority queue is used to keep track of
@@ -29,6 +30,12 @@ public class DataService extends Thread{
 	 * Peer agent associated with this data service.
 	 */
 	private PeerAgent agent;
+	
+	/**
+	 * Routing protocol encapsulated in RoutingLogic object for
+	 * routing packets not intended for this node. 
+	 */
+	private RoutingLogic routingProtocol;
 	
 	/**
 	 * If set to true, the core loop will exit in the next cycle.
@@ -56,34 +63,28 @@ public class DataService extends Thread{
 		 */
 		private Connection connection;
 		
-		private void deliverPacket(DataPacket packet){
-			
-			System.out.println("Packet delivered to destination!\n" + packet.toString());
-			
-		}
-		
 		private boolean handlePacket(DataPacket packet){
 			
-			Peer peer = packet.getPeer();
-			PeerAddress address = peer.getAddress();
-			
-			// Deliver packets destined for this node
-			if(agent.getPeer().getAddress().equals(address)){
-				deliverPacket(packet);
-				return true;
-			}
-			else{
-				//TODO send packet to routing protocol
-			
-				byte[] packetByteArray = packet.toParcel().toByteArray();
-				
-				if(packetByteArray != null){
-					
-					//Send the beacon packet.
-					return connection.send(packetByteArray, 
-										   agent.getPortConfiguration().getBeaconServicePort(), 
-										   Connection.BROADCAST_ADDRESS);
+			// Route the packet to the next hop using routing protocol
+			if(packet.getForwardMode() == ForwardMode.GREEDY) {
+				if(!routingProtocol.routeGreedy(packet)) {
+					return false;
 				}
+			}
+			else {
+				if(!routingProtocol.routePerimeter(packet)) {
+					return false;
+				}
+			}
+			
+			byte[] packetByteArray = packet.toParcel().toByteArray();
+			
+			if(packetByteArray != null){
+				
+				//Send the data packet.
+				return connection.send(packetByteArray, 
+									   agent.getPortConfiguration().getDataSendingServicePort(), 
+									   Connection.BROADCAST_ADDRESS);
 					
 			}
 			
@@ -182,16 +183,19 @@ public class DataService extends Thread{
 					
 					DataPacket packet = new DataPacket(received);
 					
-					Peer peer = packet.getPeer();
-					PeerAddress address = peer.getAddress();
-					
 					//Ignore data packets from the same peer.
-					if(agent.getPeer().getAddress().equals(address)){
+					if(agent.getPeer().getAddress().equals(packet.getPeer().getAddress())){
 						continue;
 					}
 					
 					//Ignore data packets that were not intended for this agent.
 					if(!agent.getPeer().getAddress().equals(packet.getHdr_fwd_dst_id())){
+						continue;
+					}
+					
+					// Deliver packets destined for this node
+					if(agent.getPeer().getAddress().equals(packet.getDestinationPeer().getAddress())){
+						deliverPacket(packet);
 						continue;
 					}
 					
@@ -213,7 +217,14 @@ public class DataService extends Thread{
 	public DataService(PeerAgent agent){
 		
 		this.agent = agent;
+		this.routingProtocol = new RoutingLogic(this.agent);
 		this.packetQueue = new PriorityBlockingQueue<DataPacket>();
+		
+	}
+	
+	private void deliverPacket(DataPacket packet){
+		
+		System.out.println("Packet delivered to destination!\n" + packet.toString());
 		
 	}
 	
@@ -232,7 +243,27 @@ public class DataService extends Thread{
 	
 	}
 	
-	public void shutdown(){
+	
+	/**
+	 * Starts the data service. To shutdown the service,
+	 * use {@link DataService#shutdownService()}.
+	 * 
+	 * @see #shutdownService()
+	 */
+	public void startService(){
+		
+		shutdown = false;
+		this.start();
+		
+	}
+	
+	/**
+	 * Stops the data service. To start the service,
+	 * use {@link DataService#startService()}.
+	 * 
+	 * @see #startService()
+	 */
+	public void shutdownService(){
 		
 		shutdown = true;
 		
