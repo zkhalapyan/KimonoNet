@@ -249,24 +249,52 @@ public class GeoLocation implements Parcelable {
 		return new GeoLocation(longitude, latitude, accuracy, currentTime);
 		
 	}
-	
+
 	/**
-	 * Returns the distance in meters from the current location to the specified
-	 * location.
+	 * Uses Haversine formula to accurately calculate the distance to another 
+	 * GeoLocation.
 	 * 
-	 * All calculation are done according to the formulas specified at 
-	 * <a href="http://www.movable-type.co.uk/scripts/latlong.html">
-	 * Calculate distance, bearing and more between Latitude/Longitude points
-	 * </a>
-	 * 
-	 * @param location The second location.
-	 * 
-	 * @return Distance from the current location to the specified location.
+	 * @param loc2 GeoLocation of second location to use in calculating distance.
+	 * @return Returns double precision float with distance to other GeoLocation
 	 */
-	public double distanceTo(GeoLocation location2){
-		return  Math.acos(Math.sin(this.latitude)*Math.sin(location2.latitude) + 
-                Math.cos(this.latitude)*Math.cos(location2.latitude) *
-                Math.cos(location2.longitude - this.longitude)) * EARTH_MEDIAN_RADIUS;
+	public double distanceTo(GeoLocation loc2)
+	{
+		double lo1 = Math.toRadians(this.getLongitude());
+		double la1 = Math.toRadians(this.getLatitude());
+
+		double lo2 = Math.toRadians(loc2.getLongitude());
+		double la2 = Math.toRadians(loc2.getLatitude());
+
+		double radius = 6367;
+
+		double distance = Math.sin((la2-la1)/2)*Math.sin((la2-la1)/2);
+		distance += Math.cos(la2-la1);
+		distance += Math.cos(la1)*Math.cos(la2)*Math.sin((lo2-lo1)/2)*Math.sin((lo2-lo1)/2);
+		distance = Math.asin(Math.sqrt(distance));
+		distance = 2*radius*distance;
+
+		return distance;
+	}
+
+	/**
+	 * Calculates the bearing from one GeoLocation to another.
+	 * @param loc2 GeoLocation of second location to calculate bearing to.
+	 * @return Returns double precision float with bearing between this location
+	 * and given other location in degrees.
+	 */
+	public double bearingTo(GeoLocation loc2)
+	{
+		double dLon = Math.toRadians(loc2.getLongitude()-this.getLongitude());
+		double lat1 = Math.toRadians(this.getLatitude());
+		double lat2 = Math.toRadians(loc2.getLatitude());
+
+		double y = Math.sin(dLon) * Math.cos(lat2);
+		double x = Math.cos(lat1)*Math.sin(lat2) -
+		        Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+
+		double brng = Math.toDegrees(Math.atan2(y, x));
+
+		return brng;
 	}
 	
 	/**
