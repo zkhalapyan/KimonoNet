@@ -100,7 +100,7 @@ public class Peer implements Parcelable{
 	public Peer(PeerAddress address, String name){
 		this.name = name;
 		this.address = address;		
-		this.velocity = new GeoVelocity();
+		this.velocity = new GeoVelocity(0, 0);
 	}
 	
 	public Peer(PeerAddress address, GeoLocation location, GeoVelocity velocity){
@@ -150,10 +150,6 @@ public class Peer implements Parcelable{
 		address = new PeerAddress(parcel);
 		location = new GeoLocation(parcel);
 		velocity = new GeoVelocity(parcel);
-		
-		//Since a parceled version of velocity does not include a current 
-		//location value, this needs to be manually set.
-		velocity.update(location);
 	}
 	
 	/**
@@ -162,16 +158,6 @@ public class Peer implements Parcelable{
 	 */
 	public void setLocation(GeoLocation newLocation){
 		this.location = newLocation; 
-		this.velocity.update(newLocation);
-	}
-	
-	
-	/**
-	 * Returns peer's current velocity. 
-	 * @return Peer's current velocity.
-	 */
-	public GeoVelocity getVelocity(){
-		return this.velocity;
 	}
 
 	/**
@@ -180,6 +166,18 @@ public class Peer implements Parcelable{
 	 */
 	public GeoLocation getLocation(){
 		return this.location;
+	}
+	
+	/**
+	 * Returns peer's current velocity. 
+	 * @return Peer's current velocity.
+	 */
+	public GeoVelocity getVelocity(){
+		return this.velocity;
+	}
+	
+	public void setVelocity(GeoVelocity velocity){
+		this.velocity = velocity;
 	}
 	
 	/**

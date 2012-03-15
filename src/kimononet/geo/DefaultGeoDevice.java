@@ -44,6 +44,8 @@ public class DefaultGeoDevice implements GeoDevice {
 		
 		return new GeoLocation(0, 0, 0, timeProvider.getTime());
 	}
+	
+	
 
 	/**
 	 * Sets the time provider for the 
@@ -51,5 +53,10 @@ public class DefaultGeoDevice implements GeoDevice {
 	 */
 	public void setTimeProvider(TimeProvider timeProvider){
 		this.timeProvider = timeProvider;
+	}
+
+	@Override
+	public GeoVelocity getVelocity() {
+		return new GeoVelocity(0, 0); 
 	}
 }

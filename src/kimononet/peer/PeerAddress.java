@@ -1,5 +1,6 @@
 package kimononet.peer;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 import kimononet.net.parcel.Parcel;
@@ -180,4 +181,16 @@ public class PeerAddress implements Parcelable{
 	public int hashCode(){
 		return this.toParcel().rewind().getInt();
 	}
+	
+	/**
+	 * Securely generates a new random address.
+	 * @return a new random address.
+	 */
+	public static PeerAddress generateRandomAddress(){
+		byte randomAddressBytes[] = new byte[6];
+		new SecureRandom().nextBytes(randomAddressBytes);
+		return new PeerAddress(randomAddressBytes);
+		
+	}
+
 }
