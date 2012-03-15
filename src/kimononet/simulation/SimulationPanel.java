@@ -13,12 +13,12 @@ import kimononet.geo.GeoVelocity;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAgent;
 
-public class KimonoPanel extends JPanel {
+public class SimulationPanel extends JPanel {
 
 	private BufferedImage m_imageUAV;
 	private Simulation m_simulation;
 
-	public KimonoPanel(BufferedImage imageUAV, Simulation simulation) {
+	public SimulationPanel(BufferedImage imageUAV, Simulation simulation) {
 		m_imageUAV = imageUAV;
 		m_simulation = simulation;
 	}

@@ -23,7 +23,6 @@ import java.awt.Insets;
 import java.awt.Font;
 import java.io.File;
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 
 import kimononet.geo.GeoLocation;
@@ -37,6 +36,10 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.border.BevelBorder;
+import javax.swing.SwingConstants;
+import java.awt.Color;
 
 public class Simulation {
 
@@ -49,63 +52,135 @@ public class Simulation {
 											"Initial Bearing",	// Row 6
 											"Final Bearing"};	// Row 7
 
-	private JFrame frame;
-	private JTable tablePeerProperties;
-	private int currentIndex = -1;
-	private DefaultTableModel tableModel = new DefaultTableModel();
-	private DefaultListModel<String> listModel = new DefaultListModel<String>();
-	private JList<String> listPeerAgents = new JList<String>(listModel);
-	private KimonoPanel panel;
+	private boolean bSimRunning = false;
+	private DefaultListModel<String> listModelPeers;
+	private DefaultTableModel tableModelPeerProps;
+	private DefaultTableModel tableModelPeerEnvProps;
+	private JButton btnAddPeer, btnDeletePeer, btnApplyPeerProps, btnApplyEnvProps;
+	private JFrame frame; 
+	private JLabel lblSimStatusDisplay;
+	private JList<String> listPeers;
+	private JMenuItem mntmStartStopSim, mntmEditMapDim;
+	private JTable tablePeerProps;
+	private JTable tablePeerEnvProps;
 
-	private ArrayList<PeerAgent> m_peerAgents = new ArrayList<PeerAgent>();
+	private ArrayList<PeerAgent> arrayListPeerAgents = new ArrayList<PeerAgent>();
+
+	private void refresh() {
+		if (tableModelPeerProps != null)
+			tableModelPeerProps.getDataVector().removeAllElements();
+
+		if (listModelPeers != null && getCurrentPeerIndex() >= 0 && getCurrentPeer() != null) {
+			// Refresh peer list item display.
+			listModelPeers.set(getCurrentPeerIndex(), getCurrentPeer().getName() + " (" + getCurrentPeer().getAddress().toString() + ")");
+
+			// Refresh peer properties table display.
+			String longitude = new String();
+			String latitude = new String();
+			String accuracy = new String();
+			GeoLocation location = getCurrentPeer().getLocation();
+			if (location != null) {
+				longitude = Double.toString(location.getLongitude());
+				latitude = Double.toString(location.getLatitude());
+				accuracy = Float.toString(location.getAccuracy());
+			}
+			else {
+				longitude = "n/a";
+				latitude = "n/a";
+				accuracy = "n/a";
+			}
+			if (tableModelPeerProps != null) {
+				tableModelPeerProps.addRow(new Object[] {properties[0], getCurrentPeer().getName()});
+				tableModelPeerProps.addRow(new Object[] {properties[1], getCurrentPeer().getAddress().toString()});
+				tableModelPeerProps.addRow(new Object[] {properties[2], longitude});
+				tableModelPeerProps.addRow(new Object[] {properties[3], latitude});
+				tableModelPeerProps.addRow(new Object[] {properties[4], accuracy});
+				tableModelPeerProps.addRow(new Object[] {properties[5], Float.toString(getCurrentPeer().getVelocity().getSpeed())});
+				tableModelPeerProps.addRow(new Object[] {properties[6], Float.toString(getCurrentPeer().getVelocity().getBearing())});
+				tableModelPeerProps.addRow(new Object[] {properties[7], Float.toString(getCurrentPeer().getVelocity().getBearing())});
+			}
+		}
+
+		if (frame != null)
+			frame.repaint();
+	}
 
 	private void addPeer() {
-		SecureRandom random = new SecureRandom();
-		byte bytes[] = new byte[6];
-		random.nextBytes(bytes);
-		m_peerAgents.add(new PeerAgent(new Peer(new PeerAddress(bytes))));
+		// Create new peer with random address.
+		Peer peer = new Peer(PeerAddress.generateRandomAddress());
 
-		Peer peer = m_peerAgents.get(m_peerAgents.size() - 1).getPeer();
-		listModel.add(listPeerAgents.getModel().getSize(), peer.getName() + " (" + peer.getAddress().toString() + ")");
+		// Create new PeerAgent to represent peer and add it to ArrayList.
+		arrayListPeerAgents.add(new PeerAgent(peer));
+
+		// Add peer to list.
+		listModelPeers.add(listPeers.getModel().getSize(), peer.getName() + " (" + peer.getAddress().toString() + ")");
 		frame.repaint();
 	}
 
-	private void updateProperties() {
-		if (currentIndex < 0)
+	private void deleteCurrentPeer() {
+		int i = getCurrentPeerIndex();
+		if (i < 0)
 			return;
+		listModelPeers.remove(i);
+		arrayListPeerAgents.remove(i);
+		refresh();
+	}
 
-		Peer peer = m_peerAgents.get(currentIndex).getPeer();
-
-		String longitude = new String();
-		String latitude = new String();
-		String accuracy = new String();
-		GeoLocation location = peer.getLocation();
-		if (location != null) {
-			longitude = Double.toString(location.getLongitude());
-			latitude = Double.toString(location.getLatitude());
-			accuracy = Float.toString(location.getAccuracy());
-		}
-		else {
-			longitude = "n/a";
-			latitude = "n/a";
-			accuracy = "n/a";
+	private void startStopSim() {
+		if (arrayListPeerAgents.isEmpty()) {
+			JOptionPane.showMessageDialog(frame, "Please add a peer node.");
+			return;
 		}
 
-		tableModel.getDataVector().removeAllElements();
-		tableModel.addRow(new Object[] {properties[0], peer.getName()});
-		tableModel.addRow(new Object[] {properties[1], peer.getAddress().toString()});
-		tableModel.addRow(new Object[] {properties[2], longitude});
-		tableModel.addRow(new Object[] {properties[3], latitude});
-		tableModel.addRow(new Object[] {properties[4], accuracy});
-		tableModel.addRow(new Object[] {properties[5], Float.toString(peer.getVelocity().getSpeed())});
-		tableModel.addRow(new Object[] {properties[6], Float.toString(peer.getVelocity().getInitialBearing())});
-		tableModel.addRow(new Object[] {properties[7], Float.toString(peer.getVelocity().getBearing())});
+		for (int i = 0; i < arrayListPeerAgents.size(); i++) {
+			if (!bSimRunning)
+				arrayListPeerAgents.get(i).startServices();
+			else
+				arrayListPeerAgents.get(i).shutdownServices();
+		}
 
-		frame.repaint();
+		bSimRunning = !bSimRunning;
+
+		if (mntmStartStopSim != null)
+			mntmStartStopSim.setText(bSimRunning ? "Stop Simulation" : "Start Simulation");
+		if (lblSimStatusDisplay != null) {
+			lblSimStatusDisplay.setText(bSimRunning ? "RUNNING" : "STOPPED");
+			lblSimStatusDisplay.setBackground(bSimRunning ? Color.GREEN : Color.RED);
+		}
+		if (btnAddPeer != null)
+			btnAddPeer.setEnabled(!bSimRunning);
+		if (btnDeletePeer != null)
+			btnDeletePeer.setEnabled(!bSimRunning);
+		if (btnApplyPeerProps != null)
+			btnApplyPeerProps.setEnabled(!bSimRunning);
+		if (btnApplyEnvProps != null)
+			btnApplyEnvProps.setEnabled(!bSimRunning);
+		if (mntmEditMapDim != null)
+			mntmEditMapDim.setEnabled(!bSimRunning);
+		if (tablePeerProps != null)
+			tablePeerProps.setEnabled(!bSimRunning);
+		if (tablePeerEnvProps != null)
+			tablePeerEnvProps.setEnabled(!bSimRunning);
 	}
 
 	public ArrayList<PeerAgent> getPeerAgents() {
-		return m_peerAgents;
+		return arrayListPeerAgents;
+	}
+
+	public Peer getCurrentPeer() {
+		return getPeerAt(getCurrentPeerIndex());
+	}
+
+	public int getCurrentPeerIndex() {
+		if (listPeers == null)
+			return -1;
+		return listPeers.getSelectionModel().getMinSelectionIndex();	
+	}
+
+	public Peer getPeerAt(int index) {
+		if (index < 0)
+			return null;
+		return arrayListPeerAgents.get(index).getPeer();
 	}
 
 	/**
@@ -132,174 +207,400 @@ public class Simulation {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		frame = new JFrame("KimonoNet Simulator");
-		frame.setBounds(100, 100, 800, 600);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
 		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[]{350, 0, 0};
-		gridBagLayout.rowHeights = new int[]{28, 0, 269, 0, 0, 0};
-		gridBagLayout.columnWeights = new double[]{1.0, 1.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{1.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+		gridBagLayout.columnWidths = new int[] {0, 0, 0, 0, 0};
+		gridBagLayout.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		gridBagLayout.columnWeights = new double[] {1.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gridBagLayout.rowWeights = new double[] {0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+
+		frame = new JFrame("KimonoNet Simulator");
 		frame.getContentPane().setLayout(gridBagLayout);
+		frame.setBounds(100, 100, 1024, 768);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
-		BufferedImage imageUAV = null;
-		try {
-			imageUAV = ImageIO.read(new File("uav.png"));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		panel = new KimonoPanel(imageUAV, this);
-		GridBagConstraints gbc_panel = new GridBagConstraints();
-		gbc_panel.gridheight = 4;
-		gbc_panel.insets = new Insets(0, 0, 5, 5);
-		gbc_panel.fill = GridBagConstraints.BOTH;
-		gbc_panel.gridx = 0;
-		gbc_panel.gridy = 0;
-		frame.getContentPane().add(panel, gbc_panel);
-		
-		JButton buttonAddPeer = new JButton("Add Peer");
-		GridBagConstraints gbc_buttonAddPeer = new GridBagConstraints();
-		gbc_buttonAddPeer.insets = new Insets(0, 0, 5, 0);
-		gbc_buttonAddPeer.gridx = 1;
-		gbc_buttonAddPeer.gridy = 1;
-		frame.getContentPane().add(buttonAddPeer, gbc_buttonAddPeer);
-		buttonAddPeer.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				addPeer();
-			}
-		});
-
-		JScrollPane scrollPanePeerProperties = new JScrollPane();
-		GridBagConstraints gbc_scrollPanePeerProperties = new GridBagConstraints();
-		gbc_scrollPanePeerProperties.insets = new Insets(0, 0, 5, 0);
-		gbc_scrollPanePeerProperties.fill = GridBagConstraints.BOTH;
-		gbc_scrollPanePeerProperties.gridx = 1;
-		gbc_scrollPanePeerProperties.gridy = 2;
-		frame.getContentPane().add(scrollPanePeerProperties, gbc_scrollPanePeerProperties);
-		
-		tablePeerProperties = new JTable(tableModel);
-		tableModel.addColumn("Property");
-		tableModel.addColumn("Value");
-		scrollPanePeerProperties.setViewportView(tablePeerProperties);
-
-		JScrollPane scrollPanePeerAgents = new JScrollPane();
-		GridBagConstraints gbc_scrollPanePeerAgents = new GridBagConstraints();
-		gbc_scrollPanePeerAgents.insets = new Insets(0, 0, 5, 0);
-		gbc_scrollPanePeerAgents.fill = GridBagConstraints.BOTH;
-		gbc_scrollPanePeerAgents.gridx = 1;
-		gbc_scrollPanePeerAgents.gridy = 0;
-		frame.getContentPane().add(scrollPanePeerAgents, gbc_scrollPanePeerAgents);
-		
-		ListSelectionModel listSelectionModel = listPeerAgents.getSelectionModel();
-		listSelectionModel.addListSelectionListener(new ListSelectionListener() {
-			public void valueChanged(ListSelectionEvent arg0) {
-				ListSelectionModel lsm = (ListSelectionModel)arg0.getSource();
-				if (!lsm.isSelectionEmpty()) {
-					for (int i = lsm.getMinSelectionIndex(); i <= lsm.getMaxSelectionIndex(); i++) {
-						if (lsm.isSelectedIndex(i) && i != currentIndex) {
-							currentIndex = i;
-							updateProperties();
-							break;
-						}
-					}
-				}
-			}
-		});
-		listPeerAgents.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		scrollPanePeerAgents.setViewportView(listPeerAgents);
-		
-		JButton buttonApply = new JButton("Apply (Please hit Enter first)");
-		buttonApply.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				if (currentIndex >= 0) {
-					Peer peer = m_peerAgents.get(currentIndex).getPeer();
-					peer.setName((String)tableModel.getValueAt(0, 1));
-					try {
-						double longitude = Double.parseDouble((String)tableModel.getValueAt(2, 1));
-						double latitude = Double.parseDouble((String)tableModel.getValueAt(3, 1));
-						float accuracy = Float.parseFloat((String)tableModel.getValueAt(4, 1));
-						peer.setLocation(new GeoLocation(longitude, latitude, accuracy));
-					} catch (NumberFormatException e) {
-						
-					}
-					try {
-						peer.setAddress(new PeerAddress((String)tableModel.getValueAt(1, 1)));
-					} catch (PeerAddressException e) {
-						
-					}
-					listModel.set(currentIndex, peer.getName() + " (" + peer.getAddress().toString() + ")");
-					updateProperties();
-				}
-			}
-		});
-		GridBagConstraints gbc_buttonUpdate = new GridBagConstraints();
-		gbc_buttonUpdate.insets = new Insets(0, 0, 5, 0);
-		gbc_buttonUpdate.gridx = 1;
-		gbc_buttonUpdate.gridy = 3;
-		frame.getContentPane().add(buttonApply, gbc_buttonUpdate);
-
-		JScrollPane scrollPaneStats = new JScrollPane();
-		GridBagConstraints gbc_scrollPaneStats = new GridBagConstraints();
-		gbc_scrollPaneStats.gridwidth = 2;
-		gbc_scrollPaneStats.fill = GridBagConstraints.BOTH;
-		gbc_scrollPaneStats.gridx = 0;
-		gbc_scrollPaneStats.gridy = 4;
-		frame.getContentPane().add(scrollPaneStats, gbc_scrollPaneStats);
-
-		JTextArea textAreaStats = new JTextArea();
-		textAreaStats.setFont(new Font("Monospaced", Font.PLAIN, 13));
-		textAreaStats.setEditable(false);
-		scrollPaneStats.setViewportView(textAreaStats);
-		// TODO: Just for demo only.
-		textAreaStats.setText("Packets Lost: 123\nPacket Delivery Percentage: 98.7%\nRouting Packet Overhead: 0.1%\nAverage Latency: 1 ms");
+		/*********************************************************************
+		 * Menu.
+		 *********************************************************************/
 
 		JMenuBar menuBar = new JMenuBar();
 		frame.setJMenuBar(menuBar);
 
-		JMenu mnSimulation = new JMenu("Simulation");
-		menuBar.add(mnSimulation);
+		JMenu mnSim = new JMenu("Simulation");
+		menuBar.add(mnSim);
 
-		JMenuItem mntmStartSimulation = new JMenuItem("Start Simulation");
-		mnSimulation.add(mntmStartSimulation);
+		mntmStartStopSim = new JMenuItem("Start Simulation");
+		mntmStartStopSim.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				startStopSim();
+			}
+		});
+		mnSim.add(mntmStartStopSim);
 
-		JMenuItem mntmStopSimulation = new JMenuItem("Stop Simulation");
-		mnSimulation.add(mntmStopSimulation);
+		mntmEditMapDim = new JMenuItem("Edit Map Dimensions...");
+		mnSim.add(mntmEditMapDim);
 
-		JSeparator separator = new JSeparator();
-		mnSimulation.add(separator);
+		JSeparator mnSeparator = new JSeparator();
+		mnSim.add(mnSeparator);
 
 		JMenuItem mntmExit = new JMenuItem("Exit");
 		mntmExit.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed(ActionEvent event) {
 				frame.dispose();
 			}
 		});
-		mnSimulation.add(mntmExit);
-
-		JMenu mnPeer = new JMenu("Peer");
-		menuBar.add(mnPeer);
-
-		JMenuItem mntmNewPeer = new JMenuItem("New Peer");
-		mntmNewPeer.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				addPeer();
-			}
-		});
-		mnPeer.add(mntmNewPeer);
+		mnSim.add(mntmExit);
 
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
 
 		JMenuItem mntmAbout = new JMenuItem("About...");
 		mntmAbout.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				JOptionPane.showMessageDialog(frame, "KimonoNet Simulator\n\nCopyright (C) 2012 Eric Bollens, James Hung, Zorayr Khalapyan, Wade Norris.\nAll rights reserved.");
+			public void actionPerformed(ActionEvent event) {
+				JOptionPane.showMessageDialog(frame, "KimonoNet Simulator\n\nCopyright © 2012. All rights reserved.\n\nEric Bollens\nJames Hung\nZorayr Khalapyan\nWade Norris");
 			}
 		});
 		mnHelp.add(mntmAbout);
 
+		/*********************************************************************
+		 * Panel in which to draw the UAVs and stuff.
+		 *********************************************************************/
+
+		BufferedImage imageUAV = null;
+
+		try {
+			imageUAV = ImageIO.read(new File("uav.png"));
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(frame, "Error loading image.");
+		}
+
+		SimulationPanel panel = new SimulationPanel(imageUAV, this);
+		panel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+
+		GridBagConstraints gbc_panel = new GridBagConstraints();
+		gbc_panel.fill = GridBagConstraints.BOTH;
+		gbc_panel.gridheight = 10;
+		gbc_panel.gridx = 0;
+		gbc_panel.gridy = 0;
+		gbc_panel.insets = new Insets(0, 0, 5, 5);
+
+		frame.getContentPane().add(panel, gbc_panel);
+
+
+		/*********************************************************************
+		 * Simulation status display (started, stopped).
+		 *********************************************************************/
+
+		// Add static text label. /////////////////////////////////////////////
+
+		JLabel lblSimStatus = new JLabel("Simulation Status:");
+
+		GridBagConstraints gbc_lblSimStatus = new GridBagConstraints();
+		gbc_lblSimStatus.anchor = GridBagConstraints.WEST;
+		gbc_lblSimStatus.gridx = 1;
+		gbc_lblSimStatus.gridy = 0;
+		gbc_lblSimStatus.insets = new Insets(0, 0, 5, 5);
+
+		frame.getContentPane().add(lblSimStatus, gbc_lblSimStatus);
+		
+		// Add dynamic text label. ////////////////////////////////////////////
+
+		lblSimStatusDisplay = new JLabel("STOPPED");
+		lblSimStatusDisplay.setBackground(Color.RED);
+		lblSimStatusDisplay.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		lblSimStatusDisplay.setHorizontalAlignment(SwingConstants.CENTER);
+		lblSimStatusDisplay.setOpaque(true);
+
+		GridBagConstraints gbc_lblSimStatusDisplay = new GridBagConstraints();
+		gbc_lblSimStatusDisplay.fill = GridBagConstraints.HORIZONTAL;
+		gbc_lblSimStatusDisplay.gridwidth = 2;
+		gbc_lblSimStatusDisplay.gridx = 2;
+		gbc_lblSimStatusDisplay.gridy = 0;
+		gbc_lblSimStatusDisplay.insets = new Insets(0, 0, 5, 0);
+
+		frame.getContentPane().add(lblSimStatusDisplay, gbc_lblSimStatusDisplay);
+
+		// Add separator. /////////////////////////////////////////////////////
+
+		JSeparator separatorSimStatus = new JSeparator();
+
+		GridBagConstraints gbc_separatorSimStatus = new GridBagConstraints();
+		gbc_separatorSimStatus.fill = GridBagConstraints.HORIZONTAL;
+		gbc_separatorSimStatus.gridwidth = 3;
+		gbc_separatorSimStatus.gridx = 1;
+		gbc_separatorSimStatus.gridy = 1;
+		gbc_separatorSimStatus.insets = new Insets(0, 0, 5, 0);
+
+		frame.getContentPane().add(separatorSimStatus, gbc_separatorSimStatus);
+
+
+		/*********************************************************************
+		 * Peers list.
+		 *********************************************************************/
+
+		// Add static text label. /////////////////////////////////////////////
+
+		JLabel lblPeers = new JLabel("Peers:");
+
+		GridBagConstraints gbc_lblPeers = new GridBagConstraints();
+		gbc_lblPeers.anchor = GridBagConstraints.WEST;
+		gbc_lblPeers.gridx = 1;
+		gbc_lblPeers.gridy = 2;
+		gbc_lblPeers.insets = new Insets(0, 0, 5, 5);
+
+		frame.getContentPane().add(lblPeers, gbc_lblPeers);
+
+		// Add "Add Peer" button. /////////////////////////////////////////////
+
+		btnAddPeer = new JButton("Add Peer");
+		btnAddPeer.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				addPeer();
+			}
+		});
+
+		GridBagConstraints gbc_btnAddPeer = new GridBagConstraints();
+		gbc_btnAddPeer.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnAddPeer.gridx = 2;
+		gbc_btnAddPeer.gridy = 2;
+		gbc_btnAddPeer.insets = new Insets(0, 0, 5, 5);
+
+		frame.getContentPane().add(btnAddPeer, gbc_btnAddPeer);
+		
+		// Add "Delete Peer" button. //////////////////////////////////////////
+
+		btnDeletePeer = new JButton("Delete Peer");
+		btnDeletePeer.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				deleteCurrentPeer();
+			}
+		});
+
+		GridBagConstraints gbc_btnDeletePeer = new GridBagConstraints();
+		gbc_btnDeletePeer.gridx = 3;
+		gbc_btnDeletePeer.gridy = 2;
+		gbc_btnDeletePeer.insets = new Insets(0, 0, 5, 0);
+
+		frame.getContentPane().add(btnDeletePeer, gbc_btnDeletePeer);
+
+		// Add peer list. /////////////////////////////////////////////////////
+
+		JScrollPane scrollPanePeers = new JScrollPane();
+
+		GridBagConstraints gbc_scrollPanePeers = new GridBagConstraints();
+		gbc_scrollPanePeers.fill = GridBagConstraints.BOTH;
+		gbc_scrollPanePeers.gridwidth = 3;
+		gbc_scrollPanePeers.gridx = 1;
+		gbc_scrollPanePeers.gridy = 3;
+		gbc_scrollPanePeers.insets = new Insets(0, 0, 5, 0);
+
+		frame.getContentPane().add(scrollPanePeers, gbc_scrollPanePeers);
+
+		listModelPeers = new DefaultListModel<String>();
+		listPeers = new JList<String>(listModelPeers);
+		listPeers.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		(listPeers.getSelectionModel()).addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent event) {
+				ListSelectionModel listSelectionModel = (ListSelectionModel)event.getSource();
+				if (!listSelectionModel.isSelectionEmpty())
+					refresh();
+			}
+		});
+
+		scrollPanePeers.setViewportView(listPeers);
+
+		// Add separator. /////////////////////////////////////////////////////
+
+		JSeparator separatorPeers = new JSeparator();
+
+		GridBagConstraints gbc_separatorPeers = new GridBagConstraints();
+		gbc_separatorPeers.fill = GridBagConstraints.HORIZONTAL;
+		gbc_separatorPeers.gridwidth = 3;
+		gbc_separatorPeers.gridx = 1;
+		gbc_separatorPeers.gridy = 4;
+		gbc_separatorPeers.insets = new Insets(0, 0, 5, 0);
+
+		frame.getContentPane().add(separatorPeers, gbc_separatorPeers);
+		
+		/*********************************************************************
+		 * Peer properties table.
+		 *********************************************************************/
+
+		// Add static text label. /////////////////////////////////////////////
+
+		JLabel lblPeerProps = new JLabel("Peer Properties:");
+
+		GridBagConstraints gbc_lblPeerProps = new GridBagConstraints();
+		gbc_lblPeerProps.anchor = GridBagConstraints.WEST;
+		gbc_lblPeerProps.gridx = 1;
+		gbc_lblPeerProps.gridy = 5;
+		gbc_lblPeerProps.insets = new Insets(0, 0, 5, 5);
+
+		frame.getContentPane().add(lblPeerProps, gbc_lblPeerProps);
+
+		// Add "Apply" button. ////////////////////////////////////////////////
+
+		btnApplyPeerProps = new JButton("Apply");
+		btnApplyPeerProps.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				Peer peer = getCurrentPeer();
+				if (peer != null) {
+					peer.setName((String)tableModelPeerProps.getValueAt(0, 1));
+					try {
+						double longitude = Double.parseDouble((String)tableModelPeerProps.getValueAt(2, 1));
+						double latitude = Double.parseDouble((String)tableModelPeerProps.getValueAt(3, 1));
+						float accuracy = Float.parseFloat((String)tableModelPeerProps.getValueAt(4, 1));
+						peer.setLocation(new GeoLocation(longitude, latitude, accuracy));
+					} catch (NumberFormatException e) {
+						
+					}
+					try {
+						peer.setAddress(new PeerAddress((String)tableModelPeerProps.getValueAt(1, 1)));
+					} catch (PeerAddressException e) {
+						
+					}
+					refresh();
+				}
+			}
+		});
+		
+		GridBagConstraints gbc_btnApplyPeerProps = new GridBagConstraints();
+		gbc_btnApplyPeerProps.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnApplyPeerProps.gridx = 3;
+		gbc_btnApplyPeerProps.gridy = 5;
+		gbc_btnApplyPeerProps.insets = new Insets(0, 0, 5, 0);
+
+		frame.getContentPane().add(btnApplyPeerProps, gbc_btnApplyPeerProps);
+
+		// Add peer properties table. /////////////////////////////////////////
+
+		JScrollPane scrollPanePeerProps = new JScrollPane();
+
+		GridBagConstraints gbc_scrollPanePeerProps = new GridBagConstraints();
+		gbc_scrollPanePeerProps.fill = GridBagConstraints.BOTH;
+		gbc_scrollPanePeerProps.gridwidth = 3;
+		gbc_scrollPanePeerProps.gridx = 1;
+		gbc_scrollPanePeerProps.gridy = 6;
+		gbc_scrollPanePeerProps.insets = new Insets(0, 0, 5, 0);
+
+		frame.getContentPane().add(scrollPanePeerProps, gbc_scrollPanePeerProps);
+
+		tableModelPeerProps = new DefaultTableModel();
+		tablePeerProps = new JTable(tableModelPeerProps);
+		tableModelPeerProps.addColumn("Property");
+		tableModelPeerProps.addColumn("Value");
+
+		scrollPanePeerProps.setViewportView(tablePeerProps);
+
+		// Add separator. /////////////////////////////////////////////////////
+
+		JSeparator separatorPeerProps = new JSeparator();
+
+		GridBagConstraints gbc_separatorPeerProps = new GridBagConstraints();
+		gbc_separatorPeerProps.fill = GridBagConstraints.HORIZONTAL;
+		gbc_separatorPeerProps.gridwidth = 3;
+		gbc_separatorPeerProps.gridx = 1;
+		gbc_separatorPeerProps.gridy = 7;
+		gbc_separatorPeerProps.insets = new Insets(0, 0, 5, 0);
+
+		frame.getContentPane().add(separatorPeerProps, gbc_separatorPeerProps);
+		
+		/*********************************************************************
+		 * Peer environment properties table.
+		 *********************************************************************/
+
+		// Add static text label. /////////////////////////////////////////////
+
+		JLabel lblPeerEnv = new JLabel("Global Peer Environment Properties:");
+
+		GridBagConstraints gbc_lblPeerEnv = new GridBagConstraints();
+		gbc_lblPeerEnv.anchor = GridBagConstraints.WEST;
+		gbc_lblPeerEnv.gridx = 1;
+		gbc_lblPeerEnv.gridy = 8;
+		gbc_lblPeerEnv.insets = new Insets(0, 0, 5, 5);
+
+		frame.getContentPane().add(lblPeerEnv, gbc_lblPeerEnv);
+		
+		// Add "Apply" button. ////////////////////////////////////////////////
+
+		btnApplyEnvProps = new JButton("Apply");
+
+		GridBagConstraints gbc_btnApplyEnvProps = new GridBagConstraints();
+		gbc_btnApplyEnvProps.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnApplyEnvProps.gridx = 3;
+		gbc_btnApplyEnvProps.gridy = 8;
+		gbc_btnApplyEnvProps.insets = new Insets(0, 0, 5, 0);
+
+		frame.getContentPane().add(btnApplyEnvProps, gbc_btnApplyEnvProps);
+
+		// Add peer environment properties table. /////////////////////////////
+
+		JScrollPane scrollPaneEnvProps = new JScrollPane();
+
+		GridBagConstraints gbc_scrollPaneEnvProps = new GridBagConstraints();
+
+		gbc_scrollPaneEnvProps.fill = GridBagConstraints.BOTH;
+		gbc_scrollPaneEnvProps.gridwidth = 3;
+		gbc_scrollPaneEnvProps.gridx = 1;
+		gbc_scrollPaneEnvProps.gridy = 9;
+		gbc_scrollPaneEnvProps.insets = new Insets(0, 0, 5, 0);
+
+		frame.getContentPane().add(scrollPaneEnvProps, gbc_scrollPaneEnvProps);
+
+		tableModelPeerEnvProps = new DefaultTableModel();
+		tablePeerEnvProps = new JTable(tableModelPeerEnvProps);
+		tableModelPeerEnvProps.addColumn("Property");
+		tableModelPeerEnvProps.addColumn("Value");
+
+		scrollPaneEnvProps.setViewportView(tablePeerEnvProps);
+		
+		// Add separator. /////////////////////////////////////////////////////
+
+		JSeparator separatorBottom = new JSeparator();
+
+		GridBagConstraints gbc_separatorBottom = new GridBagConstraints();
+		gbc_separatorBottom.fill = GridBagConstraints.HORIZONTAL;
+		gbc_separatorBottom.gridwidth = 4;
+		gbc_separatorBottom.gridx = 0;
+		gbc_separatorBottom.gridy = 10;
+		gbc_separatorBottom.insets = new Insets(0, 0, 5, 5);
+
+		frame.getContentPane().add(separatorBottom, gbc_separatorBottom);
+
+		/*********************************************************************
+		 * Statistics.
+		 *********************************************************************/
+
+		// Add static text label. /////////////////////////////////////////////
+
+		JLabel lblStatistics = new JLabel("Statistics:");
+
+		GridBagConstraints gbc_lblStatistics = new GridBagConstraints();
+
+		gbc_lblStatistics.anchor = GridBagConstraints.WEST;
+		gbc_lblStatistics.gridx = 0;
+		gbc_lblStatistics.gridy = 11;
+		gbc_lblStatistics.insets = new Insets(0, 0, 5, 5);
+
+		frame.getContentPane().add(lblStatistics, gbc_lblStatistics);
+
+		// Add statistics text area. //////////////////////////////////////////
+
+		JScrollPane scrollPaneStats = new JScrollPane();
+
+		GridBagConstraints gbc_scrollPaneStats = new GridBagConstraints();
+		gbc_scrollPaneStats.fill = GridBagConstraints.BOTH;
+		gbc_scrollPaneStats.gridwidth = 4;
+		gbc_scrollPaneStats.gridx = 0;
+		gbc_scrollPaneStats.gridy = 12;
+
+		frame.getContentPane().add(scrollPaneStats, gbc_scrollPaneStats);
+
+		JTextArea textAreaStats = new JTextArea();
+		textAreaStats.setFont(new Font("Monospaced", Font.PLAIN, 13));
+		textAreaStats.setEditable(false);
+
+		scrollPaneStats.setViewportView(textAreaStats);
 	}
 
 }

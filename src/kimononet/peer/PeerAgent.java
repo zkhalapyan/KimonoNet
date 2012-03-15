@@ -171,10 +171,6 @@ public class PeerAgent {
 		this.portConfigurationProvider = portConfigurationProvider;
 		this.timeProvider 			   = timeProvider;
 		
-		//Create the services used by the agent.
-		this.beaconService = new BeaconService(this);		
-		this.geoService    = new GeoService(this);
-		
 		//Create any data structures used by the agent.
 		this.peers = new HashMap<PeerAddress, Peer>();
 		this.peers2 = new HashMap<PeerAddress, HashMap<PeerAddress, Peer>>();
@@ -199,6 +195,10 @@ public class PeerAgent {
 	 * @see #shutdownServices()
 	 */
 	public void startServices(){
+		//Create the services used by the agent.
+		this.beaconService = new BeaconService(this);		
+		this.geoService    = new GeoService(this);
+		
 		this.geoService.startService();
 		this.beaconService.start();
 		
