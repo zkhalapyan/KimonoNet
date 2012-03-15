@@ -19,11 +19,17 @@ public class PeerTest {
 	private final GeoLocation location4 = new GeoLocation(-12.34567890d, -23.45678901d, -34.56789012f, 1234567893);	// Not used initially, since peer initially has no location.
 	private final GeoLocation location5 = new GeoLocation(-45.67890123d, -56.78901234d, -67.89012345f, 1234567894);	// Not used initially, since peer initially has no location.
 
-	private GeoVelocity velocity1 = new GeoVelocity(location5);	// Peer initially at location1, but as if arrived from location5. That way, it has a velocity.
-	private GeoVelocity velocity2 = new GeoVelocity(location2);	// Not used initially, since Peer initially has no velocity.
-	private GeoVelocity velocity3 = new GeoVelocity(location2);	// Peer initially at location3, but as if arrived from location2. That way, it has a velocity.
-	private GeoVelocity velocity4 = new GeoVelocity(location4);	// Not used initially, since Peer initially has no velocity.
-	private GeoVelocity velocity5 = new GeoVelocity(location5);	// Not used initially, since Peer initially has no velocity.
+	//private GeoVelocity velocity1 = new GeoVelocity(location5);	// Peer initially at location1, but as if arrived from location5. That way, it has a velocity.
+	//private GeoVelocity velocity2 = new GeoVelocity(location2);	// Not used initially, since Peer initially has no velocity.
+	//private GeoVelocity velocity3 = new GeoVelocity(location2);	// Peer initially at location3, but as if arrived from location2. That way, it has a velocity.
+	//private GeoVelocity velocity4 = new GeoVelocity(location4);	// Not used initially, since Peer initially has no velocity.
+	//private GeoVelocity velocity5 = new GeoVelocity(location5);	// Not used initially, since Peer initially has no velocity.
+
+	private GeoVelocity velocity1 = new GeoVelocity(12.34567890f, 23.45678901f);
+	private GeoVelocity velocity2 = new GeoVelocity(34.56789012f, 45.67890123f);
+	private GeoVelocity velocity3 = new GeoVelocity(56.78901234f, 67.89012345f);
+	private GeoVelocity velocity4 = new GeoVelocity(78.90123456f, 89.01234567f);
+	private GeoVelocity velocity5 = new GeoVelocity(90.12345678f, -12.34567890f);
 
 	private final String name1 = "UAV-001";
 	private final String address1 = "29:99:35:C1:8E:EB";
@@ -67,7 +73,7 @@ public class PeerTest {
 	@Before
 	public void testPeerParcel() {
 		// Peer initially at location1, but as if arrived from location5. That way, it has a velocity.
-		velocity1.update(location1);
+		//velocity1.update(location1);
 
 		parcel1.rewind();
 
@@ -96,7 +102,7 @@ public class PeerTest {
 	@Before
 	public void testPeerPeerAddressGeoLocationGeoVelocity() {
 		// Peer initially at location3, but as if arrived from location2. That way, it has a velocity.
-		velocity3.update(location3);
+		//velocity3.update(location3);
 
 		parcel3.rewind();
 
@@ -228,11 +234,11 @@ public class PeerTest {
 		/* 1 */ assertArrayEquals(location2.toParcel().toByteArray(), peerParcel.getLocation().toParcel().toByteArray());
 		/* 3 */ assertArrayEquals(location4.toParcel().toByteArray(), peerPeerAddressGeoLocationGeoVelocity.getLocation().toParcel().toByteArray());
 
-		/* 1 */ velocity1.update(location2);
-		/* 3 */ velocity3.update(location4);
+		///* 1 */ velocity1.update(location2);
+		///* 3 */ velocity3.update(location4);
 
-		/* 1 */ assertArrayEquals(velocity1.toParcel().toByteArray(), peerParcel.getVelocity().toParcel().toByteArray());
-		/* 3 */ assertArrayEquals(velocity3.toParcel().toByteArray(), peerPeerAddressGeoLocationGeoVelocity.getVelocity().toParcel().toByteArray());
+		///* 1 */ assertArrayEquals(velocity1.toParcel().toByteArray(), peerParcel.getVelocity().toParcel().toByteArray());
+		///* 3 */ assertArrayEquals(velocity3.toParcel().toByteArray(), peerPeerAddressGeoLocationGeoVelocity.getVelocity().toParcel().toByteArray());
 
 		// These peers were constructed without locations.
 
@@ -248,9 +254,9 @@ public class PeerTest {
 		//velocity4.update(location4);	// Already set location using constructor.
 		//velocity5.update(location5);	// Already set location using constructor.
 
-		assertArrayEquals(velocity2.toParcel().toByteArray(), peerPeerAddress.getVelocity().toParcel().toByteArray());
-		assertArrayEquals(velocity4.toParcel().toByteArray(), peerPeerAddressString.getVelocity().toParcel().toByteArray());
-		assertArrayEquals(velocity5.toParcel().toByteArray(), peerString.getVelocity().toParcel().toByteArray());
+		//assertArrayEquals(velocity2.toParcel().toByteArray(), peerPeerAddress.getVelocity().toParcel().toByteArray());
+		//assertArrayEquals(velocity4.toParcel().toByteArray(), peerPeerAddressString.getVelocity().toParcel().toByteArray());
+		//assertArrayEquals(velocity5.toParcel().toByteArray(), peerString.getVelocity().toParcel().toByteArray());
 
 		peerPeerAddress.setLocation(location3);			// Second time setting location. Peer 2 went from location2 -> location3.
 		peerPeerAddressString.setLocation(location5);	// Second time setting location. Peer 4 went from location4 -> location5.
@@ -260,13 +266,13 @@ public class PeerTest {
 		assertArrayEquals(location5.toParcel().toByteArray(), peerPeerAddressString.getLocation().toParcel().toByteArray());
 		assertArrayEquals(location1.toParcel().toByteArray(), peerString.getLocation().toParcel().toByteArray());
 
-		velocity2.update(location3);
-		velocity4.update(location5);
-		velocity5.update(location1);
+		//velocity2.update(location3);
+		//velocity4.update(location5);
+		//velocity5.update(location1);
 
-		assertArrayEquals(velocity2.toParcel().toByteArray(), peerPeerAddress.getVelocity().toParcel().toByteArray());
-		assertArrayEquals(velocity4.toParcel().toByteArray(), peerPeerAddressString.getVelocity().toParcel().toByteArray());
-		assertArrayEquals(velocity5.toParcel().toByteArray(), peerString.getVelocity().toParcel().toByteArray());
+		//assertArrayEquals(velocity2.toParcel().toByteArray(), peerPeerAddress.getVelocity().toParcel().toByteArray());
+		//assertArrayEquals(velocity4.toParcel().toByteArray(), peerPeerAddressString.getVelocity().toParcel().toByteArray());
+		//assertArrayEquals(velocity5.toParcel().toByteArray(), peerString.getVelocity().toParcel().toByteArray());
 	}
 
 	@Test
@@ -282,6 +288,21 @@ public class PeerTest {
 		assertEquals(name4, peerPeerAddressGeoLocationGeoVelocity.getName());
 		assertEquals(name5, peerPeerAddressString.getName());
 		assertEquals(name1, peerString.getName());
+	}
+
+	@Test
+	public void testSetVelocity() {
+		peerParcel.setVelocity(velocity2);
+		peerPeerAddress.setVelocity(velocity3);
+		peerPeerAddressGeoLocationGeoVelocity.setVelocity(velocity4);
+		peerPeerAddressString.setVelocity(velocity5);
+		peerString.setVelocity(velocity1);
+
+		assertArrayEquals(velocity2.toParcel().toByteArray(), peerParcel.getVelocity().toParcel().toByteArray());
+		assertArrayEquals(velocity3.toParcel().toByteArray(), peerPeerAddress.getVelocity().toParcel().toByteArray());
+		assertArrayEquals(velocity4.toParcel().toByteArray(), peerPeerAddressGeoLocationGeoVelocity.getVelocity().toParcel().toByteArray());
+		assertArrayEquals(velocity5.toParcel().toByteArray(), peerPeerAddressString.getVelocity().toParcel().toByteArray());
+		assertArrayEquals(velocity1.toParcel().toByteArray(), peerString.getVelocity().toParcel().toByteArray());
 	}
 
 	@Test

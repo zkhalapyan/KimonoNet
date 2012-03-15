@@ -46,15 +46,15 @@ public class TestManager {
 		(new GeoLocationTest()).testToString();
 
 		// Test GeoVelocity class.
-		(new GeoVelocityTest()).testGetAverageAccuracy();
+		//(new GeoVelocityTest()).testGetAverageAccuracy();
 		(new GeoVelocityTest()).testGetBearing();
-		(new GeoVelocityTest()).testGetInitialBearing();
+		//(new GeoVelocityTest()).testGetInitialBearing();
 		(new GeoVelocityTest()).testGetParcelSize();
 		(new GeoVelocityTest()).testGetSpeed();
 		(new GeoVelocityTest()).testParse();
 		(new GeoVelocityTest()).testToParcel();
 		(new GeoVelocityTest()).testToString();
-		(new GeoVelocityTest()).testUpdate();
+		//(new GeoVelocityTest()).testUpdate();
 
 		// Test PeerAddress class.
 		(new PeerAddressTest()).testEquals();
@@ -74,6 +74,7 @@ public class TestManager {
 		(new PeerTest()).testSetAddress();
 		(new PeerTest()).testSetLocation();
 		(new PeerTest()).testSetName();
+		(new PeerTest()).testSetVelocity();
 		(new PeerTest()).testToParcel();
 
 		// Test PeerEnvironment class.
@@ -99,6 +100,7 @@ public class TestManager {
 		(new PacketTest()).testGetParcelSize();
 		(new PacketTest()).testGetPeer();
 		(new PacketTest()).testGetType();
+		(new PacketTest()).testMagicCheck();
 		(new PacketTest()).testParse();
 		(new PacketTest()).testSetContents();
 		(new PacketTest()).testSetType();
