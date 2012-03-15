@@ -8,4 +8,9 @@ kimononet.net.parcel
 kimononet.net.routing
 kimononet.net.transport
 kimononet.peer
+kimononet.service
+kimononet.simulation
+kimononet.stat
+kimononet.test
+kimononet.time
 kimononet.util
