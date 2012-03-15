@@ -196,16 +196,16 @@ public class GeoLocation implements Parcelable {
 	
 	/**
 	 * Uses Haversine formula to accurately calculate the distance to another GeoLocation.
-	 * @param GeoLocation of second location to use in calculating distance.
+	 * @param loc2 GeoLocation of second location to use in calculating distance.
 	 * @return Returns double precision float with distance to other GeoLocation
 	 */
 	public double distanceTo(GeoLocation loc2)
 	{
-		double lo1 = this.getLongitude();
-		double la1 = this.getLatitude();
+		double lo1 = Math.toRadians(this.getLongitude());
+		double la1 = Math.toRadians(this.getLatitude());
 		
-		double lo2 = loc2.getLongitude();
-		double la2 = loc2.getLatitude();
+		double lo2 = Math.toRadians(loc2.getLongitude());
+		double la2 = Math.toRadians(loc2.getLatitude());
 		
 		double radius = 6367;
 		
@@ -216,6 +216,27 @@ public class GeoLocation implements Parcelable {
 		distance = 2*radius*distance;
 		
 		return distance;
+	}
+	
+	/**
+	 * Calculates the bearing from one GeoLocation to another.
+	 * @param loc2 GeoLocation of second location to calculate bearing to.
+	 * @return Returns double precision float with bearing between this location
+	 * and given other location in degrees.
+	 */
+	public double bearingTo(GeoLocation loc2)
+	{
+		double dLon = Math.toRadians(loc2.getLongitude()-this.getLongitude());
+		double lat1 = Math.toRadians(this.getLatitude());
+		double lat2 = Math.toRadians(loc2.getLatitude());
+		
+		double y = Math.sin(dLon) * Math.cos(lat2);
+		double x = Math.cos(lat1)*Math.sin(lat2) -
+		        Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+		
+		double brng = Math.toDegrees(Math.atan2(y, x));
+		
+		return brng;
 	}
 	
 	/**

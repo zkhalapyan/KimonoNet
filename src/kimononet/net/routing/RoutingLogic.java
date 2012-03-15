@@ -65,6 +65,7 @@ public class RoutingLogic {
 		{
 			packet.setForwardMode(ForwardMode.PERIMETER);
 			
+			//TODO clarify which 3 or 4 should be set from protocol
 			packet.setXHDRFields(s, s, s, d);
 		}
 		else
@@ -81,10 +82,38 @@ public class RoutingLogic {
 			return false;
 
 		PeerAddress id = agent.getPeer().getAddress();
+		GeoLocation x;
 		GeoLocation f = packet.getGreedyEnteredFaceLocation();
 		
-		//TODO calculate bearings and finish algorithm
+		double b = d.bearingTo(f);
+		double t;
 		
+		Peer[] peers = (Peer[]) routingTable1.values().toArray();
+		
+		for(int i=0; i<peers.length; i++)
+		{
+			t = d.bearingTo(peers[i].getLocation());
+			
+			if((b > 0 && t - b > 0) || (b < 0 && t - b < 0))
+			{
+				id = peers[i].getAddress();
+				
+				x = peers[i].getLocation();
+				
+				b = t;
+			}
+		}
+		
+		if(id.equals(agent.getPeer().getAddress()))
+		{
+			return false;
+		}
+		
+		//TODO check for intersecting edges
+		
+		//TODO check for full circle / loops
+		
+		packet.setHdr_fwd_dst_id(id);
 		return true;
 	}
 	
