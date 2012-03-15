@@ -6,27 +6,12 @@ import kimononet.net.parcel.Parcel;
 import kimononet.net.parcel.Parcelable;
 
 /**
- * Object stores geolocation in terms of longitude, latitude, and accuracy as 
- * well as keeps track of last update time. Please see below for an example:
- * 
- * <pre>
- * GeoLocation location1 = new GeoLocation(1.0, 2.0, 3.0);		
- * GeoLocation location2 = new GeoLocation(4.0, 5.0, 6.0);
- *
- * System.out.println(location2);
- * 
- * //Convert location1 to a byte array representation. 
- * byte[] location1Bytes = location1.toByteArray()
- * 
- * //Set location from a byte array.
- * location2.setLocation(location1Bytes);
- * 
- * System.out.println(location2);
- * </pre>
+ * Object stores location in terms of longitude, latitude, and accuracy as 
+ * well as keeps track of last update time. 
  *  
  * @author Zorayr Khalapyan
  * @since 2/9/2012
- * @version 3/6/2012
+ * @version 3/14/2012
  *
  */
 public class GeoLocation implements Parcelable {
@@ -36,6 +21,11 @@ public class GeoLocation implements Parcelable {
 	 * @see #getParcelSize()
 	 */
 	public static final int PARCEL_SIZE = 24;
+	
+	/**
+	 * The median radius of the Earth in meters.
+	 */
+	public static final int EARTH_MEDIAN_RADIUS = 6371000;
 	
 	/**
 	 * Stores the longitude of the current GPS location.
@@ -195,51 +185,6 @@ public class GeoLocation implements Parcelable {
 	}
 	
 	/**
-	 * Uses Haversine formula to accurately calculate the distance to another GeoLocation.
-	 * @param loc2 GeoLocation of second location to use in calculating distance.
-	 * @return Returns double precision float with distance to other GeoLocation
-	 */
-	public double distanceTo(GeoLocation loc2)
-	{
-		double lo1 = Math.toRadians(this.getLongitude());
-		double la1 = Math.toRadians(this.getLatitude());
-		
-		double lo2 = Math.toRadians(loc2.getLongitude());
-		double la2 = Math.toRadians(loc2.getLatitude());
-		
-		double radius = 6367;
-		
-		double distance = Math.sin((la2-la1)/2)*Math.sin((la2-la1)/2);
-		distance += Math.cos(la2-la1);
-		distance += Math.cos(la1)*Math.cos(la2)*Math.sin((lo2-lo1)/2)*Math.sin((lo2-lo1)/2);
-		distance = Math.asin(Math.sqrt(distance));
-		distance = 2*radius*distance;
-		
-		return distance;
-	}
-	
-	/**
-	 * Calculates the bearing from one GeoLocation to another.
-	 * @param loc2 GeoLocation of second location to calculate bearing to.
-	 * @return Returns double precision float with bearing between this location
-	 * and given other location in degrees.
-	 */
-	public double bearingTo(GeoLocation loc2)
-	{
-		double dLon = Math.toRadians(loc2.getLongitude()-this.getLongitude());
-		double lat1 = Math.toRadians(this.getLatitude());
-		double lat2 = Math.toRadians(loc2.getLatitude());
-		
-		double y = Math.sin(dLon) * Math.cos(lat2);
-		double x = Math.cos(lat1)*Math.sin(lat2) -
-		        Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
-		
-		double brng = Math.toDegrees(Math.atan2(y, x));
-		
-		return brng;
-	}
-	
-	/**
 	 * Returns the current parcel size.
 	 * @return Parcel size.
 	 * @see #PARCEL_SIZE
@@ -262,7 +207,90 @@ public class GeoLocation implements Parcelable {
 		return "Longitude: " + getLongitude() + "\t" + 
 		       "Latitude: " + getLatitude() + "\t" +
 		       "Accuracy: " + getAccuracy() + "\t" +
+
+		       //Date is created with milliseconds; hence, the conversion. 
 		       "Timestamp: " + new Date(timestamp * 1000);
+	}
+	
+	/**
+	 * Given a velocity and a current time, the method returns a new location. 
+	 * All calculation are done according to the formulas specified at 
+	 * <a href="http://www.movable-type.co.uk/scripts/latlong.html">
+	 * Calculate distance, bearing and more between Latitude/Longitude points
+	 * </a>
+	 * 
+	 * 
+	 * @param velocity The current velocity at which the location is changing.
+	 * @param currentTime The current time. This value will be compared with the
+	 *                    timestamp of the current location in order to compute
+	 *                    change in time and hence, change in distance.
+	 * 
+	 * @return Location S(t), given v, velocity, and t, time.
+	 */
+	public GeoLocation move(GeoVelocity velocity, int currentTime){
+		
+		
+		//Assuming that currentTime > timestamp, then calculate the distance 
+		//traveled as the product of speed in m/s time change in time in 
+		//seconds.
+		double distance = velocity.getSpeed() * (currentTime - timestamp);
+		
+		//Calculate the new latitude value provided the equation below.
+		//lat2 = asin(sin(lat1)*cos(d/R) + cos(lat1)*sin(d/R)*cos(θ))
+		double latitude = Math.asin(Math.sin(getLatitude())*Math.cos(distance/EARTH_MEDIAN_RADIUS) + 
+                          Math.cos(getLatitude())*Math.sin(distance/EARTH_MEDIAN_RADIUS)*Math.cos(velocity.getBearing()));
+		
+		//Calculate the new longitude value provided the equation below.
+		//lon2 = lon1 + atan2(sin(θ)*sin(d/R)*cos(lat1), cos(d/R)−sin(lat1)*sin(lat2))
+		double longitude = getLongitude() + Math.atan2(Math.sin(velocity.getBearing())*Math.sin(distance/EARTH_MEDIAN_RADIUS)*Math.cos(getLatitude()), 
+                           Math.cos(distance/EARTH_MEDIAN_RADIUS)-Math.sin(getLatitude())*Math.sin(latitude));
+		
+		
+		return new GeoLocation(longitude, latitude, accuracy, currentTime);
+		
+	}
+	
+	/**
+	 * Returns the distance in meters from the current location to the specified
+	 * location.
+	 * 
+	 * All calculation are done according to the formulas specified at 
+	 * <a href="http://www.movable-type.co.uk/scripts/latlong.html">
+	 * Calculate distance, bearing and more between Latitude/Longitude points
+	 * </a>
+	 * 
+	 * @param location The second location.
+	 * 
+	 * @return Distance from the current location to the specified location.
+	 */
+	public double getDistance(GeoLocation location2){
+		return  Math.acos(Math.sin(this.latitude)*Math.sin(location2.latitude) + 
+                Math.cos(this.latitude)*Math.cos(location2.latitude) *
+                Math.cos(location2.longitude - this.longitude)) * EARTH_MEDIAN_RADIUS;
+	}
+	
+	/**
+	 * Generates a random location bounded by the upper left corner and the 
+	 * bottom right corner. Accuracy will be set to the average accuracy of the
+	 * specified two corner locations.
+	 *  
+	 * @param upperLeftLocation Location of the upper left location.
+	 * @param lowerRightLocation Location of the lower right corner.
+	 * 
+	 * @return A random location bounded by the upper left corner and the 
+	 * bottom right corner.
+	 */
+	public static GeoLocation generateRandomGeoLocation(GeoLocation upperLeftLocation, 
+														GeoLocation lowerRightLocation){
+		
+		
+		//Calculate the random longitude and latitude values.
+		double longitude = upperLeftLocation.longitude + (upperLeftLocation.longitude - lowerRightLocation.longitude) * Math.random();
+		double latitude = upperLeftLocation.latitude + (upperLeftLocation.latitude - lowerRightLocation.latitude) * Math.random();
+		
+		
+		return new GeoLocation(longitude, latitude, (upperLeftLocation.accuracy + lowerRightLocation.accuracy) / 2);
+		
 	}
 
 }

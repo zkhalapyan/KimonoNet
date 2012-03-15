@@ -16,6 +16,8 @@ public interface GeoDevice {
 	 */
 	public GeoLocation getLocation();
 	
+	public GeoVelocity getVelocity();
+	
 	public void setTimeProvider(TimeProvider timeProvider);
 	
 }
