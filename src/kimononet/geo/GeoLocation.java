@@ -263,7 +263,7 @@ public class GeoLocation implements Parcelable {
 	 * 
 	 * @return Distance from the current location to the specified location.
 	 */
-	public double getDistance(GeoLocation location2){
+	public double distanceTo(GeoLocation location2){
 		return  Math.acos(Math.sin(this.latitude)*Math.sin(location2.latitude) + 
                 Math.cos(this.latitude)*Math.cos(location2.latitude) *
                 Math.cos(location2.longitude - this.longitude)) * EARTH_MEDIAN_RADIUS;
