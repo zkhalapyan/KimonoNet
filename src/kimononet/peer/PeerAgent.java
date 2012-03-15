@@ -224,6 +224,7 @@ public class PeerAgent {
 	 * @return The current peer's peers.
 	 */
 	public HashMap<PeerAddress, Peer> getPeers(){
+		// TODO add blocking for while table is updating
 		return this.peers;
 	}
 	
@@ -234,6 +235,7 @@ public class PeerAgent {
 	 * @return Second hop neighbor's table.
 	 */
 	public HashMap<PeerAddress, HashMap<PeerAddress, Peer>> getPeers2(){
+		// TODO add blocking for while table is updating
 		return this.peers2;
 	}
 	
