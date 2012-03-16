@@ -97,9 +97,15 @@ public class GeoLocation implements Parcelable {
 	 * @param accuracy Accuracy to set.
 	 */
 	public void setLocation(double longitude, double latitude, float accuracy){
-		this.longitude = longitude;
-		this.latitude = latitude;
-		this.accuracy = accuracy;
+		if (longitude < -180d || longitude > 180d)
+			throw new GeoLocationException("Longitude must be within the range [-180, 180].");
+		else if (latitude < -90d || latitude > 90d)
+			throw new GeoLocationException("Latitude must be within the range [-90, 90].");
+		else {
+			this.longitude = longitude;
+			this.latitude = latitude;
+			this.accuracy = accuracy;
+		}
 	}
 	
 	/**
@@ -237,13 +243,13 @@ public class GeoLocation implements Parcelable {
 		
 		//Calculate the new latitude value provided the equation below.
 		//lat2 = asin(sin(lat1)*cos(d/R) + cos(lat1)*sin(d/R)*cos(θ))
-		double latitude = Math.asin(Math.sin(getLatitude())*Math.cos(distance/EARTH_MEDIAN_RADIUS) + 
-                          Math.cos(getLatitude())*Math.sin(distance/EARTH_MEDIAN_RADIUS)*Math.cos(velocity.getBearing()));
+		double latitude = Math.toDegrees(Math.asin(Math.sin(Math.toRadians(getLatitude()))*Math.cos(distance/EARTH_MEDIAN_RADIUS) + 
+                          Math.cos(Math.toRadians(getLatitude()))*Math.sin(distance/EARTH_MEDIAN_RADIUS)*Math.cos(velocity.getBearing())));
 		
 		//Calculate the new longitude value provided the equation below.
 		//lon2 = lon1 + atan2(sin(θ)*sin(d/R)*cos(lat1), cos(d/R)−sin(lat1)*sin(lat2))
-		double longitude = getLongitude() + Math.atan2(Math.sin(velocity.getBearing())*Math.sin(distance/EARTH_MEDIAN_RADIUS)*Math.cos(getLatitude()), 
-                           Math.cos(distance/EARTH_MEDIAN_RADIUS)-Math.sin(getLatitude())*Math.sin(latitude));
+		double longitude = Math.toDegrees(Math.toRadians(getLongitude()) + Math.atan2(Math.sin(velocity.getBearing())*Math.sin(distance/EARTH_MEDIAN_RADIUS)*Math.cos(Math.toRadians(getLatitude())), 
+                           Math.cos(distance/EARTH_MEDIAN_RADIUS)-Math.sin(Math.toRadians(getLatitude()))*Math.sin(Math.toRadians(latitude))));
 		
 		
 		return new GeoLocation(longitude, latitude, accuracy, currentTime);
@@ -313,8 +319,8 @@ public class GeoLocation implements Parcelable {
 		
 		
 		//Calculate the random longitude and latitude values.
-		double longitude = upperLeftLocation.longitude + (upperLeftLocation.longitude - lowerRightLocation.longitude) * Math.random();
-		double latitude = upperLeftLocation.latitude + (upperLeftLocation.latitude - lowerRightLocation.latitude) * Math.random();
+		double longitude = upperLeftLocation.longitude + (lowerRightLocation.longitude - upperLeftLocation.longitude) * Math.random();
+		double latitude = upperLeftLocation.latitude + (lowerRightLocation.latitude - upperLeftLocation.latitude) * Math.random();
 		
 		
 		return new GeoLocation(longitude, latitude, (upperLeftLocation.accuracy + lowerRightLocation.accuracy) / 2);

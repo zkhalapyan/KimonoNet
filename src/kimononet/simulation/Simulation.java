@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListModel;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -26,10 +27,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import kimononet.geo.GeoLocation;
+import kimononet.geo.GeoVelocity;
+import kimononet.geo.RandomWaypointGeoDevice;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAddressException;
 import kimononet.peer.PeerAgent;
+import kimononet.peer.PeerEnvironment;
+import kimononet.time.SystemTimeProvider;
+
 import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionListener;
@@ -43,28 +49,29 @@ import java.awt.Color;
 
 public class Simulation {
 
-	private final String[] properties = {	"Name",				// Row 0
-											"Address",			// Row 1
-											"Longitude",		// Row 2
-											"Latitude",			// Row 3
-											"Accuracy",			// Row 4
-											"Speed",			// Row 5
-											"Initial Bearing",	// Row 6
-											"Final Bearing"};	// Row 7
+	private final String[] properties = {	"Name",			// Row 0
+											"Address",		// Row 1
+											"Longitude",	// Row 2
+											"Latitude",		// Row 3
+											"Accuracy",		// Row 4
+											"Speed",		// Row 5
+											"Bearing"};		// Row 6
 
+	private ArrayList<PeerAgent> arrayListPeerAgents = new ArrayList<PeerAgent>();
 	private boolean bSimRunning = false;
 	private DefaultListModel<String> listModelPeers;
 	private DefaultTableModel tableModelPeerProps;
 	private DefaultTableModel tableModelPeerEnvProps;
-	private JButton btnAddPeer, btnDeletePeer, btnApplyPeerProps, btnApplyEnvProps;
+	private JButton btnStartStop, btnAddPeer, btnDeletePeer, btnApplyPeerProps, btnApplyEnvProps;
 	private JFrame frame; 
 	private JLabel lblSimStatusDisplay;
 	private JList<String> listPeers;
 	private JMenuItem mntmStartStopSim, mntmEditMapDim;
 	private JTable tablePeerProps;
 	private JTable tablePeerEnvProps;
-
-	private ArrayList<PeerAgent> arrayListPeerAgents = new ArrayList<PeerAgent>();
+	private MapDimensions mapDim = new MapDimensions(	new GeoLocation(-0.25, 0.25, 0f),	// Upper left
+														new GeoLocation(0.25, -0.25, 0f));	// Lower right
+	private PeerEnvironment peerEnv = new PeerEnvironment();
 
 	private void refresh() {
 		if (tableModelPeerProps != null)
@@ -97,8 +104,22 @@ public class Simulation {
 				tableModelPeerProps.addRow(new Object[] {properties[4], accuracy});
 				tableModelPeerProps.addRow(new Object[] {properties[5], Float.toString(getCurrentPeer().getVelocity().getSpeed())});
 				tableModelPeerProps.addRow(new Object[] {properties[6], Float.toString(getCurrentPeer().getVelocity().getBearing())});
-				tableModelPeerProps.addRow(new Object[] {properties[7], Float.toString(getCurrentPeer().getVelocity().getBearing())});
 			}
+
+			if (btnDeletePeer != null)
+				btnDeletePeer.setEnabled(!bSimRunning);
+			if (btnApplyPeerProps != null)
+				btnApplyPeerProps.setEnabled(!bSimRunning);
+			if (btnApplyEnvProps != null)
+				btnApplyEnvProps.setEnabled(!bSimRunning);
+		}
+		else {
+			if (btnDeletePeer != null)
+				btnDeletePeer.setEnabled(false);
+			if (btnApplyPeerProps != null)
+				btnApplyPeerProps.setEnabled(false);
+			if (btnApplyEnvProps != null)
+				btnApplyEnvProps.setEnabled(false);
 		}
 
 		if (frame != null)
@@ -106,11 +127,14 @@ public class Simulation {
 	}
 
 	private void addPeer() {
+		GeoLocation location = GeoLocation.generateRandomGeoLocation(mapDim.getUpperLeft(), mapDim.getLowerRight());
+		GeoVelocity velocity = new GeoVelocity(343, (float)Math.toRadians(20));
+
 		// Create new peer with random address.
-		Peer peer = new Peer(PeerAddress.generateRandomAddress());
+		Peer peer = new Peer(PeerAddress.generateRandomAddress(), location, velocity);
 
 		// Create new PeerAgent to represent peer and add it to ArrayList.
-		arrayListPeerAgents.add(new PeerAgent(peer));
+		arrayListPeerAgents.add(new PeerAgent(peer, peerEnv, new RandomWaypointGeoDevice(location, velocity, new SystemTimeProvider(), 0.001, 0)));
 
 		// Add peer to list.
 		listModelPeers.add(listPeers.getModel().getSize(), peer.getName() + " (" + peer.getAddress().toString() + ")");
@@ -132,6 +156,7 @@ public class Simulation {
 			return;
 		}
 
+		// Start/stop services of each peer.
 		for (int i = 0; i < arrayListPeerAgents.size(); i++) {
 			if (!bSimRunning)
 				arrayListPeerAgents.get(i).startServices();
@@ -141,26 +166,25 @@ public class Simulation {
 
 		bSimRunning = !bSimRunning;
 
-		if (mntmStartStopSim != null)
-			mntmStartStopSim.setText(bSimRunning ? "Stop Simulation" : "Start Simulation");
-		if (lblSimStatusDisplay != null) {
-			lblSimStatusDisplay.setText(bSimRunning ? "RUNNING" : "STOPPED");
-			lblSimStatusDisplay.setBackground(bSimRunning ? Color.GREEN : Color.RED);
-		}
+		// Enable/disable buttons and stuff.
 		if (btnAddPeer != null)
 			btnAddPeer.setEnabled(!bSimRunning);
-		if (btnDeletePeer != null)
-			btnDeletePeer.setEnabled(!bSimRunning);
-		if (btnApplyPeerProps != null)
-			btnApplyPeerProps.setEnabled(!bSimRunning);
-		if (btnApplyEnvProps != null)
-			btnApplyEnvProps.setEnabled(!bSimRunning);
+		if (mntmStartStopSim != null)
+			mntmStartStopSim.setText(bSimRunning ? "Stop Simulation" : "Start Simulation");
+		if (btnStartStop != null)
+			btnStartStop.setText(bSimRunning ? "Stop" : "Start");
+		if (lblSimStatusDisplay != null) {
+			lblSimStatusDisplay.setText(bSimRunning ? "Simulation RUNNING" : "Simulation STOPPED");
+			lblSimStatusDisplay.setBackground(bSimRunning ? Color.GREEN : Color.RED);
+		}
 		if (mntmEditMapDim != null)
 			mntmEditMapDim.setEnabled(!bSimRunning);
 		if (tablePeerProps != null)
 			tablePeerProps.setEnabled(!bSimRunning);
 		if (tablePeerEnvProps != null)
 			tablePeerEnvProps.setEnabled(!bSimRunning);
+
+		refresh();
 	}
 
 	public ArrayList<PeerAgent> getPeerAgents() {
@@ -183,6 +207,10 @@ public class Simulation {
 		return arrayListPeerAgents.get(index).getPeer();
 	}
 
+	public JFrame getFrame() {
+		return frame;
+	}
+
 	/**
 	 * Create the application.
 	 */
@@ -197,7 +225,7 @@ public class Simulation {
 					Simulation window = new Simulation();
 					window.frame.setVisible(true);
 				} catch (Exception e) {
-					e.printStackTrace();
+					JOptionPane.showMessageDialog(null, "Error displaying main window.");
 				}
 			}
 		});		
@@ -238,6 +266,18 @@ public class Simulation {
 		mnSim.add(mntmStartStopSim);
 
 		mntmEditMapDim = new JMenuItem("Edit Map Dimensions...");
+		mntmEditMapDim.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				try {
+					MapDimensionsDialog dialog = new MapDimensionsDialog(mapDim);
+					dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+					dialog.setVisible(true);
+					refresh();
+				} catch (Exception e) {
+					JOptionPane.showMessageDialog(null, "Error displaying map dimensions dialog.");
+				}
+			}
+		});
 		mnSim.add(mntmEditMapDim);
 
 		JSeparator mnSeparator = new JSeparator();
@@ -274,7 +314,7 @@ public class Simulation {
 			JOptionPane.showMessageDialog(frame, "Error loading image.");
 		}
 
-		SimulationPanel panel = new SimulationPanel(imageUAV, this);
+		SimulationPanel panel = new SimulationPanel(imageUAV, mapDim, this);
 		panel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 
 		GridBagConstraints gbc_panel = new GridBagConstraints();
@@ -286,26 +326,11 @@ public class Simulation {
 
 		frame.getContentPane().add(panel, gbc_panel);
 
-
 		/*********************************************************************
 		 * Simulation status display (started, stopped).
 		 *********************************************************************/
 
-		// Add static text label. /////////////////////////////////////////////
-
-		JLabel lblSimStatus = new JLabel("Simulation Status:");
-
-		GridBagConstraints gbc_lblSimStatus = new GridBagConstraints();
-		gbc_lblSimStatus.anchor = GridBagConstraints.WEST;
-		gbc_lblSimStatus.gridx = 1;
-		gbc_lblSimStatus.gridy = 0;
-		gbc_lblSimStatus.insets = new Insets(0, 0, 5, 5);
-
-		frame.getContentPane().add(lblSimStatus, gbc_lblSimStatus);
-		
-		// Add dynamic text label. ////////////////////////////////////////////
-
-		lblSimStatusDisplay = new JLabel("STOPPED");
+		lblSimStatusDisplay = new JLabel("Simulation STOPPED");
 		lblSimStatusDisplay.setBackground(Color.RED);
 		lblSimStatusDisplay.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		lblSimStatusDisplay.setHorizontalAlignment(SwingConstants.CENTER);
@@ -314,12 +339,29 @@ public class Simulation {
 		GridBagConstraints gbc_lblSimStatusDisplay = new GridBagConstraints();
 		gbc_lblSimStatusDisplay.fill = GridBagConstraints.HORIZONTAL;
 		gbc_lblSimStatusDisplay.gridwidth = 2;
-		gbc_lblSimStatusDisplay.gridx = 2;
+		gbc_lblSimStatusDisplay.gridx = 1;
 		gbc_lblSimStatusDisplay.gridy = 0;
 		gbc_lblSimStatusDisplay.insets = new Insets(0, 0, 5, 0);
 
 		frame.getContentPane().add(lblSimStatusDisplay, gbc_lblSimStatusDisplay);
 
+		// Add "Start/Stop" button. ///////////////////////////////////////////
+
+		btnStartStop = new JButton("Start");
+		btnStartStop.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				startStopSim();
+			}
+		});
+
+		GridBagConstraints gbc_btnStartStop = new GridBagConstraints();
+		gbc_btnStartStop.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnStartStop.gridx = 3;
+		gbc_btnStartStop.gridy = 0;
+		gbc_btnStartStop.insets = new Insets(0, 0, 5, 5);
+
+		frame.getContentPane().add(btnStartStop, gbc_btnStartStop);
+		
 		// Add separator. /////////////////////////////////////////////////////
 
 		JSeparator separatorSimStatus = new JSeparator();
@@ -332,7 +374,6 @@ public class Simulation {
 		gbc_separatorSimStatus.insets = new Insets(0, 0, 5, 0);
 
 		frame.getContentPane().add(separatorSimStatus, gbc_separatorSimStatus);
-
 
 		/*********************************************************************
 		 * Peers list.
@@ -601,6 +642,8 @@ public class Simulation {
 		textAreaStats.setEditable(false);
 
 		scrollPaneStats.setViewportView(textAreaStats);
+
+		refresh();
 	}
 
 }
