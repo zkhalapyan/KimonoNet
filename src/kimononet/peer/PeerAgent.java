@@ -98,7 +98,7 @@ public class PeerAgent {
 	 * @param peer The peer represented by the peer agent.
 	 */
 	public PeerAgent(Peer peer){
-		this(peer, new DefaultPeerEnvironment());
+		this(peer, new DefaultPeerEnvironment(),  new DefaultGeoDevice(peer.getLocation(), peer.getVelocity()));
 	}
 	
 	/**
@@ -108,7 +108,7 @@ public class PeerAgent {
 	 * @param environment The peer's environment.
 	 */
 	public PeerAgent(Peer peer, PeerEnvironment environment){
-		this(peer, environment, new DefaultGeoDevice());
+		this(peer, environment, new DefaultGeoDevice(peer.getLocation(), peer.getVelocity()));
 	}
 	
 	/**
