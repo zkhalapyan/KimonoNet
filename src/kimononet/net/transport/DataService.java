@@ -49,14 +49,14 @@ public class DataService extends Thread implements Service{
 		 * when sending outgoing packets.
 		 */
 		private int sendServiceTimeout;
-		private static final int DEFAULT_SEND_TIMEOUT = 1;
+		private static final int DEFAULT_SEND_TIMEOUT = 100;
 		
 		/**
 		 * Amount of time the sending thread will sleep between trying to clear the
 		 * packet queue.
 		 */
 		private int sendServiceFrequency;
-		private static final int DEFAULT_SEND_FREQUENCY = 1;
+		private static final int DEFAULT_SEND_FREQUENCY = 100;
 		
 		/**
 		 * Connection for sending packets from the send data service.
@@ -65,23 +65,21 @@ public class DataService extends Thread implements Service{
 		
 		private boolean handlePacket(DataPacket packet){
 			
+			System.out.println("Routing packet!");
 			// Route the packet to the next hop using routing protocol
-			if(packet.getForwardMode() == ForwardMode.GREEDY) {
-				if(!routingProtocol.routeGreedy(packet)) {
-					return false;
-				}
+			if(!routingProtocol.routePacket(packet)) {
+				System.out.println("Packet was dropped during routing protocol!");
+				return false;
 			}
-			else {
-				if(!routingProtocol.routePerimeter(packet)) {
-					return false;
-				}
-			}
+			System.out.println("Packet routed!");
+			
 			
 			byte[] packetByteArray = packet.toParcel().toByteArray();
 			
 			if(packetByteArray != null){
 				
 				//Send the data packet.
+				System.out.println("Sending packet over network:\n" + packet);
 				return connection.send(packetByteArray, 
 									   agent.getPortConfiguration().getDataSendingServicePort(), 
 									   Connection.BROADCAST_ADDRESS);
@@ -139,13 +137,13 @@ public class DataService extends Thread implements Service{
 		 * when listening for incoming packets.
 		 */
 		private int receiveServiceTimeout;
-		private static final int DEFAULT_RECEIVE_TIMEOUT = 1;
+		private static final int DEFAULT_RECEIVE_TIMEOUT = 100;
 		
 		/**
 		 * Amount of time between checks for incoming packets in data service.
 		 */
 		private int receiveServiceFrequency;
-		private static final int DEFAULT_RECEIVE_FREQUENCY = 1;
+		private static final int DEFAULT_RECEIVE_FREQUENCY = 100;
 		
 		public void run(){
 			
@@ -181,15 +179,21 @@ public class DataService extends Thread implements Service{
 				
 				if(received != null){
 					
+					byte[] magic = new byte[] {(byte)0xBE, (byte)0xC0};
+					if(received[0] != magic[0] || received[1] != magic[1])
+						continue;
+					
 					DataPacket packet = new DataPacket(received);
 					
 					//Ignore data packets from the same peer.
 					if(agent.getPeer().getAddress().equals(packet.getPeer().getAddress())){
+						System.out.println("Packet is addressed to self, dropped.");
 						continue;
 					}
 					
 					//Ignore data packets that were not intended for this agent.
 					if(!agent.getPeer().getAddress().equals(packet.getHdr_fwd_dst_id())){
+						System.out.println("Packet was not intended for this node, dropped.");
 						continue;
 					}
 					

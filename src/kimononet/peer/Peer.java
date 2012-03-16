@@ -157,7 +157,8 @@ public class Peer implements Parcelable{
 	 * @param location The peer's current GPS location.
 	 */
 	public void setLocation(GeoLocation newLocation){
-		this.location = newLocation; 
+		this.location = newLocation;
+		//TODO make this update velocity?
 	}
 
 	/**

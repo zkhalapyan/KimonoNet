@@ -1,6 +1,7 @@
 package kimononet.net.routing;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import kimononet.geo.GeoLocation;
 import kimononet.net.transport.DataPacket;
@@ -25,28 +26,32 @@ public class RoutingLogic {
 	{
 		if(packet.getForwardMode() == ForwardMode.PERIMETER)
 			packet.setForwardMode(ForwardMode.GREEDY);
-			
+
 		HashMap<PeerAddress, Peer> routingTable1 = agent.getPeers();
-		if(routingTable1.size() == 0)
+		if(routingTable1.size() == 0) {
+			System.out.println("Packet dropped because there are no peers in table to route to!");
 			return false;
+		}
 		
 		double d = packet.getDestinationPeer().getLocation().distanceTo(agent.getPeer().getLocation());
 		PeerAddress id = agent.getPeer().getAddress();
 		
-		Peer[] peers = (Peer[]) routingTable1.values().toArray();
-		
-		for(int i=0; i<peers.length; i++)
+		for (Map.Entry<PeerAddress, Peer> entry : routingTable1.entrySet())
 		{
-			double t = peers[i].getLocation().distanceTo(packet.getDestinationPeer().getLocation());
+			Peer peerN = entry.getValue();
+			System.out.println("Peer in table:\n" + peerN.getAddress() + "\n" + peerN.getLocation());
+			System.out.println("Node Peer:\n" + agent.getPeer().getAddress() + "\n" + agent.getPeer().getLocation());
+			double t = peerN.getLocation().distanceTo(packet.getDestinationPeer().getLocation());
 			if (t<d)
 			{
-				id = peers[i].getAddress();
+				id = peerN.getAddress();
 				d = t;
 			}
 		}
 		
 		if(id.equals(agent.getPeer().getAddress()))
 		{
+			System.out.println("Switching packet to perimeter mode");
 			return routePerimeter(packet);
 		}
 		
@@ -88,17 +93,16 @@ public class RoutingLogic {
 		double b = d.bearingTo(f);
 		double t;
 		
-		Peer[] peers = (Peer[]) routingTable1.values().toArray();
-		
-		for(int i=0; i<peers.length; i++)
+		for (Map.Entry<PeerAddress, Peer> entry : routingTable1.entrySet())
 		{
-			t = d.bearingTo(peers[i].getLocation());
+			Peer peerN = entry.getValue();
+			t = d.bearingTo(peerN.getLocation());
 			
 			if((b > 0 && t - b > 0) || (b < 0 && t - b < 0))
 			{
-				id = peers[i].getAddress();
+				id = peerN.getAddress();
 				
-				x = peers[i].getLocation();
+				x = peerN.getLocation();
 				
 				b = t;
 			}
@@ -114,6 +118,21 @@ public class RoutingLogic {
 		//TODO check for full circle / loops
 		
 		packet.setHdr_fwd_dst_id(id);
+		return true;
+	}
+	
+	public boolean routePacket(DataPacket packet)
+	{
+		if(packet.getForwardMode() == ForwardMode.GREEDY) {
+			if(!routeGreedy(packet)) {
+				return false;
+			}
+		}
+		else {
+			if(!routePerimeter(packet)) {
+				return false;
+			}
+		}
 		return true;
 	}
 	
