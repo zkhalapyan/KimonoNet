@@ -12,51 +12,57 @@ import kimononet.time.TimeProvider;
 public class DefaultGeoDevice implements GeoDevice {
 	
 	/**
-	 * If specified, the device will utilize this time provider  in order to 
-	 * fetch the current peer's time.
+	 * 
+	 * @see #getLocation()
 	 */
-	private TimeProvider timeProvider;
+	private GeoLocation currentLocation;
 	
+	/**
+	 * @see #getVelocity()
+	 */
+	private GeoVelocity currentVelocity;
+	
+	/**
+	 * Create a GPS device emulator that will return a location initialized to
+	 * (0,0) and a velocity with speed and velocity set to 0.
+	 */
+	public DefaultGeoDevice(){
+		this(new GeoLocation(0.0, 0.0, 0.0f), new GeoVelocity(0, 0));
+	}
 	/**
 	 * Creates a new device that will fetch the System's time instead of 
 	 * utilizing a time provider.
 	 */
-	public DefaultGeoDevice(){
-		this.timeProvider = new SystemTimeProvider();
+	public DefaultGeoDevice(GeoLocation location, GeoVelocity velocity){
+
+		this.currentLocation = location;
+		this.currentVelocity = velocity;
 	}
 	
-	/**
-	 * Creates a new default geo device with the specified time provider.
-	 * 
-	 * @param timeProvider The time provider that will be used to fetch the 
-	 * 	                   System's current time.
-	 */
-	public DefaultGeoDevice(TimeProvider timeProvider){
-		this.timeProvider = timeProvider;
-	}
 	
 	/**
-	 * Returns the current geo location.
-	 * @return Current geo location.
+	 * Returns the current location.
+	 * @return Current location.
 	 */
 	@Override
 	public GeoLocation getLocation() {
-		
-		return new GeoLocation(0, 0, 0, timeProvider.getTime());
+		return currentLocation;
 	}
-	
-	
 
 	/**
-	 * Sets the time provider for the 
+	 * Returns the current velocity.
+	 */
+	@Override
+	public GeoVelocity getVelocity() {
+		return this.currentVelocity;
+	}
+	
+	/**
+	 * Since time is not going to be used by this class, this method is ignored. 
 	 * @param timeProvider The time provider to set.
 	 */
 	public void setTimeProvider(TimeProvider timeProvider){
-		this.timeProvider = timeProvider;
-	}
-
-	@Override
-	public GeoVelocity getVelocity() {
-		return new GeoVelocity(0, 0); 
+		//Discard the set time provider, since there is no need to fetch the 
+		//current time.
 	}
 }
