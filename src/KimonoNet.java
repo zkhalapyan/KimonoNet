@@ -1,5 +1,9 @@
+import kimononet.geo.GeoDevice;
 import kimononet.geo.GeoLocation;
+import kimononet.geo.GeoMap;
 import kimononet.geo.GeoVelocity;
+import kimononet.geo.RandomWaypointGeoDevice;
+import kimononet.kincol.KiNCoL;
 import kimononet.net.Packet;
 import kimononet.net.beacon.BeaconPacket;
 import kimononet.net.p2p.Connection;
@@ -8,52 +12,99 @@ import kimononet.net.p2p.port.PortConfiguration;
 import kimononet.net.parcel.Parcel;
 import kimononet.net.routing.QualityOfService;
 import kimononet.net.transport.DataPacket;
-import kimononet.net.transport.DataService;
+import kimononet.peer.DefaultPeerEnvironment;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
+import kimononet.peer.PeerEnvironment;
+import kimononet.simulation.Simulation;
+import kimononet.stat.MasterStatMonitor;
+import kimononet.stat.StatMonitor;
+import kimononet.stat.StatResults;
 
 
 @SuppressWarnings("unused")
 public class KimonoNet {
 
-	public static void main(String args[]){
-
-		//Simulation simulation = new Simulation();
-		//simulation.start();
-
-		System.out.println("Starting Simulation");
+	public static void startUISimulation(){
 		
+		Simulation simulation = new Simulation();
+		simulation.start();
+	}
+	
+	public static void startCLSimulation(){
+		
+	}
+
+	public static void main(String args[]){
+		
+		if(args.length <= 0 || args[0].equals("mode-gui")){
+			startUISimulation();
+			
+		}else if(args[0].equals("mode-cl")){
+			
+			if(args.length < 7){
+				System.out.println("Please specify [number-of-peers map-width map-height hostility-factor peer-speed number-of-packets].");
+				return;
+			}
+			
+			//Extract command line properties.
+			int   numberOfPeers   = Integer.parseInt(args[1]);
+			int   mapWidth        = Integer.parseInt(args[2]);
+			int   mapHeight       = Integer.parseInt(args[3]);
+			float hostilityFactor = Float.parseFloat(args[4]);
+			float peerSpeed       = Float.parseFloat(args[5]);
+			int  numberOfPackets  = Integer.parseInt(args[6]);
+			
+			if(numberOfPeers < 2){
+				System.out.println("Please specify more than 2 peers.");
+				return;
+			}
+			
+			GeoMap map = new GeoMap(mapWidth, mapHeight);
+			
+			new KiNCoL(numberOfPeers, map, peerSpeed, numberOfPackets, hostilityFactor).start();
+			
+		}else{
+			System.out.println("Please specify [mode] [number-of-peers map-width map-height hostility-factor].");
+		}
+		
+	}
+	
+	private static void dataPacketSendingTest(){
+		
+		System.out.println("Starting Simulation");
+
 		PeerAddress addressA = new PeerAddress("12:00:00:00:00:00");
 		GeoLocation locationA = new GeoLocation(2000.0, 2000.0, 1.0f);
-		
+
 		PeerAddress addressB = new PeerAddress("12:00:00:00:00:01");
 		GeoLocation locationB = new GeoLocation(0.0, 0.0, 1.0f);
-		
+
 		final Peer peerA = new Peer(addressA, locationA, new GeoVelocity(0f, 0f));
 		final PeerAgent agentA = new PeerAgent(peerA);
 		agentA.startServices();
-		
+
 		final Peer peerB = new Peer(addressB, locationB, new GeoVelocity(0f, 0f));
 		final PeerAgent agentB = new PeerAgent(peerB);
 		agentB.startServices();
-		
 
-		
+
+
 		new Thread(){
 			public void run(){
-				
-				
+
+
 				byte[] payload = {0x0, 0x1, 0x2, 0x3, 0x4};
-				
+
 				Packet packet1 = new DataPacket(agentA, peerB, QualityOfService.CONTROL, payload);
 				Packet packet2 = new DataPacket(agentA, peerB, QualityOfService.COMMUNICATION, payload);
 				Packet packet3 = new DataPacket(agentA, peerB, QualityOfService.REGULAR, payload);
-				
-				
+
+
 				for(int i=0; i<1; i++)
 				{
-				
+
 					try {
 						sleep(1000);
 					} catch (InterruptedException e) {
@@ -63,36 +114,13 @@ public class KimonoNet {
 					agentA.sendDataPacket((DataPacket)packet3);
 					agentA.sendDataPacket((DataPacket)packet2);
 					agentA.sendDataPacket((DataPacket)packet1);
-					
+
 				}
-				
+
 			}
 		}.start();
-		
-		
-		
-		
-		//packetTest(agentA);
-		
-		//dataPacketTest(agentA, peerB);
-	
-		
-		//agentA.startServices();
-		
-		
-		
-		//geoLocationTest();
-		//peerAddressTest();
-		//parcelTest();
-		
-		/* TESTS MULTICAST CONNECTIONS:
-		SimulationPortConfigurationProvider confProvider = new SimulationPortConfigurationProvider();
-		connectionTest(confProvider.getPortConfiguration(null));
-		connectionTest(confProvider.getPortConfiguration(null));
-		*/
-		
+
 	}
-	
 	private static void dataPacketTest(PeerAgent agentA, Peer peerB) {
 		
 		byte[] payload = {0x0, 0x1, 0x2, 0x3, 0x4};
