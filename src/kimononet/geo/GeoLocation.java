@@ -288,7 +288,7 @@ public class GeoLocation implements Parcelable {
 	 * Calculates the bearing from one GeoLocation to another.
 	 * @param loc2 GeoLocation of second location to calculate bearing to.
 	 * @return Returns double precision float with bearing between this location
-	 * and given other location in degrees.
+	 * and given other location in radians.
 	 */
 	public double bearingTo(GeoLocation loc2)
 	{
