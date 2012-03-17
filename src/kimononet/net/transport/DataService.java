@@ -1,5 +1,6 @@
 package kimononet.net.transport;
 
+import java.util.PriorityQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import kimononet.net.p2p.Connection;
@@ -24,7 +25,7 @@ public class DataService extends Thread implements Service{
 	 * Blocking priority queue is used to keep track of
 	 * packets we have received and need to handle or forward.
 	 */
-	private PriorityBlockingQueue<DataPacket> packetQueue;
+	private PriorityQueue<DataPacket> packetQueue;
 	
 	/**
 	 * Peer agent associated with this data service.
@@ -49,14 +50,6 @@ public class DataService extends Thread implements Service{
 		 * when sending outgoing packets.
 		 */
 		private int sendServiceTimeout;
-		private static final int DEFAULT_SEND_TIMEOUT = 100;
-		
-		/**
-		 * Amount of time the sending thread will sleep between trying to clear the
-		 * packet queue.
-		 */
-		private int sendServiceFrequency;
-		private static final int DEFAULT_SEND_FREQUENCY = 100;
 		
 		/**
 		 * Connection for sending packets from the send data service.
@@ -92,10 +85,9 @@ public class DataService extends Thread implements Service{
 			
 		}
 		
-		public void run(){
+		public synchronized void run(){
 			
-			sendServiceTimeout = DEFAULT_SEND_TIMEOUT;
-			sendServiceFrequency = DEFAULT_SEND_FREQUENCY;
+			sendServiceTimeout = Connection.DEFAULT_TIMEOUT;
 			
 			//Get port and address configuration information.
 			PortConfiguration conf = agent.getPortConfiguration();
@@ -116,15 +108,19 @@ public class DataService extends Thread implements Service{
 			
 			while(!shutdown){
 				
-				if(!packetQueue.isEmpty()){
+			
+				while(packetQueue.isEmpty()) {
+					try {
+						wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				
+				
+				while(!packetQueue.isEmpty()){
 					DataPacket topPriorityPacket = packetQueue.poll();
 					handlePacket(topPriorityPacket);
-				}
-
-				try {
-					sleep(sendServiceFrequency);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
 				}
 				
 			}
@@ -139,18 +135,10 @@ public class DataService extends Thread implements Service{
 		 * when listening for incoming packets.
 		 */
 		private int receiveServiceTimeout;
-		private static final int DEFAULT_RECEIVE_TIMEOUT = 100;
 		
-		/**
-		 * Amount of time between checks for incoming packets in data service.
-		 */
-		private int receiveServiceFrequency;
-		private static final int DEFAULT_RECEIVE_FREQUENCY = 100;
-		
-		public void run(){
+		public synchronized void run(){
 			
-			receiveServiceTimeout = DEFAULT_RECEIVE_TIMEOUT;
-			receiveServiceFrequency = DEFAULT_RECEIVE_FREQUENCY;
+			receiveServiceTimeout = Connection.DEFAULT_TIMEOUT;
 			
 			//Get port and address configuration information.
 			PortConfiguration conf = agent.getPortConfiguration();
@@ -205,13 +193,6 @@ public class DataService extends Thread implements Service{
 					}
 					
 					addPacketToQueue(packet);
-					sendDataService.notify();
-				}
-				
-				try {
-					sleep(receiveServiceFrequency);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
 				}
 				
 			}
@@ -223,7 +204,7 @@ public class DataService extends Thread implements Service{
 		
 		this.agent = agent;
 		this.routingProtocol = new RoutingLogic(this.agent);
-		this.packetQueue = new PriorityBlockingQueue<DataPacket>();
+		this.packetQueue = new PriorityQueue<DataPacket>();
 		
 	}
 	
@@ -236,7 +217,10 @@ public class DataService extends Thread implements Service{
 	public void addPacketToQueue(DataPacket packet){
 		
 		packetQueue.add(packet);
-		
+
+		synchronized(sendDataService){
+			sendDataService.notifyAll();
+		}
 	}
 	
 	public void run(){
