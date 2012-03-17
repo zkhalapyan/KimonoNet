@@ -10,8 +10,9 @@ import kimononet.net.parcel.Parcelable;
  * well as keeps track of last update time. 
  *  
  * @author Zorayr Khalapyan
+ * @author Wade Norris
  * @since 2/9/2012
- * @version 3/14/2012
+ * @version 3/16/2012
  *
  */
 public class GeoLocation implements Parcelable {
@@ -327,6 +328,14 @@ public class GeoLocation implements Parcelable {
 		
 		return new GeoLocation(longitude, latitude, (upperLeftLocation.accuracy + lowerRightLocation.accuracy) / 2);
 		
+	}
+	
+	/**
+	 * Returns a random bearing value between 0 and 2PI.
+	 * @return A random bearing value between 0 and 2PI.
+	 */
+	public static float generateRandomBearing(){
+		return (float)(Math.random() * Math.PI * 2);
 	}
 
 }
