@@ -1,12 +1,11 @@
-package kimononet.simulation;
+package kimononet.geo;
 
-import kimononet.geo.GeoLocation;
 
-public class MapDimensions {
+public class GeoMap {
 
 	private GeoLocation upperLeft, lowerRight;
 
-	public MapDimensions(GeoLocation ul, GeoLocation lr) {
+	public GeoMap(GeoLocation ul, GeoLocation lr) {
 		setDimensions(ul, lr);
 	}
 
@@ -20,9 +19,9 @@ public class MapDimensions {
 
 	public void setDimensions(GeoLocation ul, GeoLocation lr) {
 		if (ul.getLongitude() >= lr.getLongitude())
-			throw new MapDimensionsException("Left longitude must be less than right longitude.");
+			throw new GeoMapException("Left longitude must be less than right longitude.");
 		else if (ul.getLatitude() <= lr.getLatitude())
-			throw new MapDimensionsException("Upper latitude must be greater than lower latitude.");
+			throw new GeoMapException("Upper latitude must be greater than lower latitude.");
 		else {
 			upperLeft = ul;
 			lowerRight = lr;

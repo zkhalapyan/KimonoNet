@@ -16,6 +16,7 @@ import javax.swing.JPanel;
 
 import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoVelocity;
+import kimononet.geo.GeoMap;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAgent;
 
@@ -23,10 +24,10 @@ public class SimulationPanel extends JPanel {
 
 	private BufferedImage imageUAV;
 	private int mouseX = -1, mouseY = -1;
-	private MapDimensions mapDim;
+	private GeoMap mapDim;
 	private Simulation simulation;
 
-	public SimulationPanel(BufferedImage i, MapDimensions m, Simulation s) {
+	public SimulationPanel(BufferedImage i, GeoMap m, Simulation s) {
 		imageUAV = i;
 		mapDim = m;
 		simulation = s;

@@ -28,6 +28,7 @@ import java.util.ArrayList;
 
 import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoVelocity;
+import kimononet.geo.GeoMap;
 import kimononet.geo.RandomWaypointGeoDevice;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
@@ -69,7 +70,7 @@ public class Simulation {
 	private JMenuItem mntmStartStopSim, mntmEditMapDim;
 	private JTable tablePeerProps;
 	private JTable tablePeerEnvProps;
-	private MapDimensions mapDim = new MapDimensions(	new GeoLocation(-0.25, 0.25, 0f),	// Upper left
+	private GeoMap mapDim = new GeoMap(	new GeoLocation(-0.25, 0.25, 0f),	// Upper left
 														new GeoLocation(0.25, -0.25, 0f));	// Lower right
 	private PeerEnvironment peerEnv = new PeerEnvironment();
 

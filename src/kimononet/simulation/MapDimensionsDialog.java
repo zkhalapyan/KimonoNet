@@ -19,6 +19,8 @@ import javax.swing.JTextField;
 
 import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoLocationException;
+import kimononet.geo.GeoMap;
+import kimononet.geo.GeoMapException;
 
 public class MapDimensionsDialog extends JDialog {
 
@@ -29,12 +31,12 @@ public class MapDimensionsDialog extends JDialog {
 	private JTextField textFieldLowerRightLong;
 	private JTextField textFieldLowerRightLat;
 
-	private MapDimensions mapDim;
+	private GeoMap mapDim;
 
 	/**
 	 * Create the dialog.
 	 */
-	public MapDimensionsDialog(MapDimensions md) {
+	public MapDimensionsDialog(GeoMap md) {
 		mapDim = md;
 
 		setTitle("Edit Map Dimensions");
@@ -135,7 +137,7 @@ public class MapDimensionsDialog extends JDialog {
 					JOptionPane.showMessageDialog(MapDimensionsDialog.this, "Please enter only numbers.");
 				} catch (GeoLocationException gle) {
 					JOptionPane.showMessageDialog(MapDimensionsDialog.this, gle.getMessage());
-				} catch (MapDimensionsException mde) {
+				} catch (GeoMapException mde) {
 					JOptionPane.showMessageDialog(MapDimensionsDialog.this, mde.getMessage());
 				}
 			}
