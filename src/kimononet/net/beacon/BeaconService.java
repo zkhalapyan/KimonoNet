@@ -10,6 +10,7 @@ import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
 import kimononet.service.Service;
+import kimononet.stat.StatPacket;
 
 /**
  * Service for sending and receiving beacon packets. 
@@ -133,6 +134,11 @@ public class BeaconService extends Thread implements Service{
 					continue;
 				}
 				
+				//If the agent has a stat monitor, notify that a packet has been
+				//received.
+				if(agent.getStatMonitor() != null)
+					agent.getStatMonitor().packetReceived(new StatPacket(packet));
+				
 				//Add new peers or replace peers with updated locations.
 				updatePeer(agent.getPeers(), peer);
 				
@@ -200,13 +206,18 @@ public class BeaconService extends Thread implements Service{
 		if(packet != null){
 			
 			//Send the beacon packet.
-			return connection.send(packet, 
-								   agent.getPortConfiguration().getBeaconServicePort(), 
-								   Connection.BROADCAST_ADDRESS);
+			boolean success = connection.send(packet, 
+								              agent.getPortConfiguration().getBeaconServicePort(), 
+								              Connection.BROADCAST_ADDRESS);
+			
+			//If the agent has a stat monitor and the packet was successfully 
+			//sent, notify the stat monitor.
+			if(agent.getStatMonitor() != null && success)
+				agent.getStatMonitor().packetSent(new StatPacket(beacon));
+			
+			return success;
 		}
 			
-		
-		
 		return false;
 	}
 	
