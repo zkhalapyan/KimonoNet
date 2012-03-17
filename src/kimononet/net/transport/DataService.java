@@ -6,7 +6,6 @@ import kimononet.net.p2p.Connection;
 import kimononet.net.p2p.MulticastConnection;
 import kimononet.net.p2p.UDPConnection;
 import kimononet.net.p2p.port.PortConfiguration;
-import kimononet.net.routing.ForwardMode;
 import kimononet.net.routing.RoutingLogic;
 import kimononet.peer.PeerAgent;
 import kimononet.service.Service;
@@ -65,13 +64,11 @@ public class DataService extends Thread implements Service{
 		
 		private boolean handlePacket(DataPacket packet){
 			
-			System.out.println("Routing packet!");
 			// Route the packet to the next hop using routing protocol
 			if(!routingProtocol.routePacket(packet)) {
 				System.out.println("Packet was dropped during routing protocol!");
 				return false;
 			}
-			System.out.println("Packet routed!");
 			
 			
 			byte[] packetByteArray = packet.toParcel().toByteArray();
@@ -79,9 +76,9 @@ public class DataService extends Thread implements Service{
 			if(packetByteArray != null){
 				
 				//Send the data packet.
-				System.out.println("Sending packet over network:\n" + packet);
+				System.out.println("\nSending packet over network:\n"+packet);
 				return connection.send(packetByteArray, 
-									   agent.getPortConfiguration().getDataSendingServicePort(), 
+									   agent.getPortConfiguration().getDataReceivingServicePort(), 
 									   Connection.BROADCAST_ADDRESS);
 					
 			}
@@ -179,10 +176,6 @@ public class DataService extends Thread implements Service{
 				
 				if(received != null){
 					
-					byte[] magic = new byte[] {(byte)0xBE, (byte)0xC0};
-					if(received[0] != magic[0] || received[1] != magic[1])
-						continue;
-					
 					DataPacket packet = new DataPacket(received);
 					
 					//Ignore data packets from the same peer.
@@ -228,7 +221,7 @@ public class DataService extends Thread implements Service{
 	
 	private void deliverPacket(DataPacket packet){
 		
-		System.out.println("Packet delivered to destination!\n" + packet.toString());
+		System.out.println("\nPacket delivered to destination:\n" + packet.toString());
 		
 	}
 	

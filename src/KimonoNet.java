@@ -6,36 +6,75 @@ import kimononet.net.p2p.Connection;
 import kimononet.net.p2p.MulticastConnection;
 import kimononet.net.p2p.port.PortConfiguration;
 import kimononet.net.parcel.Parcel;
+import kimononet.net.routing.QualityOfService;
 import kimononet.net.transport.DataPacket;
+import kimononet.net.transport.DataService;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
-import kimononet.simulation.Simulation;
 
 
+@SuppressWarnings("unused")
 public class KimonoNet {
 
 	public static void main(String args[]){
 
-		Simulation simulation = new Simulation();
-		simulation.start();
+		//Simulation simulation = new Simulation();
+		//simulation.start();
 
-		/*System.out.println("Starting Simulation");
+		System.out.println("Starting Simulation");
 		
 		PeerAddress addressA = new PeerAddress("12:00:00:00:00:00");
-		GeoLocation locationA = new GeoLocation(1.0, 2.0, 3.0f);
-		GeoVelocity velocityA = new GeoVelocity(locationA);
+		GeoLocation locationA = new GeoLocation(2000.0, 2000.0, 1.0f);
 		
 		PeerAddress addressB = new PeerAddress("12:00:00:00:00:01");
-		GeoLocation locationB = new GeoLocation(3.0, 2.0, 1.0f);
-		GeoVelocity velocityB = new GeoVelocity(locationB);
+		GeoLocation locationB = new GeoLocation(0.0, 0.0, 1.0f);
 		
-		PeerAgent agentA = new PeerAgent(new Peer(addressA, locationA, velocityA));
-		Peer peerB = new Peer(addressB, locationB, velocityB);
+		final Peer peerA = new Peer(addressA, locationA, new GeoVelocity(0f, 0f));
+		final PeerAgent agentA = new PeerAgent(peerA);
+		agentA.startServices();
+		
+		final Peer peerB = new Peer(addressB, locationB, new GeoVelocity(0f, 0f));
+		final PeerAgent agentB = new PeerAgent(peerB);
+		agentB.startServices();
+		
+
+		
+		new Thread(){
+			public void run(){
+				
+				
+				byte[] payload = {0x0, 0x1, 0x2, 0x3, 0x4};
+				
+				Packet packet1 = new DataPacket(agentA, peerB, QualityOfService.CONTROL, payload);
+				Packet packet2 = new DataPacket(agentA, peerB, QualityOfService.COMMUNICATION, payload);
+				Packet packet3 = new DataPacket(agentA, peerB, QualityOfService.REGULAR, payload);
+				
+				
+				for(int i=0; i<1; i++)
+				{
+				
+					try {
+						sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+
+					agentA.sendDataPacket((DataPacket)packet3);
+					agentA.sendDataPacket((DataPacket)packet2);
+					agentA.sendDataPacket((DataPacket)packet1);
+					
+				}
+				
+			}
+		}.start();
+		
+		
+		
 		
 		//packetTest(agentA);
 		
-		dataPacketTest(agentA, peerB);
+		//dataPacketTest(agentA, peerB);
 	
 		
 		//agentA.startServices();

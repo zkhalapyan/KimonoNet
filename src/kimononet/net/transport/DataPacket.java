@@ -203,67 +203,74 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		}
 		
 		// HDR-DST-ID (8)
-		this.hdr_dst = new Peer(new PeerAddress(parcel));
+		this.hdr_dst = new Peer(new PeerAddress(contents));
 		
 		// HDR-DST-LOC (24)
-		this.hdr_dst.setLocation(new GeoLocation(parcel));
+		this.hdr_dst.setLocation(new GeoLocation(contents));
 		
 		// HDR-FWD-DST-ID (8)
-		this.hdr_fwd_dst_id = new PeerAddress(parcel);
+		this.hdr_fwd_dst_id = new PeerAddress(contents);
 		this.fwd_dst_set = true;
 		
 		// HDR-FWD-MODE (1)
-		byte fwd_mode = parcel.getByte();
+		byte fwd_mode = contents.getByte();
 		if(fwd_mode == ForwardMode.GREEDY.getFlag())
 		    this.hdr_fwd_mode = ForwardMode.GREEDY;
 		else
 		    this.hdr_fwd_mode = ForwardMode.PERIMETER;
 		
 		// HDR-DATA-LEN (2)
-		parcel.getShort();
+		short payloadLength = contents.getShort();
 		
 		// HDR-QOS (1)
-		byte qos = parcel.getByte();
+		byte qos = contents.getByte();
 		if(qos == QualityOfService.CONTROL.getFlag())
 		    this.hdr_qos = QualityOfService.CONTROL;
 		else if(qos == QualityOfService.COMMUNICATION.getFlag())
 		    this.hdr_qos = QualityOfService.COMMUNICATION;
-		else
+		else if(qos == QualityOfService.REGULAR.getFlag())
 		    this.hdr_qos = QualityOfService.REGULAR;
+		else
+			this.hdr_qos = null;
 		
 		// HDR-HDR-CHK (4)
-		this.hdr_hdr_chk = parcel.getInt();
+		this.hdr_hdr_chk = contents.getInt();
 		
 		// XHDR (96)
 		if(this.hdr_fwd_mode == ForwardMode.PERIMETER){
-			this.xhdr_entered_loc = new GeoLocation(parcel);
-			this.xhdr_face_entered_loc = new GeoLocation(parcel);
-			this.xhdr_face_first_edge_src = new GeoLocation(parcel);
-			this.xhdr_face_first_edge_dst = new GeoLocation(parcel);
+			this.xhdr_entered_loc = new GeoLocation(contents);
+			this.xhdr_face_entered_loc = new GeoLocation(contents);
+			this.xhdr_face_first_edge_src = new GeoLocation(contents);
+			this.xhdr_face_first_edge_dst = new GeoLocation(contents);
 		}
 		else{
 			for(int i=0; i<DataPacket.DATA_XHDR_SIZE; i++)
-				parcel.getByte();
+				contents.getByte();
 		}
 		
 		// Extract payload
-		parcel.getByteArray(this.payload);
+		this.payload = new byte[payloadLength];
+		contents.getByteArray(this.payload);
 		
 		/*
 		// TODO FIX CRC CHECK
 		// CRC Check for Type 0 Header Fields (Data Header and Extended Data Header)
-		parcel.add(Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE - 4, (int)0x0);
+		packet.add(Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE - 4, (int)0x0);
 		
 		CRC32 crc = new CRC32();
-		crc.update(parcel.toByteArray(), Packet.HEADER_LENGTH, DataPacket.DATA_HDR_SIZE+DataPacket.DATA_XHDR_SIZE);
+		crc.update(packet.toByteArray(), Packet.HEADER_LENGTH,
+			DataPacket.DATA_HDR_SIZE+DataPacket.DATA_XHDR_SIZE);
 		
 		if(((int)crc.getValue()) != this.hdr_hdr_chk){
-			throw new PacketException("Invalid data packet checksum.\nPacket checksum: "+this.hdr_hdr_chk+"\nComputed checksum: "+((int)crc.getValue()));
+			throw new PacketException("Invalid data packet checksum.\nPacket checksum: "
+				+this.hdr_hdr_chk+"\nComputed checksum: "+((int)crc.getValue()));
 		}*/
 		
 	}
 
 	public Parcel toParcel(){
+		
+		setDataPacketContents();
 		
 		Parcel packetParcel = super.toParcel();
 		
@@ -272,7 +279,8 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		
 		// Generate checksum of common header, data header, and extended data header
 		CRC32 crc = new CRC32();
-		crc.update(packetParcel.toByteArray(), 0, Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE + DataPacket.DATA_XHDR_SIZE);
+		crc.update(packetParcel.toByteArray(), 0, Packet.HEADER_LENGTH
+				+ DataPacket.DATA_HDR_SIZE + DataPacket.DATA_XHDR_SIZE);
 		
 		// Add checksum value to data header
 		this.hdr_hdr_chk = (int) crc.getValue();
@@ -313,22 +321,22 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		
 		// HDR-QOS (1)
 		// Quality of Service set to MEDIUM
-		dataParcel.add(QualityOfService.REGULAR.getFlag());
+		dataParcel.add(this.hdr_qos);
 		
 		// HDR-HDR-CHK (4)
 		dataParcel.add(this.hdr_hdr_chk);
 		
 		// XHDR (96)
-		if(this.hdr_fwd_mode == ForwardMode.GREEDY){
-			for(int i=0; i<DATA_XHDR_SIZE; i++) {
-				dataParcel.add(((byte)0x0));
-			}
-		}
-		else{
+		if(this.hdr_fwd_mode == ForwardMode.PERIMETER){
 			dataParcel.add(this.xhdr_entered_loc);
 			dataParcel.add(this.xhdr_face_entered_loc);
 			dataParcel.add(this.xhdr_face_first_edge_src);
 			dataParcel.add(this.xhdr_face_first_edge_dst);
+		}
+		else{
+			for(int i=0; i<DATA_XHDR_SIZE; i++) {
+				dataParcel.add(((byte)0x0));
+			}
 		}
 			
 		
@@ -348,7 +356,6 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	}
 
 	public PeerAddress getHdr_fwd_dst_id() {
-		//TODO what if not set???
 		return hdr_fwd_dst_id;
 	}
 
@@ -359,6 +366,10 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 
 	public QualityOfService getQOS() {
 		return this.hdr_qos;
+	}
+	
+	public void setQOS(QualityOfService qos) {
+		this.hdr_qos = qos;
 	}
 
 	public ForwardMode getForwardMode() {

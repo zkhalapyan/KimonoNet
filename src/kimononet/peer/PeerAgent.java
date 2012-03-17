@@ -9,6 +9,7 @@ import kimononet.net.beacon.BeaconService;
 import kimononet.net.p2p.port.PortConfiguration;
 import kimononet.net.p2p.port.PortConfigurationProvider;
 import kimononet.net.p2p.port.SimulationPortConfigurationProvider;
+import kimononet.net.transport.DataPacket;
 import kimononet.net.transport.DataService;
 import kimononet.stat.StatMonitor;
 import kimononet.time.SystemTimeProvider;
@@ -35,6 +36,13 @@ public class PeerAgent {
 	 * service is responsible for sending beacons and beacon acknowledgments.
 	 */
 	private BeaconService beaconService;
+	
+	/**
+	 * Data discovery service that allows for routing of data packets through
+	 * this node, adding data packets to the network from this node, or delivering
+	 * data packets meant for this node.
+	 */
+	private DataService dataService;
 	
 	/**
 	 * Stores current peer's environment information.
@@ -198,9 +206,11 @@ public class PeerAgent {
 		//Create the services used by the agent.
 		this.beaconService = new BeaconService(this);		
 		this.geoService    = new GeoService(this);
+		this.dataService   = new DataService(this);
 		
 		this.geoService.startService();
 		this.beaconService.start();
+		this.dataService.startService();
 		
 	}
 	
@@ -214,6 +224,18 @@ public class PeerAgent {
 	public void shutdownServices(){
 		this.geoService.shutdownService();
 		this.beaconService.shutdownService();
+		this.dataService.shutdownService();
+	}
+	
+	/**
+	 * Adds a data packet to this nodes data services queue of packets
+	 * to be routed to the next destination on the network. This allows
+	 * for the sending of data packets over the network from this node.
+	 * @param packet The DataPacket to be sent over the network.
+	 */
+	public void sendDataPacket(DataPacket packet)
+	{
+		this.dataService.addPacketToQueue(packet);
 	}
 	
 	/**

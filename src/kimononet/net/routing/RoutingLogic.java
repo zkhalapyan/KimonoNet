@@ -39,8 +39,6 @@ public class RoutingLogic {
 		for (Map.Entry<PeerAddress, Peer> entry : routingTable1.entrySet())
 		{
 			Peer peerN = entry.getValue();
-			System.out.println("Peer in table:\n" + peerN.getAddress() + "\n" + peerN.getLocation());
-			System.out.println("Node Peer:\n" + agent.getPeer().getAddress() + "\n" + agent.getPeer().getLocation());
 			double t = peerN.getLocation().distanceTo(packet.getDestinationPeer().getLocation());
 			if (t<d)
 			{
@@ -78,6 +76,7 @@ public class RoutingLogic {
 			GeoLocation e = packet.getGreedyEnteredLocation();
 			if(d.distanceTo(s) < d.distanceTo(e))
 			{
+				System.out.println("Switching packet to GREEDY mode");
 				return routeGreedy(packet);
 			}
 		}
