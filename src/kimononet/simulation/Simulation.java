@@ -61,13 +61,13 @@ public class Simulation {
 
 	private ArrayList<PeerAgent> arrayListPeerAgents = new ArrayList<PeerAgent>();
 	private boolean bSimRunning = false;
-	private DefaultListModel listModelPeers;
+	private DefaultListModel<String> listModelPeers;
 	private DefaultTableModel tableModelPeerProps;
 	private DefaultTableModel tableModelPeerEnvProps;
 	private JButton btnStartStop, btnAddPeer, btnDeletePeer, btnApplyPeerProps, btnApplyEnvProps;
 	private JFrame frame; 
 	private JLabel lblSimStatusDisplay;
-	private JList listPeers;
+	private JList<String> listPeers;
 	private JMenuItem mntmStartStopSim, mntmEditMapDim;
 	private JTable tablePeerProps;
 	private JTable tablePeerEnvProps;
@@ -449,8 +449,8 @@ public class Simulation {
 
 		frame.getContentPane().add(scrollPanePeers, gbc_scrollPanePeers);
 
-		listModelPeers = new DefaultListModel();
-		listPeers = new JList(listModelPeers);
+		listModelPeers = new DefaultListModel<String>();
+		listPeers = new JList<String>(listModelPeers);
 		listPeers.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		(listPeers.getSelectionModel()).addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent event) {

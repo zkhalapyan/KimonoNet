@@ -63,16 +63,15 @@ public class DataService extends Thread implements Service{
 				return false;
 			}
 			
-			
 			byte[] packetByteArray = packet.toParcel().toByteArray();
 			
 			if(packetByteArray != null){
 				
-				//Send the data packet.
-				System.out.println("\nSending packet over network:\n"+packet);
-				
 				StatPacket p = new StatPacket(packet, agent.getPeer().getAddress());
 				agent.getStatMonitor().packetSent(p);
+				
+				//Send the data packet.
+				System.out.println("\nSending packet over network:\n"+packet);
 				
 				return connection.send(packetByteArray, 
 									   agent.getPortConfiguration().getDataReceivingServicePort(), 

@@ -31,7 +31,7 @@ public class BeaconService extends Thread implements Service{
 	/**
 	 * Peer agent associated with this peer discovery service.
 	 */
-	private PeerAgent agent;
+	private PeerAgent agent;	
 	
 	/**
 	 * This value indicates how long in seconds a beacon service waits for 

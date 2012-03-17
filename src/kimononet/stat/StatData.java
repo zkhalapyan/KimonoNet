@@ -72,6 +72,7 @@ public class StatData {
 	 */
 	public StatResults getStatResults(PeerAddress sourceAddress, PeerAddress destinationAddress){
 		
+		
 		int receivedPacketCount = 0;
 		int sentPacketCount     = 0;
 		int beaconPacketCount   = 0;
@@ -81,48 +82,50 @@ public class StatData {
 		int greedyCount      = 0;
 		int perimeterCount   = 0;
 		
-
-		for(StatPacket packet : sentPackets){
+		synchronized(sentPackets){
 			
-			if(packet.getType() == PacketType.BEACON){
-				beaconPacketCount ++;
+			for(StatPacket packet : sentPackets){
 				
-			}else if(packet.getType() == PacketType.DATA){
-				
-				dataPacketCount ++;
-				
-				switch(packet.getMode()){
-					case GREEDY:
-						greedyCount ++;
-						break;
-					case PERIMETER:
-						perimeterCount ++;
+				if(packet.getType() == PacketType.BEACON){
+					beaconPacketCount ++;
+					
+				}else if(packet.getType() == PacketType.DATA){
+					
+					dataPacketCount ++;
+					
+					switch(packet.getMode()){
+						case GREEDY:
+							greedyCount ++;
+							break;
+						case PERIMETER:
+							perimeterCount ++;
+							
+					}
+					
+					if(packet.isSource() 
+					   && packet.getSource().equals(sourceAddress)
+					   && packet.getDestination().equals(destinationAddress)){
 						
+						sentPacketCount ++;
+						
+					}
+				}			
+			}
+		}
+		
+		synchronized(receivedPackets){
+			for(StatPacket packet : receivedPackets){
+				
+				if(packet.isSink() 
+				   && packet.getSource().equals(sourceAddress)
+				   && packet.getDestination().equals(destinationAddress)){
+					
+					receivedPacketCount ++;
 				}
+					
 			}
-			
-			if(packet.isSource() 
-			   && packet.getSource().equals(sourceAddress)
-			   && packet.getDestination().equals(destinationAddress)){
-				
-				sentPacketCount ++;
-				
-			}
-			
-			
 		}
-		
-		for(StatPacket packet : receivedPackets){
-			
-			if(packet.isSink() 
-			   && packet.getSource().equals(sourceAddress)
-			   && packet.getDestination().equals(destinationAddress)){
-				
-				receivedPacketCount ++;
-			}
-				
-		}
-		
+	
 		return new StatResults(receivedPacketCount, 
 							   sentPacketCount, 
 							   beaconPacketCount, 

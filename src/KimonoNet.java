@@ -38,6 +38,7 @@ public class KimonoNet {
 
 	public static void main(String args[]){
 		
+	
 		if(args.length <= 0 || args[0].equals("mode-gui")){
 			startUISimulation();
 			
@@ -57,8 +58,12 @@ public class KimonoNet {
 			int  numberOfPackets  = Integer.parseInt(args[6]);
 			
 			if(numberOfPeers < 2){
-				System.out.println("Please specify more than 2 peers.");
-				return;
+				
+				System.out.println("Please specify more than 2 peers in order " +
+								   "to be able to send and receive packets. No " +
+								   "packets will be sent.");
+				
+				numberOfPackets = 0;
 			}
 			
 			GeoMap map = new GeoMap(mapWidth, mapHeight);
@@ -66,8 +71,22 @@ public class KimonoNet {
 			new KiNCoL(numberOfPeers, map, peerSpeed, numberOfPackets, hostilityFactor).start();
 			
 		}else{
-			System.out.println("Please specify [mode] [number-of-peers map-width map-height hostility-factor].");
+			System.out.println("Please specify [mode] [number-of-peers " +
+							   "map-width map-height hostility-factor].");
 		}
+		
+		
+		
+		//testStatMonitor();
+	}
+	
+	private static void testStatMonitor(){
+		
+		
+		PeerAddress addressA = new PeerAddress("12:00:00:00:00:00");
+		PeerAddress addressB = new PeerAddress("12:00:00:00:00:01");
+		PeerAddress addressC = new PeerAddress("12:00:00:00:00:02");
+		
 		
 	}
 	
