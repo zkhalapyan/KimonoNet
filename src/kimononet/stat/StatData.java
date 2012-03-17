@@ -126,8 +126,8 @@ public class StatData {
 			}
 		}
 	
-		return new StatResults(receivedPacketCount, 
-							   sentPacketCount, 
+		return new StatResults(sentPacketCount, 
+							   receivedPacketCount, 
 							   beaconPacketCount, 
 							   dataPacketCount,
 							   greedyCount, 
