@@ -35,6 +35,13 @@ public class MasterStatMonitor implements StatMonitor {
 	private boolean running = true;
 	
 	/**
+	 * Initializes {@link StatData}.
+	 */
+	public MasterStatMonitor(){
+		data = new StatData();
+	}
+	
+	/**
 	 * Accounts for a sent data packet. Specified packet will be ignored if the 
 	 * current monitor has been shutdown using {@link #shutdownService()}.
 	 */
