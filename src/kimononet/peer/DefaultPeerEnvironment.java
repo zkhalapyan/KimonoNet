@@ -32,7 +32,7 @@ public class DefaultPeerEnvironment extends PeerEnvironment{
 		set("max-beacon-peers",       "34");
 		set("node-failure-rate",      "0");
 		set("packet-loss-rate",       "0");
-		set("max-transmission-range", "0");
+		set("max-transmission-range", "150");
 		set("average-gps-accuracy",   "1");
 		
 	}
