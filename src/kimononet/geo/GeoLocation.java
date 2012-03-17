@@ -330,6 +330,17 @@ public class GeoLocation implements Parcelable {
 	}
 	
 	/**
+	 * Returns a random location bounded by the provided map.
+	 * @param map The generated random map will be bounded by this value.
+	 * 
+	 * @return A randomly generated location within the bounded map.
+	 * @see #generateRandomGeoLocation(GeoLocation, GeoLocation)
+	 */
+	public static GeoLocation generateRandomGeoLocation(GeoMap map){
+		return GeoLocation.generateRandomGeoLocation(map.getUpperLeft(), map.getLowerRight());
+	}
+	
+	/**
 	 * Returns a random bearing value between 0 and 2PI.
 	 * @return A random bearing value between 0 and 2PI.
 	 */
