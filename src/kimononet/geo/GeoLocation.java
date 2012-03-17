@@ -265,21 +265,23 @@ public class GeoLocation implements Parcelable {
 	 */
 	public double distanceTo(GeoLocation loc2)
 	{
-		double lo1 = Math.toRadians(this.getLongitude());
-		double la1 = Math.toRadians(this.getLatitude());
+		double lat2 = loc2.getLatitude();
+		double lon2 = loc2.getLongitude();
+		double lat1 = this.getLatitude();
+		double lon1 = this.getLongitude();
+		
+		double R = 6371; // radius of Earth in km
+		double dLat = Math.toRadians(lat2-lat1);
+		double dLon = Math.toRadians(lon2-lon1);
+		lat1 = Math.toRadians(lat1);
+		lat2 = Math.toRadians(lat2);
 
-		double lo2 = Math.toRadians(loc2.getLongitude());
-		double la2 = Math.toRadians(loc2.getLatitude());
-
-		double radius = 6367;
-
-		double distance = Math.sin((la2-la1)/2)*Math.sin((la2-la1)/2);
-		distance += Math.cos(la2-la1);
-		distance += Math.cos(la1)*Math.cos(la2)*Math.sin((lo2-lo1)/2)*Math.sin((lo2-lo1)/2);
-		distance = Math.asin(Math.sqrt(distance));
-		distance = 2*radius*distance;
-
-		return distance;
+		double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+		        Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+		double d = R * c;
+		
+		return d;
 	}
 
 	/**
