@@ -11,6 +11,7 @@ import kimononet.net.p2p.port.PortConfigurationProvider;
 import kimononet.net.p2p.port.SimulationPortConfigurationProvider;
 import kimononet.net.transport.DataPacket;
 import kimononet.net.transport.DataService;
+import kimononet.stat.MasterStatMonitor;
 import kimononet.stat.StatMonitor;
 import kimononet.time.SystemTimeProvider;
 import kimononet.time.TimeProvider;
@@ -177,7 +178,9 @@ public class PeerAgent {
 		this.environment               = environment;
 		this.geoDevice                 = geoDevice;
 		this.portConfigurationProvider = portConfigurationProvider;
-		this.timeProvider 			   = timeProvider;
+		
+		setTimeProvider(timeProvider);
+		setStatMonitor(new MasterStatMonitor());
 		
 		//Create any data structures used by the agent.
 		this.peers = new HashMap<PeerAddress, Peer>();
