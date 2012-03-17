@@ -16,6 +16,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.Timer;
 
 import java.awt.EventQueue;
 import java.awt.GridBagLayout;
@@ -71,8 +72,10 @@ public class Simulation {
 	private JTable tablePeerProps;
 	private JTable tablePeerEnvProps;
 	private GeoMap mapDim = new GeoMap(	new GeoLocation(-0.25, 0.25, 0f),	// Upper left
-														new GeoLocation(0.25, -0.25, 0f));	// Lower right
+										new GeoLocation(0.25, -0.25, 0f));	// Lower right
 	private PeerEnvironment peerEnv = new PeerEnvironment();
+	private Timer timer;
+	private int timerRefreshRate = 1;	// in ms
 
 	private void refresh() {
 		if (tableModelPeerProps != null)
@@ -186,6 +189,12 @@ public class Simulation {
 			tablePeerEnvProps.setEnabled(!bSimRunning);
 
 		refresh();
+
+		// Start/stop repaint timer.
+		if (bSimRunning)
+			timer.start();
+		else
+			timer.stop();
 	}
 
 	public ArrayList<PeerAgent> getPeerAgents() {
@@ -236,6 +245,8 @@ public class Simulation {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
+		// TODO: hard-coded for now !!
+		peerEnv.set("max-transmission-range", "1337");
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] {0, 0, 0, 0, 0};
 		gridBagLayout.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -645,6 +656,12 @@ public class Simulation {
 		scrollPaneStats.setViewportView(textAreaStats);
 
 		refresh();
+
+		timer = new Timer(timerRefreshRate, new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				frame.repaint();
+			}
+		});
 	}
 
 }
