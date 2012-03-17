@@ -97,11 +97,11 @@ public class GeoLocation implements Parcelable {
 	 * @param accuracy Accuracy to set.
 	 */
 	public void setLocation(double longitude, double latitude, float accuracy){
-		if (longitude < -180d || longitude > 180d)
+/*		if (longitude < -180d || longitude > 180d)
 			throw new GeoLocationException("Longitude must be within the range [-180, 180].");
 		else if (latitude < -90d || latitude > 90d)
 			throw new GeoLocationException("Latitude must be within the range [-90, 90].");
-		else {
+		else */{
 			this.longitude = longitude;
 			this.latitude = latitude;
 			this.accuracy = accuracy;
@@ -300,7 +300,7 @@ public class GeoLocation implements Parcelable {
 		double x = Math.cos(lat1)*Math.sin(lat2) -
 		        Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
 
-		double brng = Math.toDegrees(Math.atan2(y, x));
+		double brng = Math.atan2(y, x);
 
 		return brng;
 	}
