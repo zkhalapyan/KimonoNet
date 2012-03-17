@@ -193,7 +193,43 @@ public class StatResults {
 		this.perimeterCount  += results.perimeterCount;
 	}
 	
-	
-	
+	/**
+	 * Returns a string representation of the current results. The output 
+	 * includes the following information.
+	 * 
+	 * <pre>
+	 * 1. <b>Packets Lost:</b> Calculated as difference between the number of 
+	 *    packets that left the source, and the number of packets that arrived at 
+	 *    the destination.
+	 * 2. <b>Packet Delivery Percentage:</b> Calculated as the ratio between the 
+	 *    number of packets received at the sink and the number of packets sent at 
+	 *    the source.
+	 * 3. <b>Control Overhead:</b> Calculated as the ratio of the number of 
+	 *    sent/received beacon packets over the number of sent/received data 
+	 *    packets.
+	 * 4. <b>Greedy Ratio:</b> Calculated as the ratio of the number of sent packets
+	 *    that used greedy over the number of sent packets that used parameter 
+	 *    routing.
+	 * </pre>
+	 */
+	public String toString(){
+		
+		String results = "";
+		results += "###############RESULTS###############"                + "\n";
+		results += "Lost Packets:          \t" + getLostPackets()         + "\n";
+		results += "Packet Delivery Ratio: \t" + getPacketDeliveryRatio() + "\n";
+		results += "Control Overhead:      \t" + getControlOverhead()     + "\n";
+		results += "Greedy Ratio:          \t" + getGreedyRatio()         + "\n\ns";
+		
+		results += "###############COUNTS###############"                 + "\n";
+		results += "Sent Packet Count:       \t" + sentPackets 	          + "\n";
+		results += "Received Packet Count:   \t" + receivedPackets        + "\n";
+		results += "Beacon Packet Count:     \t" + beaconPackets          + "\n";
+		results += "Data Packet Count:       \t" + dataPackets 	          + "\n";
+		results += "Greedy Routing Count:    \t" + greedyCount 	          + "\n";
+		results += "Perimeter Routing Count: \t" + perimeterCount         + "\n\n";
+		
+		return results;
+	}
 	
 }
