@@ -104,14 +104,13 @@ public class StatPacket {
 	 *                   
 	 * @param node The node handling the packet. This might be either the 
 	 * 			   source, the destination, or an intermediary node.
-	 * @param mode The mode of forwarding used. 
 	 */
-	public StatPacket(DataPacket dataPacket, PeerAddress node, ForwardMode mode){
+	public StatPacket(DataPacket dataPacket, PeerAddress node){
 		this(dataPacket.getType(), 
 			 dataPacket.getPeer().getAddress(),
 			 dataPacket.getDestinationPeer().getAddress(),
 			 node,
-			 mode);
+			 dataPacket.getForwardMode());
 	}
 
 	/**
