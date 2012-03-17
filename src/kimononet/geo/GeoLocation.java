@@ -288,10 +288,10 @@ public class GeoLocation implements Parcelable {
 	/**
 	 * Calculates the bearing from one GeoLocation to another.
 	 * @param loc2 GeoLocation of second location to calculate bearing to.
-	 * @return Returns double precision float with bearing between this location
+	 * @return Returns single precision float with bearing between this location
 	 * and given other location in radians.
 	 */
-	public double bearingTo(GeoLocation loc2)
+	public float bearingTo(GeoLocation loc2)
 	{
 		double dLon = Math.toRadians(loc2.getLongitude()-this.getLongitude());
 		double lat1 = Math.toRadians(this.getLatitude());
@@ -301,7 +301,7 @@ public class GeoLocation implements Parcelable {
 		double x = Math.cos(lat1)*Math.sin(lat2) -
 		        Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
 
-		double brng = Math.atan2(y, x);
+		float brng = (float) Math.atan2(y, x);
 
 		return brng;
 	}
