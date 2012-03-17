@@ -9,6 +9,7 @@ import kimononet.net.p2p.port.PortConfiguration;
 import kimononet.net.routing.RoutingLogic;
 import kimononet.peer.PeerAgent;
 import kimononet.service.Service;
+import kimononet.stat.StatPacket;
 
 /**
  * Service for sending and receiving data packets. 
@@ -77,6 +78,10 @@ public class DataService extends Thread implements Service{
 				
 				//Send the data packet.
 				System.out.println("\nSending packet over network:\n"+packet);
+				
+				StatPacket p = new StatPacket(packet, agent.getPeer().getAddress());
+				agent.getStatMonitor().packetSent(p);
+				
 				return connection.send(packetByteArray, 
 									   agent.getPortConfiguration().getDataReceivingServicePort(), 
 									   Connection.BROADCAST_ADDRESS);
@@ -189,6 +194,9 @@ public class DataService extends Thread implements Service{
 						System.out.println("Packet was not intended for this node, dropped.");
 						continue;
 					}
+					
+					StatPacket p = new StatPacket(packet, agent.getPeer().getAddress());
+					agent.getStatMonitor().packetReceived(p);
 					
 					// Deliver packets destined for this node
 					if(agent.getPeer().getAddress().equals(packet.getDestinationPeer().getAddress())){
