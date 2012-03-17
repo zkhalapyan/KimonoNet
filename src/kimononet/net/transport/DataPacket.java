@@ -380,20 +380,18 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		this.hdr_fwd_mode = mode;
 	}
 	
-	public void setXHDRFields(GeoLocation entered, GeoLocation faceEntered,
-							  GeoLocation faceEdgeSrc, GeoLocation faceEdgeDst)
+	public void initializeXHDRFields(GeoLocation entered)
 	{
 		this.xhdr_entered_loc = entered;
-		this.xhdr_face_entered_loc = faceEntered;
-		this.xhdr_face_first_edge_src = faceEdgeSrc;
-		this.xhdr_face_first_edge_dst = faceEdgeDst;
+		this.xhdr_face_entered_loc = entered;
+		this.xhdr_face_first_edge_src = entered;
 	}
 
-	public GeoLocation getGreedyEnteredLocation() {
+	public GeoLocation getPerimeterEnteredLocation() {
 		return this.xhdr_face_entered_loc;
 	}
 
-	public GeoLocation getGreedyEnteredFaceLocation() {
+	public GeoLocation getPerimeterEnteredFaceLocation() {
 		return this.xhdr_face_entered_loc;
 	}
 
@@ -433,6 +431,14 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 				   "XHDR-FACE-FIRST-EDGE-SRC: \t" + this.xhdr_face_first_edge_src + "\n" + 
 				   "XHDR-FACE-FIRST-EDGE-DST:   \t" + this.xhdr_face_first_edge_dst + "\n" + 
 				   "---------------------------------------------";
+	}
+
+	public void setXHDRFaceFirstEdgeDst(GeoLocation dst) {
+		this.xhdr_face_first_edge_dst = dst;
+	}
+
+	public void setXHDRFaceFirstEdgeSrc(GeoLocation dst) {
+		this.xhdr_face_first_edge_src = dst;
 	}
 	
 }

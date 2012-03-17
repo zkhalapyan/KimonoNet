@@ -29,7 +29,7 @@ public class RoutingLogic {
 
 		HashMap<PeerAddress, Peer> routingTable1 = agent.getPeers();
 		if(routingTable1.size() == 0) {
-			System.out.println("Packet dropped because there are no peers in table to route to!");
+			System.out.println("Packet dropped because there are no peers in table to route to.");
 			return false;
 		}
 		
@@ -49,7 +49,7 @@ public class RoutingLogic {
 		
 		if(id.equals(agent.getPeer().getAddress()))
 		{
-			System.out.println("Switching packet to perimeter mode");
+			System.out.println("Reached local maximum, switching packet to perimeter mode");
 			return routePerimeter(packet);
 		}
 		
@@ -66,36 +66,45 @@ public class RoutingLogic {
 		
 		if(packet.getForwardMode() == ForwardMode.GREEDY)
 		{
-			packet.setForwardMode(ForwardMode.PERIMETER);
-			
-			//TODO clarify which 3 or 4 should be set from protocol
-			packet.setXHDRFields(s, s, s, d);
+			packet.initializeXHDRFields(s);
 		}
 		else
 		{
-			GeoLocation e = packet.getGreedyEnteredLocation();
+			GeoLocation e = packet.getPerimeterEnteredLocation();
 			if(d.distanceTo(s) < d.distanceTo(e))
 			{
-				System.out.println("Switching packet to GREEDY mode");
+				System.out.println("Switching packet to GREEDY mode.");
 				return routeGreedy(packet);
 			}
 		}
 		
 		HashMap<PeerAddress, Peer> routingTable1 = agent.getPeers();
-		if(routingTable1.size() == 0)
+		if(routingTable1.size() == 0) {
+			System.out.println("Packet dropped because there are no peers in table to route to.");
 			return false;
+		}
 
 		PeerAddress id = agent.getPeer().getAddress();
-		GeoLocation x;
-		GeoLocation f = packet.getGreedyEnteredFaceLocation();
+		GeoLocation x = agent.getPeer().getLocation();
+		GeoLocation f = packet.getPerimeterEnteredFaceLocation();
 		
 		double b = d.bearingTo(f);
+		
+		// Make sure bearing value is within 0 and 2PI
+		b = b % (2*Math.PI);
+		if(b<0)
+			b += (2*Math.PI);
+		
 		double t;
 		
 		for (Map.Entry<PeerAddress, Peer> entry : routingTable1.entrySet())
 		{
 			Peer peerN = entry.getValue();
 			t = d.bearingTo(peerN.getLocation());
+			
+			t = t % (2*Math.PI);
+			if(t<0)
+				t += (2*Math.PI);
 			
 			if((b > 0 && t - b > 0) || (b < 0 && t - b < 0))
 			{
@@ -109,14 +118,23 @@ public class RoutingLogic {
 		
 		if(id.equals(agent.getPeer().getAddress()))
 		{
+			System.out.println("No peers to route to in perimeter, dropping packet.");
 			return false;
 		}
-		
-		//TODO check for intersecting edges
-		
-		//TODO check for full circle / loops
-		
+		else if(packet.getForwardMode() == ForwardMode.GREEDY)
+		{
+			packet.setForwardMode(ForwardMode.PERIMETER);
+			packet.setXHDRFaceFirstEdgeDst(x);
+		}
+		//else if(false)
+			//TODO CHECK IF INTERSECTION
+		//{
+			//packet.setXHDRFaceFirstEdgeSrc(s);
+			//packet.setXHDRFaceFirstEdgeDst(x);
+		//}
+
 		packet.setHdr_fwd_dst_id(id);
+		
 		return true;
 	}
 	
