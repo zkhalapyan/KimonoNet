@@ -1,9 +1,11 @@
 package kimononet.geo;
 
-import kimononet.time.SystemTimeProvider;
 import kimononet.time.TimeProvider;
 
 /**
+ * GPS enabled device that emulates a stationary device. Once initialized with 
+ * a specific location and velocity, this GPS enabled device will always return
+ * the same location and velocity. 
  * 
  * @author Zorayr Khalapyan
  * @version 3/6/2012
