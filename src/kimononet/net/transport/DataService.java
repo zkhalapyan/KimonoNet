@@ -1,6 +1,5 @@
 package kimononet.net.transport;
 
-import java.util.PriorityQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import kimononet.net.p2p.Connection;
@@ -25,7 +24,7 @@ public class DataService extends Thread implements Service{
 	 * Blocking priority queue is used to keep track of
 	 * packets we have received and need to handle or forward.
 	 */
-	private PriorityQueue<DataPacket> packetQueue;
+	private PriorityBlockingQueue<DataPacket> packetQueue;
 	
 	/**
 	 * Peer agent associated with this data service.
@@ -109,7 +108,7 @@ public class DataService extends Thread implements Service{
 			while(!shutdown){
 				
 			
-				while(packetQueue.isEmpty()) {
+				while(!shutdown && packetQueue.isEmpty()) {
 					try {
 						wait();
 					} catch (InterruptedException e) {
@@ -204,7 +203,7 @@ public class DataService extends Thread implements Service{
 		
 		this.agent = agent;
 		this.routingProtocol = new RoutingLogic(this.agent);
-		this.packetQueue = new PriorityQueue<DataPacket>();
+		this.packetQueue = new PriorityBlockingQueue<DataPacket>();
 		
 	}
 	
@@ -255,6 +254,10 @@ public class DataService extends Thread implements Service{
 	public void shutdownService(){
 		
 		shutdown = true;
+		
+		synchronized(sendDataService){
+			sendDataService.notifyAll();
+		}
 		
 	}
 	
