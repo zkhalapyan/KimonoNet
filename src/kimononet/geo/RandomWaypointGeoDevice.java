@@ -1,5 +1,6 @@
 package kimononet.geo;
 
+import kimononet.time.SystemTimeProvider;
 import kimononet.time.TimeProvider;
 
 /**
@@ -45,11 +46,42 @@ public class RandomWaypointGeoDevice implements GeoDevice {
 	private double turnProbability;
 	
 	/**
+	 * By default, {@link #turnProbability} is set to 20%.
+	 */
+	private static final double DEFAULT_TURN_PROBABILITY = 0.2;
+	
+	/**
 	 * With a probability of {@link #turnProbability}, GPS direction will change
 	 * by a maximum value either clockwise or counterclockwise specified by this
 	 * variable in radians. The direction may change by [-maxTurn, +maxTurn].
 	 */
 	private double maxTurn;
+	
+	/**
+	 * By default, {@link #maxTurn} is set to about 45 degrees.
+	 */
+	private static final double DEFAULT_MAX_TURN = Math.PI / 4;
+
+	
+	/**
+	 * Creates a new random waypoint model using {@link #DEFAULT_MAX_TURN} and
+	 * {@link #DEFAULT_TURN_PROBABILITY}. By defaul, the time provider will be 
+	 * set to the {@link SystemTimeProvider}.
+	 * 
+	 * 
+	 * @param currentLocation The starting location.
+	 * 
+	 * @param velocity        The starting velocity.
+	 */
+	public RandomWaypointGeoDevice(GeoLocation currentLocation,
+								   GeoVelocity velocity){
+		this(currentLocation, 
+			velocity, 
+			new SystemTimeProvider(), 
+			DEFAULT_MAX_TURN, 
+			DEFAULT_TURN_PROBABILITY);
+	}
+	
 	
 	/**
 	 * Creates a new GPS enabled device emulator based on the 
