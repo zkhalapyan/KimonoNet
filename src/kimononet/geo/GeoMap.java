@@ -1,12 +1,43 @@
 package kimononet.geo;
 
 
+/**
+ * 
+ * Represents a map bounded by upper left and bottom right corners.
+ * 
+ * @author James Hung
+ * @author Zorayr Khalapyan
+ *
+ */
 public class GeoMap {
 
-	private GeoLocation upperLeft, lowerRight;
+	/**
+	 * Represented the boundary at the upper left corner.
+	 */
+	private GeoLocation upperLeft;
+	
+	/**
+	 * Represents the boundary at the bottom right corner. 
+	 */
+	private GeoLocation lowerRight;
+	
+	/**
+	 * Provided a width and a height of a certain map, the constructor creates 
+	 * a upper left corner station at (0, 0) and lower right corner according
+	 * to the dimension.
+	 * 
+	 * @param width  Width of the map in meters.
+	 * @param height Height of the map in meters. 
+	 */
+	public GeoMap(int width, int height){
+		
+		this.upperLeft = new GeoLocation(0, 0, 0);
+		this.lowerRight = new GeoLocation(Math.toDegrees(height/ GeoLocation.EARTH_MEDIAN_RADIUS),
+										  Math.toDegrees(width / GeoLocation.EARTH_MEDIAN_RADIUS), 0);
+	}
 
-	public GeoMap(GeoLocation ul, GeoLocation lr) {
-		setDimensions(ul, lr);
+	public GeoMap(GeoLocation upperLeft, GeoLocation lowerRight) {
+		setDimensions(upperLeft, lowerRight);
 	}
 
 	public GeoLocation getUpperLeft() {
@@ -18,8 +49,10 @@ public class GeoMap {
 	}
 
 	public void setDimensions(GeoLocation ul, GeoLocation lr) {
+		
 		if (ul.getLongitude() >= lr.getLongitude())
 			throw new GeoMapException("Left longitude must be less than right longitude.");
+		
 		else if (ul.getLatitude() <= lr.getLatitude())
 			throw new GeoMapException("Upper latitude must be greater than lower latitude.");
 		else {
