@@ -44,6 +44,12 @@ public class BeaconService extends Thread implements Service{
 	private boolean shutdown;
 	
 	/**
+	 * If set, the beacon service will ignore all packets outside of this range.
+	 * The value is specified in meters.
+	 */
+	private Integer maxRange;
+	
+	/**
 	 * Creates a beacon service associated with the specified peer agent with
 	 * a default timeout value indicated by {@link #DEFAULT_TIMEOUT}.
 	 * 
@@ -68,6 +74,10 @@ public class BeaconService extends Thread implements Service{
 	public BeaconService(PeerAgent agent, int timeout){
 		this.agent   = agent;
 		this.timeout = timeout;
+		
+		//If the value is not set within the environment, then maxRnage will be
+		//set to null.
+		maxRange = Integer.parseInt(agent.getEnvironment().get("max-transmission-range"));
 	}
 	
 	public void run()
@@ -106,16 +116,22 @@ public class BeaconService extends Thread implements Service{
 					
 			}else{
 				
+				//Parse the received byte array to a beacon packet.
 				BeaconPacket packet = new BeaconPacket(received);
 				
 				Peer peer = packet.getPeer();
 				PeerAddress address = peer.getAddress();
-			 
 					
 				//Ignore beacons from the same peer.
 				if(agent.getPeer().getAddress().equals(address)){
 					continue;
 				} 
+				
+				//If the peer is out of range, than ignore the packet.
+				if(maxRange != null 
+				   && agent.getPeer().getLocation().distanceTo(packet.getPeer().getLocation()) > maxRange) {
+					continue;
+				}
 				
 				//Add new peers or replace peers with updated locations.
 				updatePeer(agent.getPeers(), peer);
