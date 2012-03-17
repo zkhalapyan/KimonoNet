@@ -97,6 +97,14 @@ public class StatResults {
 	
 
 	/**
+	 * Creates a new results package with all values set to null.
+	 */
+	public StatResults() {
+		this(0, 0, 0, 0, 0, 0);
+	}
+
+
+	/**
 	 * Return the ratio between the number of packets received at the sink and 
 	 * the number of packets sent at the source.
 	 * 
