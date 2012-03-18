@@ -72,6 +72,7 @@ public class StatData {
 	 */
 	public StatResults getStatResults(PeerAddress sourceAddress, PeerAddress destinationAddress){
 		
+		int totalPacketCount = 0;
 		
 		int receivedPacketCount = 0;
 		int sentPacketCount     = 0;
@@ -84,7 +85,11 @@ public class StatData {
 		
 		synchronized(sentPackets){
 			
+			totalPacketCount += sentPackets.size();
+			
 			for(StatPacket packet : sentPackets){
+				
+				
 				
 				if(packet.getType() == PacketType.BEACON){
 					beaconPacketCount ++;
@@ -114,6 +119,9 @@ public class StatData {
 		}
 		
 		synchronized(receivedPackets){
+			
+			totalPacketCount += receivedPackets.size();
+			
 			for(StatPacket packet : receivedPackets){
 				
 				if(packet.isSink() 
@@ -126,7 +134,8 @@ public class StatData {
 			}
 		}
 	
-		return new StatResults(sentPacketCount, 
+		return new StatResults(totalPacketCount,
+							   sentPacketCount, 
 							   receivedPacketCount, 
 							   beaconPacketCount, 
 							   dataPacketCount,

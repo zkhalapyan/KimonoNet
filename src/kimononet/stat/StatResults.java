@@ -24,10 +24,15 @@ package kimononet.stat;
  * 
  * @author Zorayr Khalapyan
  * @since 3/14/2012
- * @version 3/14/2012
+ * @version 3/18/2012
  */
 public class StatResults {
 
+	/**
+	 * A count of all the packets sent and received.
+	 */
+	private int totalPacketCount;
+	
 	/**
 	 * Number of packets sent from the source.
 	 */
@@ -64,6 +69,8 @@ public class StatResults {
 	 * Creates a new results package given various count values.
 	 * 
 	 *                       
+	 * @param totalPacketCount The total number of all the packets sent and 
+	 * 						   received. 
 	 * @param sentPackets      The total number of sent packets from the sink to 
 	 * 						   the source.
 	 * 
@@ -77,22 +84,24 @@ public class StatResults {
 	 * @param greedyCount     The total number of packets that used greedy 
 	 * 						  routing algorithm.
 	 * 
-	 * @param perimeterCount  The total number of packets that used the parameter
-	 *  					  routing algorithm.
+	 * @param perimeterCount  The total number of packets that used the 
+	 * 						  parameter routing algorithm.
 	 */
-	public StatResults(int sentPackets,
+	public StatResults(int totalPacketCount,
+					   int sentPackets,
 					   int receivedPackets,
 					   int beaconPackets, 
 					   int dataPackets,
 					   int greedyCount, 
 					   int perimeterCount){
 		
-		this.sentPackets     = sentPackets;
-		this.receivedPackets = receivedPackets;
-		this.beaconPackets   = beaconPackets;
-		this.dataPackets     = dataPackets;
-		this.greedyCount     = greedyCount;
-		this.perimeterCount  = perimeterCount;
+		this.totalPacketCount = totalPacketCount;
+		this.sentPackets      = sentPackets;
+		this.receivedPackets  = receivedPackets;
+		this.beaconPackets    = beaconPackets;
+		this.dataPackets      = dataPackets;
+		this.greedyCount      = greedyCount;
+		this.perimeterCount   = perimeterCount;
 	}
 	
 
@@ -100,7 +109,7 @@ public class StatResults {
 	 * Creates a new results package with all values set to null.
 	 */
 	public StatResults() {
-		this(0, 0, 0, 0, 0, 0);
+		this(0, 0, 0, 0, 0, 0, 0);
 	}
 
 
@@ -117,15 +126,16 @@ public class StatResults {
 	}
 	
 	/**
-	 * Returns the ratio of the number of sent/received beacon packets over the 
-	 * number of sent/received data packets.
+	 * Returns the ratio of the number of sent beacon packets over the 
+	 * number of the total sent/received data packets. In other words, returns
+	 * ({@link #beaconPackets}/{@link #totalPacketCount}). 
 	 * 
 	 * @return Control overhead ratio.
 	 */
 	public double getControlOverhead(){
-		return (sentPackets == 0)? 
+		return (totalPacketCount == 0)? 
 					0.0 : 
-				    (sentPackets - beaconPackets) / (double)sentPackets;
+				    (beaconPackets) / (double)totalPacketCount;
 	}
 	
 	/**
@@ -142,6 +152,14 @@ public class StatResults {
 	
 	
 	/**
+	 * Returns the total number of packets sent or received.
+	 * @return the total number of packets sent or received.
+	 * @see #totalPacketCount
+	 */
+	public int getTotalPacketCount(){
+		return this.totalPacketCount;
+	}
+	/**
 	 * Returns the number of packets that were sent from the source but not 
 	 * received at the destination.
 	 * 
@@ -154,13 +172,16 @@ public class StatResults {
 	/**
 	 * Returns the total number of packets sent from the sink to the source.
 	 * @return The total number of packets sent from the sink to the source.
+	 * @see #sentPackets
 	 */
 	public int getSentPackets() {
 		return sentPackets;
 	}
 
 	/**
-	 * @return the beaconPackets
+	 * Returns the number of beacon packets that were sent.
+	 * @return The total number of sent beacon packets.
+	 * @see #beaconPackets
 	 */
 	public int getBeaconPackets() {
 		return beaconPackets;
@@ -185,12 +206,13 @@ public class StatResults {
 	 * @param results The results to combine.
 	 */
 	public void combine(StatResults results){
-		this.receivedPackets += results.receivedPackets;
-		this.sentPackets     += results.sentPackets;
-		this.beaconPackets   += results.beaconPackets;
-		this.dataPackets     += results.dataPackets;
-		this.greedyCount     += results.greedyCount;
-		this.perimeterCount  += results.perimeterCount;
+		this.totalPacketCount += results.totalPacketCount;
+		this.receivedPackets  += results.receivedPackets;
+		this.sentPackets      += results.sentPackets;
+		this.beaconPackets    += results.beaconPackets;
+		this.dataPackets      += results.dataPackets;
+		this.greedyCount      += results.greedyCount;
+		this.perimeterCount   += results.perimeterCount;
 	}
 	
 	/**
@@ -199,17 +221,16 @@ public class StatResults {
 	 * 
 	 * <pre>
 	 * 1. <b>Packets Lost:</b> Calculated as difference between the number of 
-	 *    packets that left the source, and the number of packets that arrived at 
-	 *    the destination.
+	 *    packets that left the source, and the number of packets that arrived 
+	 *    at the destination.
 	 * 2. <b>Packet Delivery Percentage:</b> Calculated as the ratio between the 
-	 *    number of packets received at the sink and the number of packets sent at 
-	 *    the source.
+	 *    number of packets received at the sink and the number of packets sent 
+	 *    at the source.
 	 * 3. <b>Control Overhead:</b> Calculated as the ratio of the number of 
-	 *    sent/received beacon packets over the number of sent/received data 
-	 *    packets.
-	 * 4. <b>Greedy Ratio:</b> Calculated as the ratio of the number of sent packets
-	 *    that used greedy over the number of sent packets that used parameter 
-	 *    routing.
+	 *    sent beacon packets over the number of total packets.
+	 * 4. <b>Greedy Ratio:</b> Calculated as the ratio of the number of sent 
+	 * 	  packets that used greedy over the number of sent packets that used 
+	 * 	  parameter routing.
 	 * </pre>
 	 */
 	public String toString(){
@@ -222,6 +243,7 @@ public class StatResults {
 		results += "Greedy Ratio:          \t" + getGreedyRatio()         + "\n\ns";
 		
 		results += "###############COUNTS###############"                 + "\n";
+		results += "Total Packet Count:      \t" + totalPacketCount       + "\n";
 		results += "Sent Packet Count:       \t" + sentPackets 	          + "\n";
 		results += "Received Packet Count:   \t" + receivedPackets        + "\n";
 		results += "Beacon Packet Count:     \t" + beaconPackets          + "\n";
