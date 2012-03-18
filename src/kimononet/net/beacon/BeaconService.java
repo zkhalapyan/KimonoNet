@@ -1,6 +1,7 @@
 package kimononet.net.beacon;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import kimononet.net.p2p.Connection;
 import kimononet.net.p2p.MulticastConnection;
@@ -16,7 +17,7 @@ import kimononet.stat.StatPacket;
  * Service for sending and receiving beacon packets. 
  * 
  * @author Zorayr Khalapyan
- * @version 3/12/2012
+ * @version 3/18/2012
  *
  */
 public class BeaconService extends Thread implements Service{
@@ -180,7 +181,7 @@ public class BeaconService extends Thread implements Service{
 		}
 	}
 	
-	private void updatePeer(HashMap<PeerAddress, Peer> peers, Peer peer){
+	private void updatePeer(Map<PeerAddress, Peer> peers, Peer peer){
 		
 		PeerAddress address = peer.getAddress();
 		int updateTime = peer.getLocation().getTimestamp();

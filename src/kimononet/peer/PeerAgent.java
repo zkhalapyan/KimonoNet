@@ -1,6 +1,8 @@
 package kimononet.peer;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 import kimononet.geo.DefaultGeoDevice;
 import kimononet.geo.GeoDevice;
@@ -22,7 +24,7 @@ import kimononet.time.TimeProvider;
  * {@link DataService}, and storing common data exchanged by these services. 
  * 
  * @author Zorayr Khalapyan
- * @version 3/12/2012
+ * @version 3/18/2012
  *
  */
 public class PeerAgent {
@@ -30,7 +32,7 @@ public class PeerAgent {
 	/**
 	 * Current peer represented by this agent.
 	 */
-	private Peer peer;
+	private final Peer peer;
 	
 	/**
 	 * Peer discovery service associated with the current peer. Peer discovery
@@ -46,14 +48,16 @@ public class PeerAgent {
 	private DataService dataService;
 	
 	/**
-	 * Stores current peer's environment information.
-	 */
-	private PeerEnvironment environment;
-	
-	/**
-	 * Peer's GPS device.
+	 * Peer's GPS device. This service is responsible for updating the current
+	 * peer's location and velocity.
 	 */
 	private GeoDevice geoDevice;
+	
+	/**
+	 * Stores current peer's environment information.
+	 */
+	private final PeerEnvironment environment;
+
 	
 	/**
 	 * Service that update's the current peer's GPS location at a certain
@@ -66,7 +70,7 @@ public class PeerAgent {
 	 * create socket connections for various services will consult the provider
 	 * for configuring the correct port numbers. 
 	 */
-	private PortConfigurationProvider portConfigurationProvider;
+	private final PortConfigurationProvider portConfigurationProvider;
 	
 	/**
 	 * Neighboring peer's mapped to a peer address. This is ROUTING_TABLE_1 
@@ -75,7 +79,7 @@ public class PeerAgent {
 	 * 
 	 * @see #getPeers()
 	 */
-	private HashMap<PeerAddress, Peer> peers;
+	private final Map<PeerAddress, Peer> peers;
 	
 	/**
 	 * Stores second-hop neighbors: given a peer address, it will get the peers
@@ -84,12 +88,12 @@ public class PeerAgent {
 	 * 
 	 * @see #getPeers2()
 	 */
-	private HashMap<PeerAddress, HashMap<PeerAddress, Peer>> peers2;
+	private final Map<PeerAddress, HashMap<PeerAddress, Peer>> peers2;
 	
 	/**
 	 * Time provider for the current Peer. 
 	 */
-	private TimeProvider timeProvider;
+	private final TimeProvider timeProvider;
 	
 	/**
 	 * Service for gathering statistical information for the peer represented
@@ -178,13 +182,13 @@ public class PeerAgent {
 		this.environment               = environment;
 		this.geoDevice                 = geoDevice;
 		this.portConfigurationProvider = portConfigurationProvider;
+		this.timeProvider 			   = timeProvider;
 		
-		setTimeProvider(timeProvider);
 		setStatMonitor(new MasterStatMonitor());
 		
 		//Create any data structures used by the agent.
-		this.peers = new HashMap<PeerAddress, Peer>();
-		this.peers2 = new HashMap<PeerAddress, HashMap<PeerAddress, Peer>>();
+		this.peers = Collections.synchronizedMap(new HashMap<PeerAddress, Peer>());
+		this.peers2 = Collections.synchronizedMap(new HashMap<PeerAddress, HashMap<PeerAddress, Peer>>());
 	}
 	
 	public StatMonitor getStatMonitor(){
@@ -248,8 +252,7 @@ public class PeerAgent {
 	 * 
 	 * @return The current peer's peers.
 	 */
-	public HashMap<PeerAddress, Peer> getPeers(){
-		// TODO add blocking for while table is updating
+	public Map<PeerAddress, Peer> getPeers(){
 		return this.peers;
 	}
 	
@@ -259,8 +262,7 @@ public class PeerAgent {
 	 * 
 	 * @return Second hop neighbor's table.
 	 */
-	public HashMap<PeerAddress, HashMap<PeerAddress, Peer>> getPeers2(){
-		// TODO add blocking for while table is updating
+	public Map<PeerAddress, HashMap<PeerAddress, Peer>> getPeers2(){
 		return this.peers2;
 	}
 	
@@ -295,14 +297,6 @@ public class PeerAgent {
 	public PeerEnvironment getEnvironment() {
 		return environment;
 	}
-
-	/**
-	 * Sets the peer's environment. 
-	 * @param environment Peer's new environment.
-	 */
-	public void setEnvironment(PeerEnvironment environment) {
-		this.environment = environment;
-	}
 	
 	/**
 	 * Returns {@link TimeProvider} associated with this agent. The time 
@@ -313,17 +307,6 @@ public class PeerAgent {
 	 */
 	public TimeProvider getTimeProvider(){
 		return this.timeProvider;
-	}
-	
-	/**
-	 * Sets the time provider for the current peer agent. To get the time 
-	 * provider or the peer's current time, use either 
-	 * {@link #getTimeProvider()} or {@link #getTime()} respectively. 
-	 * 
-	 * @param timeProvider The time provider to set.
-	 */
-	public void setTimeProvider(TimeProvider timeProvider){
-		this.timeProvider = timeProvider;
 	}
 	
 	/**

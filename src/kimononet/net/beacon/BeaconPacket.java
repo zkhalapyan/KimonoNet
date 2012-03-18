@@ -1,6 +1,8 @@
 package kimononet.net.beacon;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.CRC32;
 
 import kimononet.net.Packet;
@@ -33,7 +35,7 @@ public class BeaconPacket extends Packet {
 	/**
 	 * Stores the list of peers advertised by this beacon packet. 
 	 */
-	private HashMap<PeerAddress, Peer> peers;
+	private Map<PeerAddress, Peer> peers;
 	
 	/**
 	 * Maximum number of peers to include in the beacon. Depending on if the
@@ -84,7 +86,7 @@ public class BeaconPacket extends Packet {
 	 * Returns a map of peers advertised by this beacon.
 	 * @return A map of peers advertised by this beacon.
 	 */
-	public HashMap<PeerAddress, Peer> getPeers(){
+	public Map<PeerAddress, Peer> getPeers(){
 		return peers;
 	}
 	
@@ -98,7 +100,7 @@ public class BeaconPacket extends Packet {
 		}
 		
 		int numPeers = (int)contents.getFloat();
-		peers = new HashMap<PeerAddress, Peer>(numPeers);
+		peers = Collections.synchronizedMap(new HashMap<PeerAddress, Peer>(numPeers));
 		
 		for(int i = 0; i < numPeers; i++){
 			Peer peer = new Peer(contents);

@@ -1,6 +1,5 @@
 package kimononet.net.routing;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import kimononet.geo.GeoLocation;
@@ -27,7 +26,7 @@ public class RoutingLogic {
 		if(packet.getForwardMode() == ForwardMode.PERIMETER)
 			packet.setForwardMode(ForwardMode.GREEDY);
 
-		HashMap<PeerAddress, Peer> routingTable1 = agent.getPeers();
+		Map<PeerAddress, Peer> routingTable1 = agent.getPeers();
 		if(routingTable1.size() == 0) {
 			System.out.println("Packet dropped because there are no peers in table to route to.");
 			return false;
@@ -78,7 +77,7 @@ public class RoutingLogic {
 			}
 		}
 		
-		HashMap<PeerAddress, Peer> routingTable1 = agent.getPeers();
+		Map<PeerAddress, Peer> routingTable1 = agent.getPeers();
 		if(routingTable1.size() == 0) {
 			System.out.println("Packet dropped because there are no peers in table to route to.");
 			return false;

@@ -89,8 +89,8 @@ public class TestManager {
 		(new PeerAgentTest()).testGetPortConfiguration();
 		(new PeerAgentTest()).testGetTime();
 		(new PeerAgentTest()).testGetTimeProvider();
-		(new PeerAgentTest()).testSetEnvironment();
-		(new PeerAgentTest()).testSetTimeProvider();
+		//(new PeerAgentTest()).testSetEnvironment();
+		//(new PeerAgentTest()).testSetTimeProvider();
 		(new PeerAgentTest()).testShutdownServices();
 		(new PeerAgentTest()).testStartServices();
 

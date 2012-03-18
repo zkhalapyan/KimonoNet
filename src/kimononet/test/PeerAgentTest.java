@@ -119,8 +119,12 @@ public class PeerAgentTest {
 		assertEquals(timeProvider, peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProviderTimeProvider.getTimeProvider());
 	}
 
+	/**
+	 * @deprecated Environement has been marked final.
+	 */
 	@Test
 	public void testSetEnvironment() {
+		/*
 		PeerEnvironment environment2 = new PeerEnvironment();
 		environment2.set("key", "value");
 
@@ -135,10 +139,15 @@ public class PeerAgentTest {
 		assertEquals(environment2, peerAgentPeerPeerEnvironmentGeoDevice.getEnvironment());
 		assertEquals(environment2, peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider.getEnvironment());
 		assertEquals(environment2, peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProviderTimeProvider.getEnvironment());
+		*/
 	}
 
+	/**
+	 * @deprecated time provider has been marked final.
+	 */
 	@Test
 	public void testSetTimeProvider() {
+		/*
 		SimulationTimeProvider timeProvider2 = new SimulationTimeProvider(234567890);
 
 		peerAgentPeer.setTimeProvider(timeProvider2);
@@ -158,6 +167,7 @@ public class PeerAgentTest {
 		assertEquals(234567890, peerAgentPeerPeerEnvironmentGeoDevice.getTime());
 		assertEquals(234567890, peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProvider.getTime());
 		assertEquals(234567890, peerAgentPeerPeerEnvironmentGeoDevicePortConfigurationProviderTimeProvider.getTime());
+		*/
 	}
 
 	@Test
