@@ -18,19 +18,52 @@ import kimononet.stat.StatResults;
 
 public class KiNCoL extends Thread{
 	
-	private static final int INTERVAL = 1000;
+	/**
+	 * Internal at which packets will be send from a random source to a random
+	 * sink.
+	 */
+	private static final int PACKET_SENDING_INTERVAL = 1000;
 	
-	private int sentPackets = 0;
+	/**
+	 * Numbers of seconds to allow beacon service to populate peers table prior
+	 * to sending packets.
+	 */
+	private static final int INITIALIZATION_DELAY = 1000;
 	
-	private float hostilityFactor;
+	/**
+	 * The simulation will timeout with this specified value if the number of 
+	 * packets to send ({@link #numberOfPackets} is zero. In other words, this
+	 * timeout lets developers test out beacon service without sending any 
+	 * data packets.
+	 */
+	private static final int BEACON_SERVICE_SIMULATION_TIMEOUT = 6000;
 	
-	private float numberOfPackets;
+	/**
+	 * Probability that at each interval an agent will explode. Value should be
+	 * in the range of [0, 1].
+	 */
+	private final float hostilityFactor;
 	
-	private PeerAgent[] agents;
+	/**
+	 * Maximum number of packets to send out before killing all the services.
+	 */
+	private final float numberOfPackets;
 	
-	private StatMonitor statMonitor;
+	/**
+	 * All the agents currently participating in the simulation.
+	 */
+	private final PeerAgent[] agents;
 	
-	private PeerEnvironment peerEnvironment;
+	/**
+	 * Statistical monitor for all the agents participating in the current 
+	 * simulation.
+	 */
+	private final StatMonitor statMonitor;
+	
+	/**
+	 * The environment for all the peers participating in the simulation.
+	 */
+	private final PeerEnvironment peerEnvironment;
 	
 	public KiNCoL(int numberOfPeers, 
 				  GeoMap map, 
@@ -55,7 +88,6 @@ public class KiNCoL extends Thread{
 			PeerAgent agent = new PeerAgent(peer, peerEnvironment, geoDevice);
 			agent.setStatMonitor(statMonitor);
 			agents[i] = agent;
-			agent.startServices();
 		}
 		
 	}
@@ -63,33 +95,61 @@ public class KiNCoL extends Thread{
 	
 	public void run(){
 		
+		//The stat result will store the final results to be displayed to the 
+		//user.
 		StatResults results = new StatResults();
 		
-		while(sentPackets < numberOfPackets){
-			
-			//Get a random sender.
-			PeerAgent source = getRandomPeerAgent();
-			PeerAgent destination;
-			
-			//Find a random receiver that is not the sender. 
-			while((destination = getRandomPeerAgent()) == source){}
-			
-			
-			byte[] payload = new byte[]{0x01, 0x02};
-			
-			source.sendDataPacket(new DataPacket(source, destination.getPeer(), QualityOfService.REGULAR, payload));
-			
-			sentPackets ++;
-			
-			results.combine(statMonitor.getStats().getStatResults(source.getPeer().getAddress(), destination.getPeer().getAddress()));
-		
-			//Slows down the simulation.
-			try {
-				sleep(INTERVAL);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+		//Start all services.
+		for(PeerAgent agent : agents){
+			agent.startServices();
 		}
+		
+		
+		try {
+			
+			//If no data packets are going to be sent, then sleep for a long 
+			//time in order to get a chance to test out beacon service.
+			if(numberOfPackets == 0){
+				sleep(BEACON_SERVICE_SIMULATION_TIMEOUT);
+			
+			//If data packets are supposed to be sent, wait for just a bit so
+			//that beacon service has enough time to populate its neighbor 
+			//tables.
+			}if(numberOfPackets > 0){
+				sleep(INITIALIZATION_DELAY);
+			}
+			
+			for(int i = 0; i < numberOfPackets; i++){
+				
+				//Account for agents exploding in hostile environments.
+				for(PeerAgent agent : agents){
+					if(Math.random() < hostilityFactor){
+						killAgent(agent);
+					}
+				}
+				
+				//Get a random sender.
+				PeerAgent source = agents[0];//getRandomPeerAgent();
+				PeerAgent destination = agents[1];
+				
+				//Find a random receiver that is not the sender. 
+				//while((destination = getRandomPeerAgent()) == source){}
+				
+				byte[] payload = new byte[]{0x01, 0x02};
+				
+				source.sendDataPacket(new DataPacket(source, destination.getPeer(), QualityOfService.REGULAR, payload));			
+				
+				results.combine(statMonitor.getStats().getStatResults(source.getPeer().getAddress(), destination.getPeer().getAddress()));
+			
+				//Slows down the simulation.
+				sleep(PACKET_SENDING_INTERVAL);
+				
+			}
+			
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	
 
 		killEveryone(agents);
 		
@@ -97,14 +157,30 @@ public class KiNCoL extends Thread{
 		
 	}
 
+	/**
+	 * Returns a random peer agent.
+	 * @return a random peer agent.
+	 */
 	private PeerAgent getRandomPeerAgent(){
-		return agents[(int)(Math.random() * agents.length)];
+		return (agents.length == 0)? 
+						null: 
+						agents[(int)(Math.random() * agents.length)];
 	}
 	
+	/**
+	 * Shuts down all the services of the specified peer agent.
+	 * @param agent The agent to kill.
+	 */
 	private void killAgent(PeerAgent agent){
-		agent.shutdownServices();
+		if(agent != null)
+			agent.shutdownServices();
 	}
 	
+	/**
+	 * Kills all the agents specified.
+	 * @param agents The agents to kill.
+	 * @see #killAgent(PeerAgent)
+	 */
 	private void killEveryone(PeerAgent[] agents){
 			
 		for(PeerAgent agent : agents){
