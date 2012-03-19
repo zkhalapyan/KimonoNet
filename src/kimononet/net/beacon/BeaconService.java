@@ -138,8 +138,10 @@ public class BeaconService extends Thread implements Service{
 				
 				//If the agent has a stat monitor, notify that a packet has been
 				//received.
-				if(agent.getStatMonitor() != null)
+				if(agent.getStatMonitor() != null){
+					
 					agent.getStatMonitor().packetReceived(new StatPacket(packet));
+				}
 				
 				//Add new peers or replace peers with updated locations.
 				updatePeer(agent.getPeers(), peer);
@@ -212,9 +214,10 @@ public class BeaconService extends Thread implements Service{
 			
 			//If the agent has a stat monitor and the packet was successfully 
 			//sent, notify the stat monitor.
-			if(agent.getStatMonitor() != null && success)
+			if(agent.getStatMonitor() != null && success){
 				agent.getStatMonitor().packetSent(new StatPacket(beacon));
-			
+			}
+
 			return success;
 		}
 			

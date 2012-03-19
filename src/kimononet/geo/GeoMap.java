@@ -60,5 +60,10 @@ public class GeoMap {
 			lowerRight = lr;
 		}
 	}
+	
+	public String toString(){
+		return "UpperLeft: (" + (float)upperLeft.getLongitude() + ", " + (float)upperLeft.getLatitude() + ") " +
+			   "LowerRight: (" + (float)lowerRight.getLongitude() + ", " + (float)lowerRight.getLatitude() + ")";
+	}
 
 }

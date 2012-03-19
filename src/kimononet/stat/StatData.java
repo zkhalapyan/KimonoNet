@@ -89,8 +89,6 @@ public class StatData {
 			
 			for(StatPacket packet : sentPackets){
 				
-				
-				
 				if(packet.getType() == PacketType.BEACON){
 					beaconPacketCount ++;
 					
@@ -107,7 +105,9 @@ public class StatData {
 							
 					}
 					
-					if(packet.isSource() 
+					if(sourceAddress != null 
+					   && destinationAddress != null
+					   && packet.isSource() 
 					   && packet.getSource().equals(sourceAddress)
 					   && packet.getDestination().equals(destinationAddress)){
 						
@@ -124,13 +124,21 @@ public class StatData {
 			
 			for(StatPacket packet : receivedPackets){
 				
-				if(packet.isSink() 
-				   && packet.getSource().equals(sourceAddress)
-				   && packet.getDestination().equals(destinationAddress)){
+				if(packet.getType() == PacketType.BEACON){
+					beaconPacketCount ++;
 					
-					receivedPacketCount ++;
+				}else if(packet.getType() == PacketType.DATA){
+					dataPacketCount ++;
+					
+					if(sourceAddress != null 
+					   && destinationAddress != null
+					   && packet.isSink() 
+					   && packet.getSource().equals(sourceAddress)
+					   && packet.getDestination().equals(destinationAddress)){
+						
+						receivedPacketCount ++;
+					}
 				}
-					
 			}
 		}
 	

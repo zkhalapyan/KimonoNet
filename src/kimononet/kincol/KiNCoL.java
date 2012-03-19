@@ -31,6 +31,13 @@ public class KiNCoL extends Thread{
 	private static final int INITIALIZATION_DELAY = 1000;
 	
 	/**
+	 * Delay in seconds to wait before exiting the simulation. The delay will 
+	 * allow all running threads to successfully shutdown. 
+	 */
+	private static final int SHUTDOWN_DELAY = 1000;
+	
+	
+	/**
 	 * The simulation will timeout with this specified value if the number of 
 	 * packets to send ({@link #numberOfPackets} is zero. In other words, this
 	 * timeout lets developers test out beacon service without sending any 
@@ -71,6 +78,18 @@ public class KiNCoL extends Thread{
 				  int numberOfPackets, 
 				  float hostilityFactor){
 		
+		System.out.println("########PARAMETERS RECEIVED########");
+		System.out.println("Number of Peers:   \t " + numberOfPeers);
+		System.out.println("Number of Packets: \t " + numberOfPackets);
+		System.out.println("Map Size:          \t " + map);
+		System.out.println("Peer Velocity:     \t " + peerSpeed);
+		System.out.println("Hostility Factor:  \t " + hostilityFactor);
+		
+		
+		if(hostilityFactor > 0.5){
+			System.out.println("Warning! You have specified a very hostile environment.");
+		}
+		
 		this.hostilityFactor = hostilityFactor;
 		this.numberOfPackets = numberOfPackets;
 		
@@ -92,9 +111,11 @@ public class KiNCoL extends Thread{
 		
 	}
 
-	
+
 	public void run(){
 		
+		System.out.println("#########STARTING SIMULATION##########");
+	
 		//The stat result will store the final results to be displayed to the 
 		//user.
 		StatResults results = new StatResults();
@@ -111,7 +132,9 @@ public class KiNCoL extends Thread{
 			//time in order to get a chance to test out beacon service.
 			if(numberOfPackets == 0){
 				sleep(BEACON_SERVICE_SIMULATION_TIMEOUT);
-			
+				
+				results.combine(statMonitor.getStats().getStatResults(null, null));
+				
 			//If data packets are supposed to be sent, wait for just a bit so
 			//that beacon service has enough time to populate its neighbor 
 			//tables.
@@ -146,14 +169,29 @@ public class KiNCoL extends Thread{
 				
 			}
 			
+			//Kill all services/threads.
+			killEveryone(agents);
+			
+			//Wait for all the threads to die out/shutdown.
+			sleep(SHUTDOWN_DELAY);
+			
+			//Output the results.
+			System.out.println(results);
+			
+			System.out.println("#########BEACON SERVICE RESULTS#########");
+			for(PeerAgent agent : agents){
+				System.out.println("Agent: \t " + agent.getPeer().getName() + 
+						           " # of peers: \t " + agent.getPeers().size() + 
+						           " # of peers2: \t " + agent.getPeers2().size());
+			}
+			System.out.println("#################DONE###################");
+			
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	
 
-		killEveryone(agents);
-		
-		System.out.println(results);
+	
 		
 	}
 

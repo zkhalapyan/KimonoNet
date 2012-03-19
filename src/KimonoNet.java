@@ -1,26 +1,24 @@
-import kimononet.geo.GeoDevice;
 import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoMap;
 import kimononet.geo.GeoVelocity;
-import kimononet.geo.RandomWaypointGeoDevice;
 import kimononet.kincol.KiNCoL;
 import kimononet.net.Packet;
+import kimononet.net.PacketType;
 import kimononet.net.beacon.BeaconPacket;
 import kimononet.net.p2p.Connection;
 import kimononet.net.p2p.MulticastConnection;
 import kimononet.net.p2p.port.PortConfiguration;
 import kimononet.net.parcel.Parcel;
+import kimononet.net.routing.ForwardMode;
 import kimononet.net.routing.QualityOfService;
 import kimononet.net.transport.DataPacket;
-import kimononet.peer.DefaultPeerEnvironment;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAgent;
-import kimononet.peer.PeerEnvironment;
 import kimononet.simulation.Simulation;
 import kimononet.stat.MasterStatMonitor;
 import kimononet.stat.StatMonitor;
-import kimononet.stat.StatResults;
+import kimononet.stat.StatPacket;
 
 
 @SuppressWarnings("unused")
@@ -38,7 +36,7 @@ public class KimonoNet {
 
 	public static void main(String args[]){
 		
-	
+		
 		if(args.length <= 0 || args[0].equals("mode-gui")){
 			startUISimulation();
 			
@@ -75,8 +73,6 @@ public class KimonoNet {
 							   "map-width map-height hostility-factor].");
 		}
 		
-		
-		
 		//testStatMonitor();
 	}
 	
@@ -87,7 +83,40 @@ public class KimonoNet {
 		PeerAddress addressB = new PeerAddress("12:00:00:00:00:01");
 		PeerAddress addressC = new PeerAddress("12:00:00:00:00:02");
 		
+		/*
+		this.type        = type;
+		this.source      = source;
+		this.destination = destination;
+		this.node        = node;
+		this.mode 		 = mode;
+		*/
 		
+		StatPacket p1 = new StatPacket(PacketType.DATA,
+									   addressA, 
+									   addressB,
+									   addressA,
+									   ForwardMode.GREEDY);
+		
+		StatPacket p2 = new StatPacket(PacketType.DATA,
+									   addressA, 
+									   addressB,
+									   addressB,
+									   ForwardMode.GREEDY);
+		StatMonitor monitor = new MasterStatMonitor();
+		
+		monitor.packetSent(p1);
+		monitor.packetReceived(p2);
+		
+		
+		if(p1.isSource() 
+				   && p1.getSource().equals(addressA)
+				   && p1.getDestination().equals(addressB)){
+			System.out.println("p1 is a sent packet");
+		}
+		
+		System.out.println("p2 is sink - " + p2.isSink() + " is source - " + p2.isSource());
+		System.out.println("p1 is sink - " + p1.isSink() + " is source - " + p1.isSource());
+		System.out.println(monitor.getStats().getStatResults(addressA, addressB));
 	}
 	
 	private static void dataPacketSendingTest(){
