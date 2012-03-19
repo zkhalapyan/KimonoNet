@@ -27,7 +27,7 @@ public class BeaconService extends Thread implements Service{
 	 * long in seconds a beacon service waits for receiving a beacon from a 
 	 * neighbor before sending out its own beacon.
 	 */
-	private static final int DEFAULT_TIMEOUT = 30;
+	private static final int DEFAULT_TIMEOUT = 100;
 	
 	/**
 	 * Peer agent associated with this peer discovery service.
@@ -79,6 +79,7 @@ public class BeaconService extends Thread implements Service{
 		
 		//If the value is not set within the environment, then maxRnage will be
 		//set to null.
+		//ToDo: Remove association between beacon service and environment variables.
 		maxRange = Integer.parseInt(agent.getEnvironment().get("max-transmission-range"));
 	}
 	
@@ -169,8 +170,6 @@ public class BeaconService extends Thread implements Service{
 				
 				
 			}
-			
-			
 			
 			//If a shutdown was requested, then exit the core loop.
 			if(shutdown){

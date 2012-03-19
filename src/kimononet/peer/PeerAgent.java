@@ -211,7 +211,13 @@ public class PeerAgent {
 	 */
 	public void startServices(){
 		//Create the services used by the agent.
-		this.beaconService = new BeaconService(this);		
+		if(environment.get("beacon-service-timeout") != null){
+			int timeout  = Integer.parseInt(environment.get("beacon-service-timeout"));
+			this.beaconService = new BeaconService(this, timeout); 
+		}else{
+			this.beaconService = new BeaconService(this);
+		}
+											
 		this.geoService    = new GeoService(this);
 		this.dataService   = new DataService(this);
 		
