@@ -108,13 +108,14 @@ public class BeaconService extends Thread implements Service{
 		
 		byte[] received;
 		
-		while(true){
+		while(!shutdown){
 			
 			//Remember that receive will either timeout and return null or
 			//return the received bytes.
 			received = connection.receive();
 			
 			if(received == null){
+				System.out.println("Beacon service for " + agent.getPeer().getAddress() + " timed out. Sending a beacon.");
 				sendBeacon(connection);
 					
 			}else{
@@ -139,7 +140,6 @@ public class BeaconService extends Thread implements Service{
 				//If the agent has a stat monitor, notify that a packet has been
 				//received.
 				if(agent.getStatMonitor() != null){
-					
 					agent.getStatMonitor().packetReceived(new StatPacket(packet));
 				}
 				
@@ -166,16 +166,12 @@ public class BeaconService extends Thread implements Service{
 				
 				//If the source of the beacon doesn't know about us, then
 				//send a beacon as a response.
-				if(packet.getPeers().containsKey(agent.getPeer().getAddress())){
+				if(!packet.getPeers().containsKey(agent.getPeer().getAddress())){
 					sendBeacon(connection);
+					System.out.println("Apparently peer " + packet.getPeer().getAddress() + " doesn't know about " + agent.getPeer().getAddress());
 				}
 				
 				
-			}
-			
-			//If a shutdown was requested, then exit the core loop.
-			if(shutdown){
-				break;
 			}
 			
 		

@@ -60,7 +60,7 @@ public class BeaconPacket extends Packet {
 									
 		this.peers = agent.getPeers();	
 		
-		setBeaconContents();
+		
 	}
 	
 	/**
@@ -99,7 +99,7 @@ public class BeaconPacket extends Packet {
 			throw new PacketException("Malformed beacon packet. Missing contents.");
 		}
 		
-		int numPeers = (int)contents.getFloat();
+		int numPeers = (int)contents.getShort();
 		peers = Collections.synchronizedMap(new HashMap<PeerAddress, Peer>(numPeers));
 		
 		for(int i = 0; i < numPeers; i++){
@@ -113,6 +113,9 @@ public class BeaconPacket extends Packet {
 	}
 
 	public Parcel toParcel(){
+		
+		//Include the current peers in the beacon packet.
+		setBeaconContents();
 		
 		//Get the packet parcel which includes the common header and the beacon
 		//contents. Since space was allocated for a checksum, the last 4 bytes 
@@ -160,24 +163,42 @@ public class BeaconPacket extends Packet {
 		
 		beaconParcel.add((short)numPeers);
 		
+		//Count of currently included peers. This value is used to cap off how
+		//many peers will be included in the beacon packet.
+		int includedPeers = 0;
+		
 		//Add all the neighbor peers to the beacon contents.
 		for(PeerAddress address : peers.keySet()){
 			beaconParcel.add(peers.get(address));
+			
+			//If we already added enough peers to this beacon, then exit 
+			//the loop.
+			if(++includedPeers > numPeers)
+				break;
 		}
 		
 		//Add a long value 0 as a temporary checksum.
-		beaconParcel.add(0l);
+		beaconParcel.add((long)0);
 	
 		super.setContents(beaconParcel);
+	}
+	
+	public String getPeersDump(){
+		
+		String dump = "BEACON SERVICE DUMP FOR PEER " + getPeer().getAddress() + "\n";
+		
+		for(PeerAddress address : getPeers().keySet()){
+			dump += address + "\n";
+		}
+		
+		dump += "--done--\n";
+		return dump;
 	}
 	
 	/**
 	 * Returns a string representation of the current beacon packet.
 	 */
 	public String toString(){
-		
-		
-		return super.toString() + 
-		      "";
+		return super.toString();
 	}
 }
