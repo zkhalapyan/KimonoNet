@@ -87,8 +87,9 @@ public class SimulationPanel extends JPanel {
 		double scaler = panelHeight / latitudeRange;
 		return (-y / scaler + topBound);
 	}
+
 	public void paintComponent(Graphics g) {
-		final double GRID_INTERVAL = 0.1d; 
+		final double GRID_INTERVAL = 0.001d; 
 
 		Graphics2D g2d = (Graphics2D)g;
 
@@ -130,9 +131,9 @@ public class SimulationPanel extends JPanel {
 			int tooltipX = mouseX + 10;
 			int tooltipY = mouseY + 20;
 			g2d.setColor(Color.LIGHT_GRAY);
-			g2d.fillRect(tooltipX, tooltipY, 150, 50);
+			g2d.fillRect(tooltipX, tooltipY, 175, 50);
 			g2d.setColor(Color.BLACK);
-			g2d.drawRect(tooltipX, tooltipY, 150, 50);
+			g2d.drawRect(tooltipX, tooltipY, 175, 50);
 			g2d.drawString("Longitude: " + Float.toString((float)xToLongitude(mouseX)) + "°", tooltipX + 5, tooltipY + 20);
 			g2d.drawString("Latitude: " + Float.toString((float)yToLatitude(mouseY)) + "°", tooltipX + 5, tooltipY + 40);
 		}
