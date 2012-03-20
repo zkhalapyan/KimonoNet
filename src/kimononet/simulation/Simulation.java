@@ -12,7 +12,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
@@ -30,10 +29,10 @@ import java.util.ArrayList;
 
 import kimononet.geo.GeoDevice;
 import kimononet.geo.GeoLocation;
+import kimononet.geo.GeoLocationException;
 import kimononet.geo.GeoVelocity;
 import kimononet.geo.GeoMap;
 import kimononet.geo.RandomWaypointGeoDevice;
-import kimononet.kincol.KiNCoL;
 import kimononet.net.routing.QualityOfService;
 import kimononet.net.transport.DataPacket;
 import kimononet.peer.Peer;
@@ -44,13 +43,13 @@ import kimononet.peer.PeerEnvironment;
 import kimononet.stat.MasterStatMonitor;
 import kimononet.stat.StatMonitor;
 import kimononet.stat.StatResults;
-import kimononet.time.SystemTimeProvider;
 
 import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.border.BevelBorder;
@@ -59,20 +58,21 @@ import java.awt.Color;
 
 public class Simulation {
 
-	private final String[] properties = {	"Name",			// Row 0
-											"Address",		// Row 1
-											"Longitude",	// Row 2
-											"Latitude",		// Row 3
-											"Accuracy",		// Row 4
-											"Speed",		// Row 5
-											"Bearing"};		// Row 6
+	private final String[] properties = {	"Name",				// Row 0
+											"Address",			// Row 1
+											"Longitude (°)",	// Row 2
+											"Latitude (°)",		// Row 3
+											"Accuracy",			// Row 4
+											"Speed (m/s)",		// Row 5
+											"Bearing (°)"};		// Row 6
 
 	private ArrayList<PeerAgent> arrayListPeerAgents = new ArrayList<PeerAgent>();
 	private boolean bSimRunning = false;
+	private boolean bh4x0r = false;
 	private DefaultListModel listModelPeers;
-	private DefaultTableModel tableModelPeerProps;
-	private DefaultTableModel tableModelPeerEnvProps;
-	private JButton btnStartStop, btnAddPeer, btnDeletePeer, btnClearAll, btnApplyPeerProps, btnApplyEnvProps, btnCopy, btnClear;
+	private PropertyTableModel tableModelPeerProps;
+	private PropertyTableModel tableModelPeerEnvProps;
+	private JButton btnStartStop, btnAddPeer, btnDeletePeer, btnClearAll, /*btnApplyPeerProps, btnApplyEnvProps,*/ btnh4x0r, btnCopy, btnClear;
 	private JFrame frame; 
 	private JLabel lblSimStatusDisplay;
 	private JList listPeers;
@@ -128,23 +128,23 @@ public class Simulation {
 				tableModelPeerProps.addRow(new Object[] {properties[3], latitude});
 				tableModelPeerProps.addRow(new Object[] {properties[4], accuracy});
 				tableModelPeerProps.addRow(new Object[] {properties[5], Float.toString(getCurrentPeer().getVelocity().getSpeed())});
-				tableModelPeerProps.addRow(new Object[] {properties[6], Float.toString(getCurrentPeer().getVelocity().getBearing())});
+				tableModelPeerProps.addRow(new Object[] {properties[6], Double.toString(Math.toDegrees(getCurrentPeer().getVelocity().getBearing()))});
 			}
 
 			if (btnDeletePeer != null)
 				btnDeletePeer.setEnabled(!bSimRunning);
-			if (btnApplyPeerProps != null)
+			/*if (btnApplyPeerProps != null)
 				btnApplyPeerProps.setEnabled(!bSimRunning);
 			if (btnApplyEnvProps != null)
-				btnApplyEnvProps.setEnabled(!bSimRunning);
+				btnApplyEnvProps.setEnabled(!bSimRunning);*/
 		}
 		else {
 			if (btnDeletePeer != null)
 				btnDeletePeer.setEnabled(false);
-			if (btnApplyPeerProps != null)
+			/*if (btnApplyPeerProps != null)
 				btnApplyPeerProps.setEnabled(false);
 			if (btnApplyEnvProps != null)
-				btnApplyEnvProps.setEnabled(false);
+				btnApplyEnvProps.setEnabled(false);*/
 		}
 
 		if (textAreaStats != null && results != null) {
@@ -592,7 +592,7 @@ public class Simulation {
 		
 		// Add "Apply" button. ////////////////////////////////////////////////
 
-		btnApplyPeerProps = new JButton("Apply");
+		/*btnApplyPeerProps = new JButton("Apply");
 		btnApplyPeerProps.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				Peer peer = getCurrentPeer();
@@ -622,7 +622,7 @@ public class Simulation {
 		gbc_btnApplyPeerProps.gridy = 5;
 		gbc_btnApplyPeerProps.insets = new Insets(0, 0, 5, 0);
 		
-		frame.getContentPane().add(btnApplyPeerProps, gbc_btnApplyPeerProps);
+		frame.getContentPane().add(btnApplyPeerProps, gbc_btnApplyPeerProps);*/
 
 		// Add peer properties table. /////////////////////////////////////////
 
@@ -637,10 +637,44 @@ public class Simulation {
 
 		frame.getContentPane().add(scrollPanePeerProps, gbc_scrollPanePeerProps);
 
-		tableModelPeerProps = new DefaultTableModel();
+		tableModelPeerProps = new PropertyTableModel();
 		tablePeerProps = new JTable(tableModelPeerProps);
 		tableModelPeerProps.addColumn("Property");
 		tableModelPeerProps.addColumn("Value");
+		tableModelPeerProps.addTableModelListener(new TableModelListener() {
+			public void tableChanged(TableModelEvent tme) {
+				if (tme.getType() == TableModelEvent.UPDATE) {
+					Peer peer = getCurrentPeer();
+					if (peer != null) {
+						try {
+							String name = (String)tableModelPeerProps.getValueAt(0, 1);
+							PeerAddress address = new PeerAddress((String)tableModelPeerProps.getValueAt(1, 1));
+							double longitude = Double.parseDouble((String)tableModelPeerProps.getValueAt(2, 1));
+							double latitude = Double.parseDouble((String)tableModelPeerProps.getValueAt(3, 1));
+							float accuracy = Float.parseFloat((String)tableModelPeerProps.getValueAt(4, 1));
+							float speed = Float.parseFloat((String)tableModelPeerProps.getValueAt(5, 1));
+							float bearing = (float)Math.toRadians(Double.parseDouble((String)tableModelPeerProps.getValueAt(6, 1)));
+
+							GeoLocation location = new GeoLocation(longitude, latitude, accuracy);
+							GeoVelocity velocity = new GeoVelocity(speed, bearing); 
+
+							peer.setName(name);
+							peer.setAddress(address);
+							peer.setLocation(location);
+							peer.setVelocity(velocity);
+							arrayListPeerAgents.set(getCurrentPeerIndex(), new PeerAgent(peer, peerEnv, new RandomWaypointGeoDevice(location, velocity)));
+						} catch (NumberFormatException nfe) {
+							JOptionPane.showMessageDialog(frame, "Please a valid number.");
+						} catch (GeoLocationException gle) {
+							JOptionPane.showMessageDialog(frame, gle.getMessage());
+						} catch (PeerAddressException pae) {
+							JOptionPane.showMessageDialog(frame, "Please a valid address.");
+						}
+						refresh();
+					}
+				}
+			}
+		});
 
 		scrollPanePeerProps.setViewportView(tablePeerProps);
 
@@ -675,7 +709,7 @@ public class Simulation {
 		
 		// Add "Apply" button. ////////////////////////////////////////////////
 
-		btnApplyEnvProps = new JButton("Apply");
+		/*btnApplyEnvProps = new JButton("Apply");
 		
 		GridBagConstraints gbc_btnApplyEnvProps = new GridBagConstraints();
 		gbc_btnApplyEnvProps.fill = GridBagConstraints.HORIZONTAL;
@@ -683,7 +717,7 @@ public class Simulation {
 		gbc_btnApplyEnvProps.gridy = 8;
 		gbc_btnApplyEnvProps.insets = new Insets(0, 0, 5, 0);
 				
-		frame.getContentPane().add(btnApplyEnvProps, gbc_btnApplyEnvProps);
+		frame.getContentPane().add(btnApplyEnvProps, gbc_btnApplyEnvProps);*/
 
 		// Add peer environment properties table. /////////////////////////////
 
@@ -699,7 +733,7 @@ public class Simulation {
 
 		frame.getContentPane().add(scrollPaneEnvProps, gbc_scrollPaneEnvProps);
 
-		tableModelPeerEnvProps = new DefaultTableModel();
+		tableModelPeerEnvProps = new PropertyTableModel();
 		tablePeerEnvProps = new JTable(tableModelPeerEnvProps);
 		tableModelPeerEnvProps.addColumn("Property");
 		tableModelPeerEnvProps.addColumn("Value");
@@ -751,8 +785,33 @@ public class Simulation {
 		textAreaStats = new JTextArea();
 		textAreaStats.setFont(new Font("Monospaced", Font.PLAIN, 13));
 		textAreaStats.setEditable(false);
-
 		scrollPaneStats.setViewportView(textAreaStats);
+
+		// Add "h4x0r" button. /////////////////////////////////////////////////
+
+		btnh4x0r = new JButton("1337 Mode");
+		btnh4x0r.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				bh4x0r = !bh4x0r;
+				if (bh4x0r) {
+					textAreaStats.setForeground(Color.GREEN);
+					textAreaStats.setBackground(Color.BLACK);
+				}
+				else {
+					textAreaStats.setForeground(Color.BLACK);
+					textAreaStats.setBackground(Color.WHITE);
+				}
+				refresh();
+			}
+		});
+		
+		GridBagConstraints gbc_btnh4x0r = new GridBagConstraints();
+		gbc_btnh4x0r.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnh4x0r.gridx = 2;
+		gbc_btnh4x0r.gridy = 11;
+		gbc_btnh4x0r.insets = new Insets(0, 0, 5, 0);
+		
+		frame.getContentPane().add(btnh4x0r, gbc_btnh4x0r);
 
 		// Add "Copy" button. /////////////////////////////////////////////////
 
