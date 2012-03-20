@@ -11,7 +11,7 @@ import kimononet.time.TimeProvider;
  * 
  * Accordingly, each time {@link #getVelocity()} is called, the bearing of the 
  * velocity will shift according to probability specified by 
- * {@link #turnProbability} by maximum of {@link #maxTurn} either in clockwise 
+ * {@link #turnInterval} by maximum of {@link #maxTurn} either in clockwise 
  * or counterclockwise direction.
  *  
  * @author Zorayr Khalapyan
@@ -43,15 +43,15 @@ public class RandomWaypointGeoDevice implements GeoDevice {
 	 * single time the method is invoked, the direction of the velocity will
 	 * change.  
 	 */
-	private double turnProbability;
+	private double turnInterval;
 	
 	/**
-	 * By default, {@link #turnProbability} is set to 20%.
+	 * In seconds.
 	 */
-	private static final double DEFAULT_TURN_PROBABILITY = 0.2;
+	private static final int DEFAULT_TURN_INTERVAL = 3;
 	
 	/**
-	 * With a probability of {@link #turnProbability}, GPS direction will change
+	 * With a probability of {@link #turnInterval}, GPS direction will change
 	 * by a maximum value either clockwise or counterclockwise specified by this
 	 * variable in radians. The direction may change by [-maxTurn, +maxTurn].
 	 */
@@ -60,12 +60,14 @@ public class RandomWaypointGeoDevice implements GeoDevice {
 	/**
 	 * By default, {@link #maxTurn} is set to about 45 degrees.
 	 */
-	private static final double DEFAULT_MAX_TURN = Math.PI / 4;
+	private static final double DEFAULT_MAX_TURN = Math.PI / 8;
 
+	
+	private int lastTurnTime;
 	
 	/**
 	 * Creates a new random waypoint model using {@link #DEFAULT_MAX_TURN} and
-	 * {@link #DEFAULT_TURN_PROBABILITY}. By defaul, the time provider will be 
+	 * {@link #DEFAULT_TURN_INTERVAL}. By defaul, the time provider will be 
 	 * set to the {@link SystemTimeProvider}.
 	 * 
 	 * 
@@ -79,7 +81,7 @@ public class RandomWaypointGeoDevice implements GeoDevice {
 			velocity, 
 			new SystemTimeProvider(), 
 			DEFAULT_MAX_TURN, 
-			DEFAULT_TURN_PROBABILITY);
+			DEFAULT_TURN_INTERVAL);
 	}
 	
 	
@@ -98,20 +100,19 @@ public class RandomWaypointGeoDevice implements GeoDevice {
 	 * 
 	 * @param maxTurn         Maximum allowed turn at each hop.
 	 * 
-	 * @param turnProbability Probability that the direction will change at the 
-	 *                        next hop.
 	 */
 	public RandomWaypointGeoDevice(GeoLocation currentLocation, 
 							   	   GeoVelocity velocity,
 							   	   TimeProvider timeProvider,
 							   	   double maxTurn,
-							   	   double turnProbability){
+							   	   double turnInterval){
 		
 		this.currentLocation = currentLocation;
 		this.velocity        = velocity;
 		this.timeProvider    = timeProvider;
 		this.maxTurn         = maxTurn;
-		this.turnProbability = turnProbability;
+		this.turnInterval = turnInterval;
+		this.lastTurnTime = timeProvider.getTime();
 		
 		
 	}
@@ -124,12 +125,20 @@ public class RandomWaypointGeoDevice implements GeoDevice {
 	 */
 	@Override
 	public GeoLocation getLocation() {
-		return currentLocation.move(getVelocity(), timeProvider.getTime());
+		
+		if(timeProvider.getTime() - lastTurnTime>= turnInterval){
+			turn();
+			lastTurnTime = timeProvider.getTime();
+		}
+		
+		currentLocation.move(getVelocity(), timeProvider.getTime());
+		
+		return currentLocation;
 	}
 
 
 	/**
-	 * With probability specified by {@link #turnProbability}, updates the 
+	 * With probability specified by {@link #turnInterval}, updates the 
 	 * bearing direction by up to {@link #maxTurn} and returns the current
 	 * velocity.
 	 * 
@@ -137,15 +146,12 @@ public class RandomWaypointGeoDevice implements GeoDevice {
 	 */
 	@Override
 	public GeoVelocity getVelocity() {
-		
-		//Waypoint algorithm.
-		if(turnProbability > Math.random()){
-			velocity.setBearing(velocity.getBearing() + (float)(-maxTurn + 2 * maxTurn * Math.random()));
-		}
-		
 		return velocity;
 	}
 
+	private void turn(){
+		velocity.setBearing(velocity.getBearing() + (float)(-maxTurn + 2 * maxTurn * Math.random()));
+	}
 	/**
 	 * Sets the current time provider.
 	 * @param timeProvider New time provider to set.

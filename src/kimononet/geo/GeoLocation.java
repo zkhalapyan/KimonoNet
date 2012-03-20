@@ -220,7 +220,9 @@ public class GeoLocation implements Parcelable {
 	}
 	
 	/**
-	 * Given a velocity and a current time, the method returns a new location. 
+	 * Given a velocity and a current time, the method updates the current 
+	 * location after moving the current location by v*t.
+	 * 
 	 * All calculation are done according to the formulas specified at 
 	 * <a href="http://www.movable-type.co.uk/scripts/latlong.html">
 	 * Calculate distance, bearing and more between Latitude/Longitude points
@@ -228,13 +230,13 @@ public class GeoLocation implements Parcelable {
 	 * 
 	 * 
 	 * @param velocity The current velocity at which the location is changing.
+	 * 
 	 * @param currentTime The current time. This value will be compared with the
 	 *                    timestamp of the current location in order to compute
 	 *                    change in time and hence, change in distance.
-	 * 
-	 * @return Location S(t), given v, velocity, and t, time.
+	 *
 	 */
-	public GeoLocation move(GeoVelocity velocity, int currentTime){
+	public void move(GeoVelocity velocity, int currentTime){
 		
 		
 		//Assuming that currentTime > timestamp, then calculate the distance 
@@ -253,7 +255,9 @@ public class GeoLocation implements Parcelable {
                            Math.cos(distance/EARTH_MEDIAN_RADIUS)-Math.sin(Math.toRadians(getLatitude()))*Math.sin(Math.toRadians(latitude))));
 		
 		
-		return new GeoLocation(longitude, latitude, accuracy, currentTime);
+		this.longitude = longitude;
+		this.latitude = latitude;
+		this.timestamp = currentTime;
 		
 	}
 

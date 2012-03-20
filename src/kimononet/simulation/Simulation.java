@@ -132,13 +132,13 @@ public class Simulation {
 
 	private void addPeer() {
 		GeoLocation location = GeoLocation.generateRandomGeoLocation(mapDim.getUpperLeft(), mapDim.getLowerRight());
-		GeoVelocity velocity = new GeoVelocity(343, (float)Math.toRadians(20));
+		GeoVelocity velocity = new GeoVelocity(1000, GeoLocation.generateRandomBearing());
 
 		// Create new peer with random address.
 		Peer peer = new Peer(PeerAddress.generateRandomAddress(), location, velocity);
 
 		// Create new PeerAgent to represent peer and add it to ArrayList.
-		arrayListPeerAgents.add(new PeerAgent(peer, peerEnv, new RandomWaypointGeoDevice(location, velocity, new SystemTimeProvider(), 0.001, 0)));
+		arrayListPeerAgents.add(new PeerAgent(peer, peerEnv, new RandomWaypointGeoDevice(location, velocity)));
 
 		// Add peer to list.
 		listModelPeers.add(listPeers.getModel().getSize(), peer.getName() + " (" + peer.getAddress().toString() + ")");
