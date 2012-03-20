@@ -10,6 +10,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.awt.image.RescaleOp;
 import java.util.ArrayList;
 
 import javax.swing.JPanel;
@@ -122,8 +123,13 @@ public class SimulationPanel extends JPanel {
 				peerY = (int)(latitudeToY(location.getLatitude())) - offsetY;
 			}
 
-			AffineTransformOp op = new AffineTransformOp(AffineTransform.getRotateInstance(peer.getVelocity().getBearing(), offsetX, offsetY), AffineTransformOp.TYPE_BILINEAR);
-			g2d.drawImage(op.filter(imageUAV, null), peerX, peerY, this);
+			AffineTransformOp atop = new AffineTransformOp(AffineTransform.getRotateInstance(peer.getVelocity().getBearing(), offsetX, offsetY), AffineTransformOp.TYPE_BILINEAR);
+			BufferedImage imageUAVRotated = atop.filter(imageUAV, null);
+			if (peer == simulation.getCurrentPeer()) {
+				RescaleOp rop = new RescaleOp(1.2f, 15, null);
+				rop.filter(imageUAVRotated, imageUAVRotated);
+			}
+			g2d.drawImage(imageUAVRotated, peerX, peerY, this);
 		}
 
 		// Paint tooltip.
