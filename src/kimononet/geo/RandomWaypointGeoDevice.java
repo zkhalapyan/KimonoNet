@@ -4,7 +4,7 @@ import kimononet.time.SystemTimeProvider;
 import kimononet.time.TimeProvider;
 
 /**
- * GPS enabled device emulator that provided an intial location and velocity,
+ * GPS enabled device emulator that provided an initial location and velocity,
  * acts according to the the  
  * <a href="http://en.wikipedia.org/wiki/Random_waypoint_model">Random Waypoint 
  * Model </a>. 
@@ -139,7 +139,7 @@ public class RandomWaypointGeoDevice implements GeoDevice {
 	public GeoVelocity getVelocity() {
 		
 		//Waypoint algorithm.
-		if(turnProbability < Math.random()){
+		if(turnProbability > Math.random()){
 			velocity.setBearing(velocity.getBearing() + (float)(-maxTurn + 2 * maxTurn * Math.random()));
 		}
 		
