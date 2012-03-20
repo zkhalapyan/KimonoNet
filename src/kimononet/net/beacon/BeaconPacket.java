@@ -1,5 +1,6 @@
 package kimononet.net.beacon;
 
+import java.nio.BufferUnderflowException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -91,6 +92,27 @@ public class BeaconPacket extends Packet {
 	}
 	
 	public void parse(Parcel parcel){
+	
+		try{
+			//Extract CRC and calculate CRC.
+			parcel.rewind();
+			long crc = parcel.getLong(parcel.capacity() - 8);
+			parcel.add(parcel.capacity() - 8, (long)0);
+			byte[] data = new byte[parcel.capacity()];		
+			parcel.rewind();
+			parcel.get(data, 0, parcel.capacity());
+			CRC32 crc32Checker = new CRC32();
+			crc32Checker.update(data);
+			
+			if(crc32Checker.getValue() != crc){
+				throw new PacketException("CRC check for beacon packet did not pass.");
+			}
+			
+		}catch(BufferUnderflowException ex){
+			throw new PacketException("Packet is too short - cannot parse.");
+		}
+		
+		
 		super.parse(parcel);
 		
 		Parcel contents = getContents();
@@ -98,6 +120,8 @@ public class BeaconPacket extends Packet {
 		if(contents == null){
 			throw new PacketException("Malformed beacon packet. Missing contents.");
 		}
+		
+		
 		
 		int numPeers = (int)contents.getShort();
 		peers = Collections.synchronizedMap(new HashMap<PeerAddress, Peer>(numPeers));
@@ -107,8 +131,8 @@ public class BeaconPacket extends Packet {
 			peers.put(peer.getAddress(), peer);
 		}
 		
+		
 		//ToDo: CRC Check.
-		//ToDo: Magic Check.
 		
 	}
 
@@ -133,6 +157,7 @@ public class BeaconPacket extends Packet {
 		//throw an exception.
 		packetParcel.add(packetParcel.getParcelSize() - 8, crc.getValue());
 		
+		System.out.println("CRC sender side = " + crc.getValue() + " data length = " + packetParcel.capacity() );
 		return packetParcel;
 	}
 	
@@ -167,6 +192,7 @@ public class BeaconPacket extends Packet {
 		//many peers will be included in the beacon packet.
 		int includedPeers = 0;
 		
+	
 		//Add all the neighbor peers to the beacon contents.
 		for(PeerAddress address : peers.keySet()){
 			beaconParcel.add(peers.get(address));
@@ -176,7 +202,7 @@ public class BeaconPacket extends Packet {
 			if(++includedPeers > numPeers)
 				break;
 		}
-		
+
 		//Add a long value 0 as a temporary checksum.
 		beaconParcel.add((long)0);
 	

@@ -17,11 +17,11 @@ public class SimulationPortConfigurationProvider
 	 */
 	private boolean IS_MULTICAST = true;
 	
-	private static final int BEACON_SERVICE_PORT = 5000;
+	private static final int BEACON_SERVICE_PORT = 55461;
 	
-	private static final int DATA_SENDING_SERVICE_PORT = 5001;
+	private static final int DATA_SENDING_SERVICE_PORT = 55462;
 	
-	private static final int DATA_RECEIVING_SERVICE_PORT = 5002;
+	private static final int DATA_RECEIVING_SERVICE_PORT = 55463;
 	
 	private static PortConfiguration portConfiguration;
 	

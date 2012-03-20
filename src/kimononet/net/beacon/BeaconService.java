@@ -3,6 +3,7 @@ package kimononet.net.beacon;
 import java.util.HashMap;
 import java.util.Map;
 
+import kimononet.net.PacketException;
 import kimononet.net.p2p.Connection;
 import kimononet.net.p2p.MulticastConnection;
 import kimononet.net.p2p.UDPConnection;
@@ -119,9 +120,17 @@ public class BeaconService extends Thread implements Service{
 				sendBeacon(connection);
 					
 			}else{
+				BeaconPacket packet;
 				
-				//Parse the received byte array to a beacon packet.
-				BeaconPacket packet = new BeaconPacket(received);
+				try{
+					//Parse the received byte array to a beacon packet.
+					packet = new BeaconPacket(received);
+					 
+				//In case of an error, output the message and reset the loop.
+				}catch(PacketException ex){
+					System.out.println(ex.getMessage());
+					continue;
+				}
 				
 				Peer peer = packet.getPeer();
 				PeerAddress address = peer.getAddress();

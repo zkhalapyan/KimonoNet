@@ -168,6 +168,17 @@ public class Parcel implements Parcelable{
 		return new Parcel(buffer.compact());
 	}
 	
+	public void get(byte[] dst, int offset, int length){
+		this.buffer.get(dst, offset, length);
+	}
+	
+	public long getLong(int index){
+		return this.buffer.getLong(index);
+	}
+	
+	public int remaining(){
+		return this.buffer.remaining();
+	}
 	/**
 	 * Combines multiple parcelable objects into a single parcel.
 	 * 
