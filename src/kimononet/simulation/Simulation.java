@@ -223,6 +223,16 @@ public class Simulation {
 		listPeers.getSelectionModel().setSelectionInterval(i, i);	
 	}
 
+	public void updateCurrentPeerAgent(GeoLocation location) {
+		updateCurrentPeerAgent(location, getCurrentPeer().getVelocity());		
+	}
+
+	public void updateCurrentPeerAgent(GeoLocation location, GeoVelocity velocity) {
+		getCurrentPeer().setLocation(location);
+		getCurrentPeer().setVelocity(velocity);
+		arrayListPeerAgents.set(getCurrentPeerIndex(), new PeerAgent(getCurrentPeer(), peerEnv, new RandomWaypointGeoDevice(location, velocity)));		
+	}
+
 	public Peer getPeerAt(int index) {
 		if (index < 0)
 			return null;
@@ -666,9 +676,7 @@ public class Simulation {
 
 							peer.setName(name);
 							peer.setAddress(address);
-							peer.setLocation(location);
-							peer.setVelocity(velocity);
-							arrayListPeerAgents.set(getCurrentPeerIndex(), new PeerAgent(peer, peerEnv, new RandomWaypointGeoDevice(location, velocity)));
+							updateCurrentPeerAgent(location, velocity);
 						} catch (NumberFormatException nfe) {
 							JOptionPane.showMessageDialog(frame, "Please a valid number.");
 						} catch (GeoLocationException gle) {

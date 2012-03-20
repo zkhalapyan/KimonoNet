@@ -44,7 +44,7 @@ public class SimulationPanel extends JPanel {
 
 				if (rect.contains(x, y)) {
 					if (bMove)
-						peer.setLocation(new GeoLocation(xToLongitude(mouseX), yToLatitude(mouseY), peer.getLocation().getAccuracy()));
+						simulation.updateCurrentPeerAgent(new GeoLocation(xToLongitude(mouseX), yToLatitude(mouseY), peer.getLocation().getAccuracy()));
 					simulation.setCurrentPeerIndex(i);
 					simulation.refresh();
 					break;
