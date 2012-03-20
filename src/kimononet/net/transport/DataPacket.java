@@ -187,18 +187,25 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	public void parse(Parcel parcel){
 	
 		try{
-			//Extract CRC and calculate CRC.
+			// Extract CRC from packet header
 			parcel.rewind();
 			this.hdr_hdr_chk = parcel.getInt(Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE - 4);
+			
+			// Set CRC field to 0
 			parcel.add(Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE - 4, (int)0);
-			byte[] data = new byte[DataPacket.DATA_HDR_SIZE+DataPacket.DATA_XHDR_SIZE];		
+			
+			// Extract data to do CRC check for
+			byte[] data = new byte[Packet.HEADER_LENGTH+DataPacket.DATA_HDR_SIZE+DataPacket.DATA_XHDR_SIZE];		
 			parcel.rewind();
-			parcel.get(data, Packet.HEADER_LENGTH, DataPacket.DATA_HDR_SIZE+DataPacket.DATA_XHDR_SIZE);
+			parcel.get(data, 0, Packet.HEADER_LENGTH+DataPacket.DATA_HDR_SIZE+DataPacket.DATA_XHDR_SIZE);
+			
+			// Calculate CRC checksum for extracted data
 			CRC32 crc32Checker = new CRC32();
 			crc32Checker.update(data);
 			
-			if(crc32Checker.getValue() != this.hdr_hdr_chk){
-				throw new PacketException("CRC check for beacon packet did not pass.");
+			// Check computed checksum against checksum extracted from header
+			if(((int)crc32Checker.getValue()) != this.hdr_hdr_chk){
+				throw new PacketException("CRC check for data packet did not pass.");
 			}
 			
 		}catch(BufferUnderflowException ex){
@@ -281,6 +288,7 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		
 		// Add checksum value to data header
 		this.hdr_hdr_chk = (int) crc.getValue();
+		
 		packetParcel.add(Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE - 4, this.hdr_hdr_chk);
 		
 		return packetParcel;

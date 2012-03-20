@@ -169,7 +169,21 @@ public class KimonoNet {
 		}.start();
 
 	}
-	private static void dataPacketTest(PeerAgent agentA, Peer peerB) {
+	
+	private static void dataPacketTest() {
+		
+		System.out.println("Starting Simulation");
+
+		PeerAddress addressA = new PeerAddress("12:00:00:00:00:00");
+		GeoLocation locationA = new GeoLocation(90.0, 90.0, 1.0f);
+
+		PeerAddress addressB = new PeerAddress("12:00:00:00:00:01");
+		GeoLocation locationB = new GeoLocation(0.0, 0.0, 1.0f);
+
+		final Peer peerA = new Peer(addressA, locationA, new GeoVelocity(0f, 0f));
+		final PeerAgent agentA = new PeerAgent(peerA);
+
+		final Peer peerB = new Peer(addressB, locationB, new GeoVelocity(0f, 0f));
 		
 		byte[] payload = {0x0, 0x1, 0x2, 0x3, 0x4};
 		
