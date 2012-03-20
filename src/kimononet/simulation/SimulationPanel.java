@@ -29,6 +29,30 @@ public class SimulationPanel extends JPanel {
 	private GeoMap mapDim;
 	private Simulation simulation;
 
+	private void processDnD(int x, int y, boolean bMove) {
+		ArrayList<PeerAgent> peerAgents = simulation.getPeerAgents();
+		for (int i = 0; i < peerAgents.size(); i++) {
+			Peer peer = peerAgents.get(i).getPeer();
+			GeoLocation location = peer.getLocation();
+			Rectangle rect = new Rectangle();
+
+			if (location != null) {
+				rect.x = (int)(longitudeToX(location.getLongitude()) - (imageUAV.getWidth() / 2));
+				rect.y = (int)(latitudeToY(location.getLatitude()) - (imageUAV.getHeight() / 2));
+				rect.width = rect.x + imageUAV.getWidth();
+				rect.height = rect.y + imageUAV.getHeight();
+
+				if (rect.contains(x, y)) {
+					if (bMove)
+						peer.setLocation(new GeoLocation(xToLongitude(mouseX), yToLatitude(mouseY), peer.getLocation().getAccuracy()));
+					simulation.setCurrentPeerIndex(i);
+					simulation.refresh();
+					break;
+				}
+			}
+		}
+	}
+
 	public SimulationPanel(BufferedImage i, GeoMap m, Simulation s) {
 		imageUAV = i;
 		mapDim = m;
@@ -38,45 +62,26 @@ public class SimulationPanel extends JPanel {
 	}
 
 	public void processMouseMotionEvent(MouseEvent e) {
-		if (e.getID() == MouseEvent.MOUSE_MOVED) {
+		if (e.getID() == MouseEvent.MOUSE_DRAGGED || e.getID() == MouseEvent.MOUSE_MOVED) {
 			mouseX = e.getX();
 			mouseY = e.getY();
 			simulation.getFrame().repaint();
 		}
 
-		if (e.getID() == MouseEvent.MOUSE_DRAGGED) {
-			mouseX = e.getX();
-			mouseY = e.getY();
-
-			ArrayList<PeerAgent> peerAgents = simulation.getPeerAgents();
-			for (int i = 0; i < peerAgents.size(); i++) {
-				Peer peer = peerAgents.get(i).getPeer();
-				GeoLocation location = peer.getLocation();
-				Rectangle rect = new Rectangle();
-
-				if (location != null) {
-					rect.x = (int)(longitudeToX(location.getLongitude()) - (imageUAV.getWidth() / 2));
-					rect.y = (int)(latitudeToY(location.getLatitude()) - (imageUAV.getHeight() / 2));
-					rect.width = rect.x + imageUAV.getWidth();
-					rect.height = rect.y + imageUAV.getHeight();
-
-					if (rect.contains(mouseX, mouseY)) {
-						peer.setLocation(new GeoLocation(xToLongitude(mouseX), yToLatitude(mouseY), peer.getLocation().getAccuracy()));
-						simulation.getFrame().repaint();
-					}
-				}
-			}
-
-			simulation.refresh();
-		}
+		if (e.getID() == MouseEvent.MOUSE_DRAGGED)
+			processDnD(mouseX, mouseY, true);
 	}
 
 	public void processMouseEvent(MouseEvent e) {
 		if (e.getID() == MouseEvent.MOUSE_EXITED) {
 			mouseX = -1;
 			mouseY = -1;
+			simulation.getFrame().repaint();
 		}
-		simulation.getFrame().repaint();
+
+		if (e.getID() == MouseEvent.MOUSE_PRESSED)
+			processDnD(mouseX, mouseY, false);	// Don't move the UAV, just highlight it.
+
 		super.processMouseEvent(e);
 	}
 

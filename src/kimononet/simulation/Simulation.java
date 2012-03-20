@@ -217,6 +217,12 @@ public class Simulation {
 		return listPeers.getSelectionModel().getMinSelectionIndex();	
 	}
 
+	public void setCurrentPeerIndex(int i) {
+		if (listPeers == null)
+			return;
+		listPeers.getSelectionModel().setSelectionInterval(i, i);	
+	}
+
 	public Peer getPeerAt(int index) {
 		if (index < 0)
 			return null;
