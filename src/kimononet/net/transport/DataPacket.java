@@ -1,5 +1,6 @@
 package kimononet.net.transport;
 
+import java.nio.BufferUnderflowException;
 import java.util.zip.CRC32;
 
 import kimononet.geo.GeoLocation;
@@ -114,19 +115,10 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	 */
 	private GeoLocation xhdr_entered_loc;
 	
-	/**
-	 * TODO: Figure out what this variable is.
-	 */
 	private GeoLocation xhdr_face_entered_loc;
 	
-	/**
-	 * TODO: Figure out what this variable is.
-	 */
 	private GeoLocation xhdr_face_first_edge_src;
 	
-	/**
-	 * TODO: Figure out what this variable is.
-	 */
 	private GeoLocation xhdr_face_first_edge_dst;
 	
 	/**
@@ -193,6 +185,25 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	 * @param parcel Parcel representation of a data packet.
 	 */
 	public void parse(Parcel parcel){
+	
+		try{
+			//Extract CRC and calculate CRC.
+			parcel.rewind();
+			this.hdr_hdr_chk = parcel.getInt(Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE - 4);
+			parcel.add(Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE - 4, (int)0);
+			byte[] data = new byte[DataPacket.DATA_HDR_SIZE+DataPacket.DATA_XHDR_SIZE];		
+			parcel.rewind();
+			parcel.get(data, Packet.HEADER_LENGTH, DataPacket.DATA_HDR_SIZE+DataPacket.DATA_XHDR_SIZE);
+			CRC32 crc32Checker = new CRC32();
+			crc32Checker.update(data);
+			
+			if(crc32Checker.getValue() != this.hdr_hdr_chk){
+				throw new PacketException("CRC check for beacon packet did not pass.");
+			}
+			
+		}catch(BufferUnderflowException ex){
+			throw new PacketException("Packet is too short - cannot parse.");
+		}
 		
 		super.parse(parcel);
 		
@@ -234,7 +245,7 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 			this.hdr_qos = null;
 		
 		// HDR-HDR-CHK (4)
-		this.hdr_hdr_chk = contents.getInt();
+		contents.getInt();
 		
 		// XHDR (96)
 		if(this.hdr_fwd_mode == ForwardMode.PERIMETER){
@@ -251,20 +262,6 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 		// Extract payload
 		this.payload = new byte[payloadLength];
 		contents.getByteArray(this.payload);
-		
-		/*
-		// TODO FIX CRC CHECK
-		// CRC Check for Type 0 Header Fields (Data Header and Extended Data Header)
-		packet.add(Packet.HEADER_LENGTH + DataPacket.DATA_HDR_SIZE - 4, (int)0x0);
-		
-		CRC32 crc = new CRC32();
-		crc.update(packet.toByteArray(), Packet.HEADER_LENGTH,
-			DataPacket.DATA_HDR_SIZE+DataPacket.DATA_XHDR_SIZE);
-		
-		if(((int)crc.getValue()) != this.hdr_hdr_chk){
-			throw new PacketException("Invalid data packet checksum.\nPacket checksum: "
-				+this.hdr_hdr_chk+"\nComputed checksum: "+((int)crc.getValue()));
-		}*/
 		
 	}
 

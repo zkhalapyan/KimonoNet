@@ -175,6 +175,10 @@ public class Parcel implements Parcelable{
 	public long getLong(int index){
 		return this.buffer.getLong(index);
 	}
+
+	public int getInt(int index) {
+		return this.buffer.getInt(index);
+	}
 	
 	public int remaining(){
 		return this.buffer.remaining();
