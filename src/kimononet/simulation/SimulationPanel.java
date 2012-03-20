@@ -4,6 +4,7 @@ import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
@@ -37,10 +38,36 @@ public class SimulationPanel extends JPanel {
 	}
 
 	public void processMouseMotionEvent(MouseEvent e) {
-		if (e.getID() == MouseEvent.MOUSE_MOVED || e.getID() == MouseEvent.MOUSE_DRAGGED) {
+		if (e.getID() == MouseEvent.MOUSE_MOVED) {
 			mouseX = e.getX();
 			mouseY = e.getY();
 			simulation.getFrame().repaint();
+		}
+
+		if (e.getID() == MouseEvent.MOUSE_DRAGGED) {
+			mouseX = e.getX();
+			mouseY = e.getY();
+
+			ArrayList<PeerAgent> peerAgents = simulation.getPeerAgents();
+			for (int i = 0; i < peerAgents.size(); i++) {
+				Peer peer = peerAgents.get(i).getPeer();
+				GeoLocation location = peer.getLocation();
+				Rectangle rect = new Rectangle();
+
+				if (location != null) {
+					rect.x = (int)(longitudeToX(location.getLongitude()) - (imageUAV.getWidth() / 2));
+					rect.y = (int)(latitudeToY(location.getLatitude()) - (imageUAV.getHeight() / 2));
+					rect.width = rect.x + imageUAV.getWidth();
+					rect.height = rect.y + imageUAV.getHeight();
+
+					if (rect.contains(mouseX, mouseY)) {
+						peer.setLocation(new GeoLocation(xToLongitude(mouseX), yToLatitude(mouseY), peer.getLocation().getAccuracy()));
+						simulation.getFrame().repaint();
+					}
+				}
+			}
+
+			simulation.refresh();
 		}
 	}
 

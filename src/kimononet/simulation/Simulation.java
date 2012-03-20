@@ -89,82 +89,6 @@ public class Simulation {
 	private Timer timer;
 	private int timerRefreshRate = 1000;	// in ms
 
-	private void refresh() {
-		if (tableModelPeerProps != null)
-			tableModelPeerProps.getDataVector().removeAllElements();
-
-		if (listModelPeers != null && !listModelPeers.isEmpty()) {
-			if (btnClearAll != null)
-				btnClearAll.setEnabled(!bSimRunning);
-		}
-		else {
-			if (btnClearAll != null)
-				btnClearAll.setEnabled(false);
-		}
-
-		if (listModelPeers != null && getCurrentPeerIndex() >= 0 && getCurrentPeer() != null) {
-			// Refresh peer list item display.
-			listModelPeers.set(getCurrentPeerIndex(), getCurrentPeer().getName() + " (" + getCurrentPeer().getAddress().toString() + ")");
-
-			// Refresh peer properties table display.
-			String longitude = new String();
-			String latitude = new String();
-			String accuracy = new String();
-			GeoLocation location = getCurrentPeer().getLocation();
-			if (location != null) {
-				longitude = Double.toString(location.getLongitude());
-				latitude = Double.toString(location.getLatitude());
-				accuracy = Float.toString(location.getAccuracy());
-			}
-			else {
-				longitude = "n/a";
-				latitude = "n/a";
-				accuracy = "n/a";
-			}
-			if (tableModelPeerProps != null) {
-				tableModelPeerProps.addRow(new Object[] {properties[0], getCurrentPeer().getName()});
-				tableModelPeerProps.addRow(new Object[] {properties[1], getCurrentPeer().getAddress().toString()});
-				tableModelPeerProps.addRow(new Object[] {properties[2], longitude});
-				tableModelPeerProps.addRow(new Object[] {properties[3], latitude});
-				tableModelPeerProps.addRow(new Object[] {properties[4], accuracy});
-				tableModelPeerProps.addRow(new Object[] {properties[5], Float.toString(getCurrentPeer().getVelocity().getSpeed())});
-				tableModelPeerProps.addRow(new Object[] {properties[6], Double.toString(Math.toDegrees(getCurrentPeer().getVelocity().getBearing()))});
-			}
-
-			if (btnDeletePeer != null)
-				btnDeletePeer.setEnabled(!bSimRunning);
-			/*if (btnApplyPeerProps != null)
-				btnApplyPeerProps.setEnabled(!bSimRunning);
-			if (btnApplyEnvProps != null)
-				btnApplyEnvProps.setEnabled(!bSimRunning);*/
-		}
-		else {
-			if (btnDeletePeer != null)
-				btnDeletePeer.setEnabled(false);
-			/*if (btnApplyPeerProps != null)
-				btnApplyPeerProps.setEnabled(false);
-			if (btnApplyEnvProps != null)
-				btnApplyEnvProps.setEnabled(false);*/
-		}
-
-		if (textAreaStats != null && results != null) {
-			textAreaStats.setText(results.toString());
-			textAreaStats.setCaretPosition(0);
-		}
-
-		if (textAreaStats.getText().isEmpty()) {
-			btnClear.setEnabled(false);
-			btnCopy.setEnabled(false);
-		}
-		else {
-			btnClear.setEnabled(!bSimRunning);
-			btnCopy.setEnabled(!bSimRunning);
-		}
-
-		if (frame != null)
-			frame.repaint();
-	}
-
 	private void addPeer() {
 		GeoLocation location = GeoLocation.generateRandomGeoLocation(mapDim);
 		GeoVelocity velocity = new GeoVelocity(100, GeoLocation.generateRandomBearing());
@@ -301,6 +225,82 @@ public class Simulation {
 
 	public JFrame getFrame() {
 		return frame;
+	}
+
+	public void refresh() {
+		if (tableModelPeerProps != null)
+			tableModelPeerProps.getDataVector().removeAllElements();
+
+		if (listModelPeers != null && !listModelPeers.isEmpty()) {
+			if (btnClearAll != null)
+				btnClearAll.setEnabled(!bSimRunning);
+		}
+		else {
+			if (btnClearAll != null)
+				btnClearAll.setEnabled(false);
+		}
+
+		if (listModelPeers != null && getCurrentPeerIndex() >= 0 && getCurrentPeer() != null) {
+			// Refresh peer list item display.
+			listModelPeers.set(getCurrentPeerIndex(), getCurrentPeer().getName() + " (" + getCurrentPeer().getAddress().toString() + ")");
+
+			// Refresh peer properties table display.
+			String longitude = new String();
+			String latitude = new String();
+			String accuracy = new String();
+			GeoLocation location = getCurrentPeer().getLocation();
+			if (location != null) {
+				longitude = Double.toString(location.getLongitude());
+				latitude = Double.toString(location.getLatitude());
+				accuracy = Float.toString(location.getAccuracy());
+			}
+			else {
+				longitude = "n/a";
+				latitude = "n/a";
+				accuracy = "n/a";
+			}
+			if (tableModelPeerProps != null) {
+				tableModelPeerProps.addRow(new Object[] {properties[0], getCurrentPeer().getName()});
+				tableModelPeerProps.addRow(new Object[] {properties[1], getCurrentPeer().getAddress().toString()});
+				tableModelPeerProps.addRow(new Object[] {properties[2], longitude});
+				tableModelPeerProps.addRow(new Object[] {properties[3], latitude});
+				tableModelPeerProps.addRow(new Object[] {properties[4], accuracy});
+				tableModelPeerProps.addRow(new Object[] {properties[5], Float.toString(getCurrentPeer().getVelocity().getSpeed())});
+				tableModelPeerProps.addRow(new Object[] {properties[6], Double.toString(Math.toDegrees(getCurrentPeer().getVelocity().getBearing()))});
+			}
+
+			if (btnDeletePeer != null)
+				btnDeletePeer.setEnabled(!bSimRunning);
+			/*if (btnApplyPeerProps != null)
+				btnApplyPeerProps.setEnabled(!bSimRunning);
+			if (btnApplyEnvProps != null)
+				btnApplyEnvProps.setEnabled(!bSimRunning);*/
+		}
+		else {
+			if (btnDeletePeer != null)
+				btnDeletePeer.setEnabled(false);
+			/*if (btnApplyPeerProps != null)
+				btnApplyPeerProps.setEnabled(false);
+			if (btnApplyEnvProps != null)
+				btnApplyEnvProps.setEnabled(false);*/
+		}
+
+		if (textAreaStats != null && results != null) {
+			textAreaStats.setText(results.toString());
+			textAreaStats.setCaretPosition(0);
+		}
+
+		if (textAreaStats.getText().isEmpty()) {
+			btnClear.setEnabled(false);
+			btnCopy.setEnabled(false);
+		}
+		else {
+			btnClear.setEnabled(!bSimRunning);
+			btnCopy.setEnabled(!bSimRunning);
+		}
+
+		if (frame != null)
+			frame.repaint();
 	}
 
 	/**
