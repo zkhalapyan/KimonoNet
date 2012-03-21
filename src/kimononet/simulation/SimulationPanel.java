@@ -212,8 +212,8 @@ public class SimulationPanel extends JPanel {
 			g2d.fillRect(tooltipX, tooltipY, 175, 50);
 			g2d.setColor(Color.BLACK);
 			g2d.drawRect(tooltipX, tooltipY, 175, 50);
-			g2d.drawString("Longitude: " + Float.toString((float)xToLongitude(mouseX)) + "°", tooltipX + 5, tooltipY + 20);
-			g2d.drawString("Latitude: " + Float.toString((float)yToLatitude(mouseY)) + "°", tooltipX + 5, tooltipY + 40);
+			g2d.drawString("Longitude: " + Float.toString((float)xToLongitude(mouseX)) + "?", tooltipX + 5, tooltipY + 20);
+			g2d.drawString("Latitude: " + Float.toString((float)yToLatitude(mouseY)) + "?", tooltipX + 5, tooltipY + 40);
 		}
 
 	}

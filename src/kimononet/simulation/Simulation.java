@@ -369,7 +369,7 @@ public class Simulation {
 		JMenuItem mntmAbout = new JMenuItem("About...");
 		mntmAbout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				JOptionPane.showMessageDialog(frame, "KimonoNet Simulator\n\nCopyright © 2012. All rights reserved.\n\nEric Bollens\nJames Hung\nZorayr Khalapyan\nWade Norris");
+				JOptionPane.showMessageDialog(frame, "KimonoNet Simulator\n\nCopyright ? 2012. All rights reserved.\n\nEric Bollens\nJames Hung\nZorayr Khalapyan\nWade Norris");
 			}
 		});
 		mnHelp.add(mntmAbout);

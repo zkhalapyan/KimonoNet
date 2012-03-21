@@ -16,11 +16,11 @@ public class PeerPropertiesTable extends JTable {
 
 	private final String[] properties = {	"Name",				// Row 0
 											"Address",			// Row 1
-											"Longitude (°)",	// Row 2
-											"Latitude (°)",		// Row 3
+											"Longitude (?)",	// Row 2
+											"Latitude (?)",		// Row 3
 											"Accuracy",			// Row 4
 											"Speed (m/s)",		// Row 5
-											"Bearing (°)" };	// Row 6
+											"Bearing (?)" };	// Row 6
 
 	private PropertyTableModel model;
 	private Simulation sim;
