@@ -20,19 +20,20 @@ public class KiNCoL extends Thread{
 	
 	/**
 	 * Internal at which packets will be send from a random source to a random
-	 * sink.
+	 * sink. This value is in milliseconds.
 	 */
-	private static final int PACKET_SENDING_INTERVAL = 1000;
+	private static final int PACKET_SENDING_INTERVAL = 10;
 	
 	/**
 	 * Numbers of seconds to allow beacon service to populate peers table prior
-	 * to sending packets.
+	 * to sending packets. This value is in milliseconds.
 	 */
-	private static final int INITIALIZATION_DELAY = 1000;
+	private static final int INITIALIZATION_DELAY = 2000;
 	
 	/**
 	 * Delay in seconds to wait before exiting the simulation. The delay will 
-	 * allow all running threads to successfully shutdown. 
+	 * allow all running threads to successfully shutdown. This value is in 
+	 * milliseconds.
 	 */
 	private static final int SHUTDOWN_DELAY = 1000;
 	
@@ -142,6 +143,14 @@ public class KiNCoL extends Thread{
 				sleep(INITIALIZATION_DELAY);
 			}
 			
+			//Get a random sender.
+			PeerAgent source = getRandomPeerAgent();
+			PeerAgent destination;
+			
+			//Find a random receiver that is not the sender. 
+			while((destination = getRandomPeerAgent()) == source){}
+			
+			
 			for(int i = 0; i < numberOfPackets; i++){
 				
 				//Account for agents exploding in hostile environments.
@@ -151,18 +160,9 @@ public class KiNCoL extends Thread{
 					}
 				}
 				
-				//Get a random sender.
-				PeerAgent source = agents[0];//getRandomPeerAgent();
-				PeerAgent destination = agents[1];
-				
-				//Find a random receiver that is not the sender. 
-				//while((destination = getRandomPeerAgent()) == source){}
-				
 				byte[] payload = new byte[]{0x01, 0x02};
 				
 				source.sendDataPacket(new DataPacket(source, destination.getPeer(), QualityOfService.REGULAR, payload));			
-				
-				results.combine(statMonitor.getStats().getStatResults(source.getPeer().getAddress(), destination.getPeer().getAddress()));
 			
 				//Slows down the simulation.
 				sleep(PACKET_SENDING_INTERVAL);
@@ -172,8 +172,12 @@ public class KiNCoL extends Thread{
 			//Kill all services/threads.
 			killEveryone(agents);
 			
+			System.out.println("Shutting down...");
+			
 			//Wait for all the threads to die out/shutdown.
 			sleep(SHUTDOWN_DELAY);
+			
+			results.combine(statMonitor.getStats().getStatResults(source.getPeer().getAddress(), destination.getPeer().getAddress()));
 			
 			//Output the results.
 			System.out.println(results);
@@ -194,6 +198,8 @@ public class KiNCoL extends Thread{
 	
 		
 	}
+	
+
 
 	/**
 	 * Returns a random peer agent.

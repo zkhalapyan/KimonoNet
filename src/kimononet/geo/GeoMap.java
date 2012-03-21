@@ -32,8 +32,8 @@ public class GeoMap {
 	public GeoMap(int width, int height){
 		
 		this.upperLeft = new GeoLocation(0, 0, 0);
-		this.lowerRight = new GeoLocation(Math.toDegrees(height/ GeoLocation.EARTH_MEDIAN_RADIUS),
-										  Math.toDegrees(width / GeoLocation.EARTH_MEDIAN_RADIUS), 0);
+		this.lowerRight = new GeoLocation(Math.toDegrees(height / (double)GeoLocation.EARTH_MEDIAN_RADIUS),
+										  Math.toDegrees(width / (double)GeoLocation.EARTH_MEDIAN_RADIUS), 0);
 	}
 
 	public GeoMap(GeoLocation upperLeft, GeoLocation lowerRight) {

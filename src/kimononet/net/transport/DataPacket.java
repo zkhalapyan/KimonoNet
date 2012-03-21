@@ -420,22 +420,7 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	 */
 	public String toString(){
 		
-		return super.toString() + 
-				   "\nData Packet Header\n" +  
-				   "HDR-DST-ID:  \t\t" + this.hdr_dst.getAddress() + "\n" + 
-				   "HDR-DST-LOC: \t\t" + this.hdr_dst.getLocation() + "\n" +
-				   "HDR-FWD-DST-ID:\t\t" + this.hdr_fwd_dst_id + "\n" + 
-				   "HDR-FWD-MODE:\t\t" + this.hdr_fwd_mode + "\n" + 
-				   "HDR-DATA-LEN: \t\t" + this.payload.length + "\n" + 
-				   "HDR-QOS:    \t\t" + this.hdr_qos + "\n" +  
-				   "HDR-HDR-CHK:\t\t" + this.hdr_hdr_chk + "\n" +
-				   "--------------------------------------------- \n" +
-				   "Data Packet Extended Header\n" +  
-				   "XHDR-ENTERED-LOC:\t\t" + this.xhdr_entered_loc + "\n" + 
-				   "XHDR-FACE-ENTERED-LOC:\t\t" + this.xhdr_face_entered_loc + "\n" +
-				   "XHDR-FACE-FIRST-EDGE-SRC: \t" + this.xhdr_face_first_edge_src + "\n" + 
-				   "XHDR-FACE-FIRST-EDGE-DST:   \t" + this.xhdr_face_first_edge_dst + "\n" + 
-				   "---------------------------------------------";
+		return "PACKET FROM " + getPeer().getAddress() + " TO " + getDestinationPeer().getAddress();
 	}
 
 	public void setXHDRFaceFirstEdgeDst(GeoLocation dst) {

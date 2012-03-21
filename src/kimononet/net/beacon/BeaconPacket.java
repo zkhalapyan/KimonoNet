@@ -157,7 +157,7 @@ public class BeaconPacket extends Packet {
 		//throw an exception.
 		packetParcel.add(packetParcel.getParcelSize() - 8, crc.getValue());
 		
-		System.out.println("CRC sender side = " + crc.getValue() + " data length = " + packetParcel.capacity() );
+		//System.out.println("CRC sender side = " + crc.getValue() + " data length = " + packetParcel.capacity() );
 		return packetParcel;
 	}
 	

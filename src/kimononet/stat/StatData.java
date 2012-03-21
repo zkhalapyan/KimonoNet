@@ -74,6 +74,9 @@ public class StatData {
 		
 		int totalPacketCount = 0;
 		
+		int totalSentDataPackets = 0;
+		int totalReceivedDataPackets = 0;
+		
 		int receivedPacketCount = 0;
 		int sentPacketCount     = 0;
 		int beaconPacketCount   = 0;
@@ -96,14 +99,18 @@ public class StatData {
 					
 					dataPacketCount ++;
 					
+					totalSentDataPackets ++;
+					
 					switch(packet.getMode()){
 						case GREEDY:
 							greedyCount ++;
 							break;
 						case PERIMETER:
 							perimeterCount ++;
+							break;
 							
 					}
+					
 					
 					if(sourceAddress != null 
 					   && destinationAddress != null
@@ -130,6 +137,8 @@ public class StatData {
 				}else if(packet.getType() == PacketType.DATA){
 					dataPacketCount ++;
 					
+					totalReceivedDataPackets ++;
+					
 					if(sourceAddress != null 
 					   && destinationAddress != null
 					   && packet.isSink() 
@@ -148,7 +157,9 @@ public class StatData {
 							   beaconPacketCount, 
 							   dataPacketCount,
 							   greedyCount, 
-							   perimeterCount);
+							   perimeterCount,
+							   totalSentDataPackets,
+							   totalReceivedDataPackets);
 		
 	}
 	

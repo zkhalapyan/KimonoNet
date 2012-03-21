@@ -64,6 +64,10 @@ public class StatResults {
 	 */
 	private int perimeterCount;
 	
+	private int totalSentDataPackets;
+	
+	private int totalReceivedDataPackets;
+	
 
 	/**
 	 * Creates a new results package given various count values.
@@ -93,7 +97,9 @@ public class StatResults {
 					   int beaconPackets, 
 					   int dataPackets,
 					   int greedyCount, 
-					   int perimeterCount){
+					   int perimeterCount,
+					   int totalSentDataPackets,
+					   int totalReceivedDataPackets){
 		
 		this.totalPacketCount = totalPacketCount;
 		this.sentPackets      = sentPackets;
@@ -102,6 +108,9 @@ public class StatResults {
 		this.dataPackets      = dataPackets;
 		this.greedyCount      = greedyCount;
 		this.perimeterCount   = perimeterCount;
+		
+		this.totalSentDataPackets = totalSentDataPackets;
+		this.totalReceivedDataPackets = totalSentDataPackets;
 	}
 	
 
@@ -109,7 +118,7 @@ public class StatResults {
 	 * Creates a new results package with all values set to null.
 	 */
 	public StatResults() {
-		this(0, 0, 0, 0, 0, 0, 0);
+		this(0, 0, 0, 0, 0, 0, 0, 0, 0);
 	}
 
 
@@ -145,9 +154,9 @@ public class StatResults {
 	 * @return Greedy ratio.
 	 */
 	public double getGreedyRatio(){
-		return (dataPackets == 0)? 
+		return (totalSentDataPackets == 0)? 
 					0.0 : 
-					greedyCount / (double)dataPackets;
+					greedyCount / (double)totalSentDataPackets;
 	}
 	
 	
@@ -213,6 +222,8 @@ public class StatResults {
 		this.dataPackets      += results.dataPackets;
 		this.greedyCount      += results.greedyCount;
 		this.perimeterCount   += results.perimeterCount;
+		this.totalReceivedDataPackets += results.totalReceivedDataPackets;
+		this.totalSentDataPackets += results.totalSentDataPackets;
 	}
 	
 	/**
@@ -237,16 +248,20 @@ public class StatResults {
 		
 		String results = "";
 		results += "###############RESULTS###############"                + "\n";
-		results += "Lost Packets:          \t" + getLostPackets()         + "\n";
-		results += "Packet Delivery Ratio: \t" + getPacketDeliveryRatio() + "\n";
-		results += "Control Overhead:      \t" + getControlOverhead()     + "\n";
-		results += "Greedy Ratio:          \t" + getGreedyRatio()         + "\n\ns";
+		results += "Lost Packets:          \t" +  getLostPackets() +    "\n";
+		results += "Packet Delivery Ratio: \t" + (int)(getPacketDeliveryRatio() * 100)    + "%\n";
+		results += "Control Overhead:      \t" + (int)(getControlOverhead() * 100)    + "%\n";
+		results += "Greedy Ratio:          \t" + (int)(getGreedyRatio()     * 100)    + "%\n\ns";
 		
 		results += "###############COUNTS###############"                 + "\n";
-		results += "Total Packet Count:      \t" + totalPacketCount       + "\n";
-		results += "Sent Packet Count:       \t" + sentPackets 	          + "\n";
-		results += "Received Packet Count:   \t" + receivedPackets        + "\n";
-		results += "Beacon Packet Count:     \t" + beaconPackets          + "\n";
+		
+		results += "Total Packet Count:                      \t" + totalPacketCount         + "\n";
+		results += "Total Sent Data Packet Count:            \t" + totalSentDataPackets     + "\n";
+		results += "Total Received Data Packet Count:        \t" + totalReceivedDataPackets + "\n";
+		results += "Sent Packets (from source) Count:        \t" + sentPackets 	            + "\n";
+		results += "Received Packets (at destination) Count: \t" + receivedPackets          + "\n";
+		results += "Beacon Packet Count:                     \t" + beaconPackets            + "\n";
+		
 		results += "Data Packet Count:       \t" + dataPackets 	          + "\n";
 		results += "Greedy Routing Count:    \t" + greedyCount 	          + "\n";
 		results += "Perimeter Routing Count: \t" + perimeterCount         + "\n\n";

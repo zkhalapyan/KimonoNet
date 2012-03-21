@@ -116,7 +116,7 @@ public class BeaconService extends Thread implements Service{
 			received = connection.receive();
 			
 			if(received == null){
-				System.out.println("Beacon service for " + agent.getPeer().getAddress() + " timed out. Sending a beacon.");
+				//System.out.println("Beacon service for " + agent.getPeer().getAddress() + " timed out. Sending a beacon.");
 				sendBeacon(connection);
 					
 			}else{
@@ -177,7 +177,7 @@ public class BeaconService extends Thread implements Service{
 				//send a beacon as a response.
 				if(!packet.getPeers().containsKey(agent.getPeer().getAddress())){
 					sendBeacon(connection);
-					System.out.println("Apparently peer " + packet.getPeer().getAddress() + " doesn't know about " + agent.getPeer().getAddress());
+					//System.out.println("Apparently peer " + packet.getPeer().getAddress() + " doesn't know about " + agent.getPeer().getAddress());
 				}
 				
 				

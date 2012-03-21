@@ -120,7 +120,7 @@ public class StatPacket {
 	 * @return True if {@link #node} is the same as {@link #source}.
 	 */
 	public boolean isSource(){
-		return this.source == this.node;
+		return this.source.equals(this.node);
 	}
 	
 	/**
@@ -131,7 +131,7 @@ public class StatPacket {
 	 * 
 	 */
 	public boolean isSink(){
-		return this.destination == this.node;
+		return this.destination.equals(this.node);
 	}
 	
 	/**

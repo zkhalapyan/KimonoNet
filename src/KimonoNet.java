@@ -38,7 +38,7 @@ public class KimonoNet {
 		
 		
 		if(args.length <= 0 || args[0].equals("mode-gui")){
-			startUISimulation(); // dataPacketSendingTest();
+			startUISimulation();
 			
 		}else if(args[0].equals("mode-cl")){
 			
@@ -63,6 +63,7 @@ public class KimonoNet {
 				
 				numberOfPackets = 0;
 			}
+			
 			
 			GeoMap map = new GeoMap(mapWidth, mapHeight);
 			
@@ -124,7 +125,7 @@ public class KimonoNet {
 		System.out.println("Starting Simulation");
 
 		PeerAddress addressA = new PeerAddress("12:00:00:00:00:00");
-		GeoLocation locationA = new GeoLocation(0.000001, 0.0, 1.0f);
+		GeoLocation locationA = new GeoLocation(2000.0, 2000.0, 1.0f);
 
 		PeerAddress addressB = new PeerAddress("12:00:00:00:00:01");
 		GeoLocation locationB = new GeoLocation(0.0, 0.0, 1.0f);
@@ -169,21 +170,7 @@ public class KimonoNet {
 		}.start();
 
 	}
-	
-	private static void dataPacketTest() {
-		
-		System.out.println("Starting Simulation");
-
-		PeerAddress addressA = new PeerAddress("12:00:00:00:00:00");
-		GeoLocation locationA = new GeoLocation(90.0, 90.0, 1.0f);
-
-		PeerAddress addressB = new PeerAddress("12:00:00:00:00:01");
-		GeoLocation locationB = new GeoLocation(0.0, 0.0, 1.0f);
-
-		final Peer peerA = new Peer(addressA, locationA, new GeoVelocity(0f, 0f));
-		final PeerAgent agentA = new PeerAgent(peerA);
-
-		final Peer peerB = new Peer(addressB, locationB, new GeoVelocity(0f, 0f));
+	private static void dataPacketTest(PeerAgent agentA, Peer peerB) {
 		
 		byte[] payload = {0x0, 0x1, 0x2, 0x3, 0x4};
 		
