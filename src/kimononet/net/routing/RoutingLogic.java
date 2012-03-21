@@ -81,7 +81,7 @@ public class RoutingLogic {
 		{
 			Peer peerN = entry.getValue();
 			double t = peerN.getLocation().distanceTo(packet.getDestinationPeer().getLocation());
-			if (t<d)
+			if (peerN.getAddress().equals(packet.getDestinationPeer().getAddress()) || t<d)
 			{
 				id = peerN.getAddress();
 				d = t;
