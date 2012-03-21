@@ -88,6 +88,7 @@ public class Simulation {
 	private GeoMap mapDim = new GeoMap(	new GeoLocation(-0.01, 0.01, 0f),		// Upper left
 										new GeoLocation(0.01, -0.01, 0f));	// Lower right
 	private PeerEnvironment peerEnv = new DefaultPeerEnvironment();
+	private SimulationPanel panel; 
 	private StatMonitor statMon = new MasterStatMonitor();
 	private StatResults results;
 	private Timer timer;
@@ -113,13 +114,18 @@ public class Simulation {
 		refresh();
 	}
 
-	private void deleteCurrentPeer() {
-		int i = getCurrentPeerIndex();
+	private void deletePeer(int i) {
 		if (i < 0)
 			return;
 		listModelPeers.remove(i);
+		if (bSimRunning)
+			arrayListPeerAgents.get(i).shutdownServices();
 		arrayListPeerAgents.remove(i);
 		refresh();
+	}
+
+	private void deleteCurrentPeer() {
+		deletePeer(getCurrentPeerIndex());
 	}
 
 	private void deleteAllPeers() {
@@ -129,7 +135,7 @@ public class Simulation {
 	}
 
 	private void startStopSim() {
-		if (arrayListPeerAgents.size() < 2) {
+		if (!bSimRunning && arrayListPeerAgents.size() < 2) {
 			JOptionPane.showMessageDialog(frame, "Please at least 2 peers.");
 			return;
 		}
@@ -162,7 +168,8 @@ public class Simulation {
 
 			// Wait for all the threads to die out/shutdown.
 			//sleep(KiNCoL.SHUTDOWN_DELAY);
-			
+
+			panel.clearExplosionPoints();
 			results = null;
 
 			/*System.out.println("#########BEACON SERVICE RESULTS#########");
@@ -460,16 +467,16 @@ public class Simulation {
 		 * Panel in which to draw the UAVs and stuff.
 		 *********************************************************************/
 
-		BufferedImage imageUAV = null;
+		BufferedImage imageUAV = null, imageUAVxplod = null;
 
 		try {
 			imageUAV = ImageIO.read(new File("uav.png"));
+			imageUAVxplod = ImageIO.read(new File("uavxplod.png"));
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(frame, "Error loading image.");
 		}
 
-		//JPanel panel = new JPanel();
-		SimulationPanel panel = new SimulationPanel(imageUAV, mapDim, this);
+		panel = new SimulationPanel(imageUAV, imageUAVxplod, mapDim, this);
 		panel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 
 		GridBagConstraints gbc_panel = new GridBagConstraints();
@@ -922,12 +929,18 @@ public class Simulation {
 		timer = new Timer(timerRefreshRate, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// Account for agents exploding in hostile environments.
-				/*for (PeerAgent agent : arrayListPeerAgents) {
+				for (int i = 0; i < arrayListPeerAgents.size(); i++) {
 					if (Math.random() < hostilityFactor) {
-						if (agent != null)
-							agent.shutdownServices();
+						panel.peerExplode(getPeerAt(i));
+						deletePeer(i);
 					}
-				}*/
+				}
+				if (arrayListPeerAgents.size() < 2) {
+					// If we have less than 2 agents left, stop the simulation.
+					startStopSim();
+					JOptionPane.showMessageDialog(frame, "All peers have died except for one. The simulation has been automatically stopped.");
+					return;
+				}
 
 				// Get a random sender.
 				PeerAgent source = getRandomPeerAgent();
