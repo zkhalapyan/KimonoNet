@@ -957,6 +957,7 @@ public class Simulation {
 				results.combine(statMon.getStats().getStatResults(source.getPeer().getAddress(), destination.getPeer().getAddress()));
 
 				// Refresh the UI.
+				panel.incrementClock();
 				refresh();
 			}
 		});

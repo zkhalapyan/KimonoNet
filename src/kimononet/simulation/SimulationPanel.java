@@ -34,6 +34,7 @@ public class SimulationPanel extends JPanel {
 	private final int EXPLOSION_POINT_LIFETIME = 1;
 	private HashMap<Point, Integer> explosionPoints = new HashMap<Point, Integer>();
 	private BufferedImage imageUAV, imageUAVxplod;
+	private int clock;
 	private int mouseX = -1, mouseY = -1;
 	private GeoMap mapDim;
 	private Simulation simulation;
@@ -50,13 +51,17 @@ public class SimulationPanel extends JPanel {
 		return rect;
 	}
 
+	public void incrementClock() {
+		clock++;
+	}
+
 	public void peerExplode(Peer peer) {
 		if (peer == null)
 			return;
 		GeoLocation location = peer.getLocation();
 		if (location == null)
 			return;
-		explosionPoints.put(new Point((int)(longitudeToX(location.getLongitude())) - (imageUAV.getWidth() / 2), (int)(latitudeToY(location.getLatitude())) - (imageUAV.getHeight() / 2)), 0);
+		explosionPoints.put(new Point((int)(longitudeToX(location.getLongitude())) - (imageUAV.getWidth() / 2), (int)(latitudeToY(location.getLatitude())) - (imageUAV.getHeight() / 2)), clock);
 	}
 
 	public void clearExplosionPoints() {
@@ -225,10 +230,8 @@ public class SimulationPanel extends JPanel {
 	        Point point = (Point)pairs.getKey();
 	        Integer pointLifetime = (Integer)pairs.getValue();
 	        g2d.drawImage(imageUAVxplod, point.x, point.y, this);
-	        if (pointLifetime > EXPLOSION_POINT_LIFETIME)
+	        if ((clock - pointLifetime) > EXPLOSION_POINT_LIFETIME)
 	        	it.remove();
-	        else
-	        	pairs.setValue(pointLifetime + 1);
 	    }
 
 		// Paint tooltip.
