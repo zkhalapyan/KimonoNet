@@ -38,7 +38,7 @@ public class KimonoNet {
 		
 		
 		if(args.length <= 0 || args[0].equals("mode-gui")){
-			startUISimulation();
+			startUISimulation(); // dataPacketSendingTest();
 			
 		}else if(args[0].equals("mode-cl")){
 			
@@ -124,7 +124,7 @@ public class KimonoNet {
 		System.out.println("Starting Simulation");
 
 		PeerAddress addressA = new PeerAddress("12:00:00:00:00:00");
-		GeoLocation locationA = new GeoLocation(2000.0, 2000.0, 1.0f);
+		GeoLocation locationA = new GeoLocation(0.000001, 0.0, 1.0f);
 
 		PeerAddress addressB = new PeerAddress("12:00:00:00:00:01");
 		GeoLocation locationB = new GeoLocation(0.0, 0.0, 1.0f);
