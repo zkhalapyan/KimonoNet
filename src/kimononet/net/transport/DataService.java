@@ -74,12 +74,7 @@ public class DataService extends Thread implements Service{
 			
 			if(packetByteArray != null){
 				
-				StatPacket p = new StatPacket(packet, agent.getPeer().getAddress());
-				agent.getStatMonitor().packetSent(p);
-				
 				//Send the data packet.
-				System.out.println("\nSending packet over network:\n"+packet);
-				
 				return connection.send(packetByteArray, 
 									   agent.getPortConfiguration().getDataReceivingServicePort(), 
 									   Connection.BROADCAST_ADDRESS);
@@ -227,6 +222,9 @@ public class DataService extends Thread implements Service{
 	}
 	
 	public void addPacketToQueue(DataPacket packet){
+		
+		StatPacket p = new StatPacket(packet, agent.getPeer().getAddress());
+		agent.getStatMonitor().packetSent(p);
 		
 		packetQueue.add(packet);
 
