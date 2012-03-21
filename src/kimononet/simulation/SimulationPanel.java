@@ -28,7 +28,7 @@ import kimononet.peer.PeerAgent;
 public class SimulationPanel extends JPanel {
 
 	private BufferedImage imageUAV, imageUAVxplod;
-	private final int EXPLOSION_POINT_LIFETIME = 1;
+	private final int EXPLOSION_POINT_LIFETIME = 10;
 	private GeoMap mapDim;
 	private HashMap<Point, Long> explosionPoints = new HashMap<Point, Long>();
 	private int mouseX = -1, mouseY = -1;
