@@ -66,9 +66,16 @@ public class DataService extends Thread implements Service{
 			
 			// Route the packet to the next hop using routing protocol
 			if(!routingProtocol.routePacket(packet)) {
+				
+				StatPacket p = new StatPacket(packet, agent.getPeer().getAddress());
+				agent.getStatMonitor().packetDropped(p);
+				
 				System.out.println("Packet was dropped during routing protocol!");
 				return false;
 			}
+
+			StatPacket p = new StatPacket(packet, agent.getPeer().getAddress());
+			agent.getStatMonitor().packetSent(p);
 			
 			byte[] packetByteArray = packet.toParcel().toByteArray();
 			
@@ -222,9 +229,6 @@ public class DataService extends Thread implements Service{
 	}
 	
 	public void addPacketToQueue(DataPacket packet){
-		
-		StatPacket p = new StatPacket(packet, agent.getPeer().getAddress());
-		agent.getStatMonitor().packetSent(p);
 		
 		packetQueue.add(packet);
 
