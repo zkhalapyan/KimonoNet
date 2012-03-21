@@ -32,9 +32,9 @@ import kimononet.peer.PeerAgent;
 public class SimulationPanel extends JPanel {
 
 	private final int EXPLOSION_POINT_LIFETIME = 1;
-	private HashMap<Point, Integer> explosionPoints = new HashMap<Point, Integer>();
+	private HashMap<Point, Long> explosionPoints = new HashMap<Point, Long>();
 	private BufferedImage imageUAV, imageUAVxplod;
-	private int clock;
+	private long clock;
 	private int mouseX = -1, mouseY = -1;
 	private GeoMap mapDim;
 	private Simulation simulation;
@@ -65,6 +65,7 @@ public class SimulationPanel extends JPanel {
 	}
 
 	public void clearExplosionPoints() {
+		clock = 0;
 		explosionPoints.clear();
 	}
 
@@ -228,7 +229,7 @@ public class SimulationPanel extends JPanel {
 	    while (it.hasNext()) {
 	        Map.Entry pairs = (Map.Entry)it.next();
 	        Point point = (Point)pairs.getKey();
-	        Integer pointLifetime = (Integer)pairs.getValue();
+	        Long pointLifetime = (Long)pairs.getValue();
 	        g2d.drawImage(imageUAVxplod, point.x, point.y, this);
 	        if ((clock - pointLifetime) > EXPLOSION_POINT_LIFETIME)
 	        	it.remove();
