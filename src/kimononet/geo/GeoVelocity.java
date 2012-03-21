@@ -109,5 +109,19 @@ public class GeoVelocity implements Parcelable {
 		return PARCEL_SIZE;
 	}
 
+	/**
+	 * Adjust the current bearing to be within the [0, 2Pi) range. 
+	 */
+	public void standardizeBearing(){
+		
+		//Make sure that the current bearing is positive.
+		while(getBearing() < 0){
+			setBearing((float)(getBearing() + Math.PI * 2));
+		}
+		
+		//Clamp bearings larger than two PI.
+		setBearing((float)(getBearing() % (2 * Math.PI)));
+		
+	}
 }
 	

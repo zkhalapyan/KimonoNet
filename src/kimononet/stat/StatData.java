@@ -135,6 +135,10 @@ public class StatData {
 			
 			for(StatPacket packet : receivedPackets){
 				
+				if(packet.isDropped()){
+					continue;
+				}
+				
 				if(packet.getType() == PacketType.BEACON){
 					beaconPacketCount ++;
 					

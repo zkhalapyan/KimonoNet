@@ -78,7 +78,7 @@ public class Simulation {
 		PeerAddress address = PeerAddress.generateRandomAddress();
 		GeoLocation location = GeoLocation.generateRandomGeoLocation(mapDim);
 		GeoVelocity velocity = new GeoVelocity(100, GeoLocation.generateRandomBearing());
-		GeoDevice device = new RandomWaypointGeoDevice(location, velocity);
+		GeoDevice device = new RandomWaypointGeoDevice(location, velocity, mapDim);
 
 		// Create new peer with random address, location, velocity.
 		Peer peer = new Peer(address, location, velocity);

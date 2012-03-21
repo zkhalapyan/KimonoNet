@@ -65,9 +65,11 @@ public class RandomWaypointGeoDevice implements GeoDevice {
 	
 	private int lastTurnTime;
 	
+	private GeoMap map;
+	
 	/**
 	 * Creates a new random waypoint model using {@link #DEFAULT_MAX_TURN} and
-	 * {@link #DEFAULT_TURN_INTERVAL}. By defaul, the time provider will be 
+	 * {@link #DEFAULT_TURN_INTERVAL}. By default, the time provider will be 
 	 * set to the {@link SystemTimeProvider}.
 	 * 
 	 * 
@@ -84,6 +86,26 @@ public class RandomWaypointGeoDevice implements GeoDevice {
 			DEFAULT_TURN_INTERVAL);
 	}
 	
+	/**
+	 * Creates a new random waypoint model using {@link #DEFAULT_MAX_TURN} and
+	 * {@link #DEFAULT_TURN_INTERVAL}. By default, the time provider will be 
+	 * set to the {@link SystemTimeProvider}. The third parameter also specifies
+	 * the bounding map.
+	 * 
+	 * 
+	 * @param currentLocation The starting location.
+	 * 
+	 * @param velocity        The starting velocity.
+	 * @param map             The bounding map.
+	 */
+	public RandomWaypointGeoDevice(GeoLocation currentLocation, 
+								   GeoVelocity velocity,
+ 								   GeoMap map){
+		 
+		this(currentLocation, velocity);
+		this.map = map;
+		
+	}
 	
 	/**
 	 * Creates a new GPS enabled device emulator based on the 
@@ -146,12 +168,78 @@ public class RandomWaypointGeoDevice implements GeoDevice {
 	 */
 	@Override
 	public GeoVelocity getVelocity() {
+		
+		checkBoundaries();
+		
 		return velocity;
 	}
 
 	private void turn(){
 		velocity.setBearing(velocity.getBearing() + (float)(-maxTurn + 2 * maxTurn * Math.random()));
 	}
+	
+	private void checkBoundaries(){
+		
+		float turn =(float)(Math.PI / 2);
+		float firstQuadrant = (float)(Math.PI / 2);
+		float secondQuadrant = (float)(Math.PI);
+		float thirdQuadrant = (float)(3 * Math.PI / 2);
+		float fourthQuadrant = (float)(2 * Math.PI);
+
+		velocity.standardizeBearing();
+		
+		//Hit the top border.
+		if(currentLocation.getLatitude() >= map.getUpperLeft().getLatitude()){
+			
+			if(0 <= velocity.getBearing() && velocity.getBearing() <= firstQuadrant){
+				velocity.setBearing(velocity.getBearing() + turn);
+				
+			} else if(thirdQuadrant <= velocity.getBearing() && velocity.getBearing() <= fourthQuadrant){
+				velocity.setBearing(velocity.getBearing() - turn);
+			
+			} else{
+				//velocity.setBearing(secondQuadrant);
+			}
+			
+			
+		//Hit the bottom border.
+		}else if(currentLocation.getLatitude() <= map.getLowerRight().getLatitude()){
+			
+			if(firstQuadrant <= velocity.getBearing() && velocity.getBearing() <= secondQuadrant)
+				velocity.setBearing(velocity.getBearing() - turn);
+			
+			else if( secondQuadrant <= velocity.getBearing() && velocity.getBearing() <= thirdQuadrant){
+				velocity.setBearing(velocity.getBearing() + turn);
+			}
+			
+			
+		//Hit the right border.
+		}else if(currentLocation.getLongitude() >= map.getLowerRight().getLongitude()){
+			
+			if(0 <= velocity.getBearing() && velocity.getBearing() <= firstQuadrant){
+				velocity.setBearing(velocity.getBearing() - turn);
+			
+			}else if(firstQuadrant <= velocity.getBearing() && velocity.getBearing() <= secondQuadrant){
+				velocity.setBearing(velocity.getBearing() + turn);
+			
+			}
+			
+			
+		//Hit the left border.
+		}else if(currentLocation.getLongitude() <= map.getUpperLeft().getLongitude()){	
+			
+			// Quadrant III
+			if(secondQuadrant <= velocity.getBearing() && velocity.getBearing() <= thirdQuadrant)
+				velocity.setBearing(velocity.getBearing() - turn);
+			
+			else if(thirdQuadrant <= velocity.getBearing() && velocity.getBearing() <= fourthQuadrant)
+				velocity.setBearing(velocity.getBearing() + turn);
+			
+		}	
+		
+		velocity.standardizeBearing();
+	}
+	
 	/**
 	 * Sets the current time provider.
 	 * @param timeProvider New time provider to set.
