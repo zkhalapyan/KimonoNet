@@ -1,0 +1,58 @@
+Welcome to KimonoNet
+
+==============================================================================
+
+Copyright:
+    (c) 2012 
+
+TABLE OF CONTENTS
+
+1. Introduction
+
+2. Repository Organization
+
+3. Running Simulations
+
+
+1. Introduction
+
+==============================================================================
+
+2. Repository Organization
+
+==============================================================================
+
+3. Running Simulations
+There are two types of simulations supported: KiNCoL and Simulation UI. 
+Depending on the type of simulation required, the developer may choose one or 
+the either. Below are instructions for running KiNCoL:
+
+1. Open terminal/cmd and navigate to the binary distribution folder. 
+2. Within command prompt, type the following:
+
+java KimonoNet mode-cl [number-of-peers map-width map-height hostility-factor 
+peer-speed number-of-packets [beacon-timeout]]
+
+Parameter Discriptions:
+
+number-of-peers   (integer) : The number of peers to participate in the simulation.
+map-width         (integer) : Map width in meters.
+map-height        (integer) : Map height in meteres.
+hostility-factor  (float)   : Value in the range of [0, 1] that indicates the 
+                              probability of node failure. 
+peer-speed        (float)   : Average speed of a node in the simulation.
+number-of-packets (integer) : Number of packets to send from a random source to a 
+                              stationary destination.
+beacon-timeout    (integer) : Value in milliseconds that indicates the frequency 
+                              of becaon packets. 
+
+
+3.After running the simulation, results will be displayed on the console.
+
+4. To turn off 2-hop routing to simulate GPSR, instead of mode-cl, type
+mode-cl-gpsr.
+
+
+
+
+==============================================================================
