@@ -40,4 +40,8 @@ public class PeerEnvironment {
 	public void set(String key, String value){
 		map.put(key, value);
 	}
+
+	public HashMap<String, String> getHashMap() {
+		return map;
+	}
 }

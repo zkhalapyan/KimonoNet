@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.image.AffineTransformOp;
@@ -29,28 +30,16 @@ public class SimulationPanel extends JPanel {
 	private GeoMap mapDim;
 	private Simulation simulation;
 
-	private void processDnD(int x, int y, boolean bMove) {
-		ArrayList<PeerAgent> peerAgents = simulation.getPeerAgents();
-		for (int i = 0; i < peerAgents.size(); i++) {
-			Peer peer = peerAgents.get(i).getPeer();
-			GeoLocation location = peer.getLocation();
-			Rectangle rect = new Rectangle();
-
-			if (location != null) {
-				rect.x = (int)(longitudeToX(location.getLongitude()) - (imageUAV.getWidth() / 2));
-				rect.y = (int)(latitudeToY(location.getLatitude()) - (imageUAV.getHeight() / 2));
-				rect.width = rect.x + imageUAV.getWidth();
-				rect.height = rect.y + imageUAV.getHeight();
-
-				if (rect.contains(x, y)) {
-					if (bMove)
-						simulation.updateCurrentPeerAgent(new GeoLocation(xToLongitude(mouseX), yToLatitude(mouseY), peer.getLocation().getAccuracy()));
-					simulation.setCurrentPeerIndex(i);
-					simulation.refresh();
-					break;
-				}
-			}
-		}
+	private Rectangle calculatePeerRectangle(Peer peer) {
+		GeoLocation location = peer.getLocation();
+		if (location == null)
+			return null;
+		Rectangle rect = new Rectangle();
+		rect.x = (int)(longitudeToX(location.getLongitude()) - (imageUAV.getWidth() / 2));
+		rect.y = (int)(latitudeToY(location.getLatitude()) - (imageUAV.getHeight() / 2));
+		rect.width = imageUAV.getWidth();
+		rect.height = imageUAV.getHeight();
+		return rect;
 	}
 
 	public SimulationPanel(BufferedImage i, GeoMap m, Simulation s) {
@@ -58,7 +47,7 @@ public class SimulationPanel extends JPanel {
 		mapDim = m;
 		simulation = s;
 
-	    this.enableEvents(AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_MOTION_EVENT_MASK);
+	    this.enableEvents(AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_MOTION_EVENT_MASK | AWTEvent.MOUSE_WHEEL_EVENT_MASK);
 	}
 
 	public void processMouseMotionEvent(MouseEvent e) {
@@ -68,8 +57,19 @@ public class SimulationPanel extends JPanel {
 			simulation.getFrame().repaint();
 		}
 
-		if (e.getID() == MouseEvent.MOUSE_DRAGGED)
-			processDnD(mouseX, mouseY, true);
+		if (e.getID() == MouseEvent.MOUSE_DRAGGED && !simulation.isSimulationRunning()) {
+			// Move the current UAV.
+			Peer peer = simulation.getCurrentPeer();
+			Rectangle rect = calculatePeerRectangle(peer);
+			if (rect != null) {
+				if (rect.contains(mouseX, mouseY)) {
+					simulation.updateCurrentPeerAgent(new GeoLocation(xToLongitude(mouseX), yToLatitude(mouseY), peer.getLocation().getAccuracy()));
+					simulation.refresh();
+				}
+			}
+		}
+
+		super.processMouseMotionEvent(e);
 	}
 
 	public void processMouseEvent(MouseEvent e) {
@@ -79,10 +79,40 @@ public class SimulationPanel extends JPanel {
 			simulation.getFrame().repaint();
 		}
 
-		if (e.getID() == MouseEvent.MOUSE_PRESSED)
-			processDnD(mouseX, mouseY, false);	// Don't move the UAV, just highlight it.
+		if (e.getID() == MouseEvent.MOUSE_PRESSED) {
+			// Select the UAV.
+			ArrayList<PeerAgent> peerAgents = simulation.getPeerAgents();
+			for (int i = 0; i < peerAgents.size(); i++) {
+				Peer peer = peerAgents.get(i).getPeer();
+				Rectangle rect = calculatePeerRectangle(peer);
+				if (rect != null) {
+					if (rect.contains(mouseX, mouseY)) {
+						simulation.setCurrentPeerIndex(i);
+						simulation.refresh();
+						break;
+					}
+				}
+			}
+		}
 
 		super.processMouseEvent(e);
+	}
+
+	public void processMouseWheelEvent(MouseWheelEvent e) {
+		if (!simulation.isSimulationRunning()) {
+			// Rotate the current UAV.
+			int notches = e.getWheelRotation();
+			Peer peer = simulation.getCurrentPeer();
+			Rectangle rect = calculatePeerRectangle(peer);
+			if (rect != null) {
+				if (rect.contains(mouseX, mouseY)) {
+					simulation.updateCurrentPeerAgent(peer.getLocation(), new GeoVelocity(peer.getVelocity().getSpeed(), peer.getVelocity().getBearing() + (float)Math.toRadians(notches)));
+					simulation.refresh();
+				}
+			}
+		}
+
+		super.processMouseWheelEvent(e);
 	}
 
 	private double longitudeToX(double longitude) {

@@ -26,6 +26,8 @@ import java.awt.Font;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 
 import kimononet.geo.GeoDevice;
 import kimononet.geo.GeoLocation;
@@ -35,6 +37,7 @@ import kimononet.geo.GeoMap;
 import kimononet.geo.RandomWaypointGeoDevice;
 import kimononet.net.routing.QualityOfService;
 import kimononet.net.transport.DataPacket;
+import kimononet.peer.DefaultPeerEnvironment;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAddressException;
@@ -69,6 +72,7 @@ public class Simulation {
 	private ArrayList<PeerAgent> arrayListPeerAgents = new ArrayList<PeerAgent>();
 	private boolean bSimRunning = false;
 	private boolean bh4x0r = false;
+	private float hostilityFactor;
 	private DefaultListModel listModelPeers;
 	private PropertyTableModel tableModelPeerProps;
 	private PropertyTableModel tableModelPeerEnvProps;
@@ -76,14 +80,14 @@ public class Simulation {
 	private JFrame frame; 
 	private JLabel lblSimStatusDisplay;
 	private JList listPeers;
-	private JMenuItem mntmStartStopSim, mntmEditMapDim;
+	private JMenuItem mntmStartStopSim, mntmChangeHostility, mntmEditMapDim;
 	private JTable tablePeerProps;
 	private JTable tablePeerEnvProps;
 	private JTextArea textAreaStats;
 	private int peerIndex = 0;	// This is just for peer names, e.g. Peer-0, Peer-1, etc.
 	private GeoMap mapDim = new GeoMap(	new GeoLocation(-0.01, 0.01, 0f),		// Upper left
 										new GeoLocation(0.01, -0.01, 0f));	// Lower right
-	private PeerEnvironment peerEnv = new PeerEnvironment();
+	private PeerEnvironment peerEnv = new DefaultPeerEnvironment();
 	private StatMonitor statMon = new MasterStatMonitor();
 	private StatResults results;
 	private Timer timer;
@@ -131,18 +135,23 @@ public class Simulation {
 		}
 
 		// Start/stop services of each peer.
-		for (int i = 0; i < arrayListPeerAgents.size(); i++) {
-			PeerAgent agent = arrayListPeerAgents.get(i);
-			Peer peer = agent.getPeer();
-			if (!bSimRunning) {
-				// This is to prevent the UAVs from jumping a large distance if
-				// the simulation was not started right after adding the peers.
-				peer.getLocation().setTimestamp(agent.getTimeProvider().getTime());
-
-				agent.startServices();
+		try {
+			for (int i = 0; i < arrayListPeerAgents.size(); i++) {
+				PeerAgent agent = arrayListPeerAgents.get(i);
+				Peer peer = agent.getPeer();
+				if (!bSimRunning) {
+					// This is to prevent the UAVs from jumping a large distance if
+					// the simulation was not started right after adding the peers.
+					peer.getLocation().setTimestamp(agent.getTimeProvider().getTime());
+	
+					agent.startServices();
+				}
+				else
+					agent.shutdownServices();
 			}
-			else
-				agent.shutdownServices();
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(frame, "Cannot start the simulation. Please ensure all parameters are set correctly.");
+			return;
 		}
 
 		bSimRunning = !bSimRunning;
@@ -202,7 +211,11 @@ public class Simulation {
 	private PeerAgent getRandomPeerAgent() {
 		return (arrayListPeerAgents.isEmpty() ? null : arrayListPeerAgents.get((int)(Math.random() * arrayListPeerAgents.size())));
 	}
-	
+
+	public boolean isSimulationRunning() {
+		return bSimRunning;
+	}
+
 	public ArrayList<PeerAgent> getPeerAgents() {
 		return arrayListPeerAgents;
 	}
@@ -246,6 +259,9 @@ public class Simulation {
 	public void refresh() {
 		if (tableModelPeerProps != null)
 			tableModelPeerProps.getDataVector().removeAllElements();
+
+		if (tableModelPeerEnvProps != null)
+			tableModelPeerEnvProps.getDataVector().removeAllElements();
 
 		if (listModelPeers != null && !listModelPeers.isEmpty()) {
 			if (btnClearAll != null)
@@ -301,6 +317,15 @@ public class Simulation {
 				btnApplyEnvProps.setEnabled(false);*/
 		}
 
+		// Refresh peer environment table display.
+		if (tableModelPeerEnvProps != null) {
+		    Iterator it = peerEnv.getHashMap().entrySet().iterator();
+		    while (it.hasNext()) {
+		        Map.Entry pairs = (Map.Entry)it.next();
+		        tableModelPeerEnvProps.addRow(new Object[] {pairs.getKey(), pairs.getValue()});
+		    }
+		}
+
 		if (textAreaStats != null && results != null) {
 			textAreaStats.setText(results.toString());
 			textAreaStats.setCaretPosition(0);
@@ -343,8 +368,6 @@ public class Simulation {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		// TODO: hard-coded for now !!
-		peerEnv.set("max-transmission-range", "1337");
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] {0, 0, 0, 0, 0};
 		gridBagLayout.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -374,6 +397,27 @@ public class Simulation {
 			}
 		});
 		mnSim.add(mntmStartStopSim);
+
+		mntmChangeHostility = new JMenuItem("Change Hostility Factor...");
+		mntmChangeHostility.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				String string = JOptionPane.showInputDialog(frame, "Please enter a new hostility factor.", hostilityFactor);
+				if (string != null) {
+					try {
+						float newHostilityFactor = Float.parseFloat(string);
+						if (newHostilityFactor < 0 || newHostilityFactor > 1)
+							throw new NumberFormatException();
+						hostilityFactor = newHostilityFactor;
+						if (hostilityFactor > 0.5)
+							JOptionPane.showMessageDialog(frame, "Warning: You have specified a very hostile environment!\n\nClick OK to continue.");
+					} catch (NumberFormatException e) {
+						JOptionPane.showMessageDialog(frame, "Invalid hostility factor. It must be in the range [0, 1].");
+					}
+					refresh();
+				}
+			}
+		});
+		mnSim.add(mntmChangeHostility);
 
 		mntmEditMapDim = new JMenuItem("Edit Map Dimensions...");
 		mntmEditMapDim.addActionListener(new ActionListener() {
@@ -751,7 +795,15 @@ public class Simulation {
 		tablePeerEnvProps = new JTable(tableModelPeerEnvProps);
 		tableModelPeerEnvProps.addColumn("Property");
 		tableModelPeerEnvProps.addColumn("Value");
-
+		tableModelPeerEnvProps.addTableModelListener(new TableModelListener(){
+			public void tableChanged(TableModelEvent tme) {
+				if (tme.getType() == TableModelEvent.UPDATE) {
+					for (int row = 0; row < tableModelPeerEnvProps.getRowCount(); row++)
+						peerEnv.set((String)tableModelPeerEnvProps.getValueAt(row, 0), (String)tableModelPeerEnvProps.getValueAt(row, 1));
+					refresh();
+				}
+			}
+		});
 		scrollPaneEnvProps.setViewportView(tablePeerEnvProps);
 		
 		// Add separator. /////////////////////////////////////////////////////
@@ -869,10 +921,11 @@ public class Simulation {
 
 		timer = new Timer(timerRefreshRate, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				//Account for agents exploding in hostile environments.
-				/*for(PeerAgent agent : agents){
-					if(Math.random() < hostilityFactor){
-						killAgent(agent);
+				// Account for agents exploding in hostile environments.
+				/*for (PeerAgent agent : arrayListPeerAgents) {
+					if (Math.random() < hostilityFactor) {
+						if (agent != null)
+							agent.shutdownServices();
 					}
 				}*/
 
