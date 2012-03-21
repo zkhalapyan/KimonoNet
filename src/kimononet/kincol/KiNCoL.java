@@ -198,9 +198,16 @@ public class KiNCoL extends Thread{
 			
 			System.out.println("#########BEACON SERVICE RESULTS#########");
 			for(PeerAgent agent : agents){
+				
+				int peers2NeighborCount = 0;
+				
+				for(PeerAddress address : agent.getPeers2().keySet()){
+					peers2NeighborCount += agent.getPeers2().get(address).size();
+				}
+				
 				System.out.println("Agent: \t " + agent.getPeer().getName() + 
 						           " # of peers: \t " + agent.getPeers().size() + 
-						           " # of peers2: \t " + agent.getPeers2().size());
+						           " # of peers2: \t " + peers2NeighborCount);
 			}
 			System.out.println("#################DONE###################");
 			

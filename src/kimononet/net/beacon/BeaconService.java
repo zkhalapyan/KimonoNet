@@ -170,7 +170,11 @@ public class BeaconService extends Thread implements Service{
 				}
 					
 				for(PeerAddress neighborAddress : packet.getPeers().keySet()){
-					updatePeer(peers2, packet.getPeers().get(neighborAddress));
+					
+					//It is redundant to put the current peer inside peers2.
+					if(!neighborAddress.equals(agent.getPeer().getAddress())){
+						updatePeer(peers2, packet.getPeers().get(neighborAddress));
+					}
 				}
 				
 				//If the source of the beacon doesn't know about us, then
