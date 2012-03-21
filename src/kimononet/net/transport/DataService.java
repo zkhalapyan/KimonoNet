@@ -41,6 +41,13 @@ public class DataService extends Thread implements Service{
 	 * If set to true, the core loop will exit in the next cycle.
 	 */
 	private boolean shutdown;
+	
+	/**
+	 * If set to true the routing logic will use twoHopPeer knowledge
+	 * to route packets, if set to false it will essentially just be
+	 * GPSR using only knowledge of Peers in range.
+	 */
+	private boolean twoHopEnabled;
 
 	Thread sendDataService = new Thread(){
 		
@@ -197,12 +204,19 @@ public class DataService extends Thread implements Service{
 			
 		}
 	};
+	
+	public DataService(PeerAgent agent, boolean twoHopEnabled){
+		
+		this.agent = agent;
+		this.twoHopEnabled = twoHopEnabled;
+		this.routingProtocol = new RoutingLogic(this.agent, this.twoHopEnabled);
+		this.packetQueue = new PriorityBlockingQueue<DataPacket>();
+		
+	}
 
 	public DataService(PeerAgent agent){
 		
-		this.agent = agent;
-		this.routingProtocol = new RoutingLogic(this.agent);
-		this.packetQueue = new PriorityBlockingQueue<DataPacket>();
+		this(agent, true);
 		
 	}
 	
@@ -258,6 +272,17 @@ public class DataService extends Thread implements Service{
 			sendDataService.notifyAll();
 		}
 		
+	}
+	
+	/**
+	 * Sets whether or not 2 Hop Routing will be enabled.
+	 * @param twoHopEnabled Boolean value if true 2 Hop
+	 * Routing will be enabled, if false 2 Hop Routing will
+	 * be disabled.
+	 */
+	public void set2HopRouting(boolean twoHopEnabled){
+		this.twoHopEnabled = twoHopEnabled;
+		this.routingProtocol.setTwoHopEnabled(twoHopEnabled);
 	}
 	
 }

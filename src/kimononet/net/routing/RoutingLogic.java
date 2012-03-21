@@ -1,6 +1,8 @@
 package kimononet.net.routing;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import kimononet.geo.GeoLocation;
 import kimononet.net.transport.DataPacket;
@@ -15,10 +17,50 @@ import kimononet.peer.PeerAgent;
 public class RoutingLogic {
 	
 	private PeerAgent agent;
+	private boolean twoHopEnabled;
 	
-	public RoutingLogic(PeerAgent agent)
+	public RoutingLogic(PeerAgent agent, boolean twoHopEnabled)
 	{
 		this.agent = agent;
+		this.setTwoHopEnabled(twoHopEnabled);
+	}
+	
+	public void updatePeerTables()
+	{
+		int maxRange = Integer.parseInt(agent.getEnvironment().get("max-transmission-range"));
+		
+		Map<PeerAddress, Peer> routingTable1 = agent.getPeers();
+		for (Map.Entry<PeerAddress, Peer> entry : routingTable1.entrySet())
+		{
+			Peer peerN = entry.getValue();
+			peerN.getLocation().move(peerN.getVelocity(), (int)(System.currentTimeMillis() / 1000));
+			
+			// TODO move out of range nodes to table2?
+			if(peerN.getLocation().distanceTo(agent.getPeer().getLocation()) > maxRange){
+				routingTable1.remove(entry.getKey());
+			}
+		}
+		
+		if(!this.twoHopEnabled)
+			return;
+
+		Map<PeerAddress, HashMap<PeerAddress, Peer>> routingTable2 = agent.getPeers2();
+		for (Entry<PeerAddress, HashMap<PeerAddress, Peer>> entry : routingTable2.entrySet())
+		{
+			Map<PeerAddress, Peer> subTable = entry.getValue();
+			for (Map.Entry<PeerAddress, Peer> subEntry : subTable.entrySet())
+			{
+				
+				Peer peerN = subEntry.getValue();
+				peerN.getLocation().move(peerN.getVelocity(), (int)(System.currentTimeMillis() / 1000));
+				
+				if(peerN.getLocation().distanceTo(agent.getPeer().getLocation()) < maxRange){
+					subTable.remove(subEntry.getKey());
+					routingTable1.put(subEntry.getKey(), subEntry.getValue());
+				}
+				
+			}
+		}
 	}
 
 	public boolean routeGreedy(DataPacket packet)
@@ -139,6 +181,7 @@ public class RoutingLogic {
 	
 	public boolean routePacket(DataPacket packet)
 	{
+		
 		if(packet.getForwardMode() == ForwardMode.GREEDY) {
 			if(!routeGreedy(packet)) {
 				return false;
@@ -149,7 +192,23 @@ public class RoutingLogic {
 				return false;
 			}
 		}
+		
 		return true;
+		
+	}
+
+	/**
+	 * @return twoHopEnabled boolean value for if Two Hop Routing is enabled
+	 */
+	public boolean isTwoHopEnabled() {
+		return twoHopEnabled;
+	}
+
+	/**
+	 * @param twoHopEnabled Boolean value to specify if Two Hop Routing should be enabled
+	 */
+	public void setTwoHopEnabled(boolean twoHopEnabled) {
+		this.twoHopEnabled = twoHopEnabled;
 	}
 	
 }
