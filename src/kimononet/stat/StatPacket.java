@@ -21,6 +21,8 @@ import kimononet.peer.PeerAddress;
  */
 public class StatPacket {
 
+	private boolean dropped = false;
+	
 	/**
 	 * The type of the current packet. This is important for calculating the 
 	 * ratio of overhead vs. data packets processed.
@@ -174,6 +176,13 @@ public class StatPacket {
 		return mode;
 	}
 
+	public boolean isDropped(){
+		return dropped;
+	}
+	
+	public void setDropped(boolean dropped){
+		this.dropped = dropped;
+	}
 	
 
 }

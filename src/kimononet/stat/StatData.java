@@ -55,7 +55,7 @@ public class StatData {
 		}
 		
 	}
-	
+
 	/**
 	 * Adds a packet to the received packets list.
 	 * @param packet Received packet.
@@ -91,6 +91,10 @@ public class StatData {
 			totalPacketCount += sentPackets.size();
 			
 			for(StatPacket packet : sentPackets){
+				
+				if(packet.isDropped()){
+					continue;
+				}
 				
 				if(packet.getType() == PacketType.BEACON){
 					beaconPacketCount ++;

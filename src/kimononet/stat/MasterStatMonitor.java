@@ -52,6 +52,15 @@ public class MasterStatMonitor implements StatMonitor {
 		}	
 	}
 
+	public final void packetDropped(StatPacket packet){
+		packet.setDropped(true);
+		
+		if(running){
+			data.addSentPacket(packet);
+		}
+	}
+	
+	
 	/**
 	 * Accounts for a received data packet. Specified packet will be ignored if 
 	 * the current monitor has been shutdown using {@link #shutdownService()}.
