@@ -180,6 +180,10 @@ public class RandomWaypointGeoDevice implements GeoDevice {
 	
 	private void checkBoundaries(){
 		
+		if(map == null){
+			return;
+		}
+		
 		float turn =(float)(Math.PI / 2);
 		float firstQuadrant = (float)(Math.PI / 2);
 		float secondQuadrant = (float)(Math.PI);

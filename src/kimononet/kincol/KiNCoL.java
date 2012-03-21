@@ -1,5 +1,6 @@
 package kimononet.kincol;
 
+import kimononet.geo.DefaultGeoDevice;
 import kimononet.geo.GeoDevice;
 import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoMap;
@@ -77,7 +78,8 @@ public class KiNCoL extends Thread{
 				  GeoMap map, 
 				  float peerSpeed, 
 				  int numberOfPackets, 
-				  float hostilityFactor){
+				  float hostilityFactor,
+				  int beaconTimeout){
 		
 		System.out.println("########PARAMETERS RECEIVED########");
 		System.out.println("Number of Peers:   \t " + numberOfPeers);
@@ -95,6 +97,10 @@ public class KiNCoL extends Thread{
 		this.numberOfPackets = numberOfPackets;
 		
 		peerEnvironment = new DefaultPeerEnvironment();
+		
+		if(beaconTimeout > 0)
+			peerEnvironment.set("beacon-service-timeout", "" + beaconTimeout);
+		
 		statMonitor = new MasterStatMonitor();;
 		
 		agents = new PeerAgent[numberOfPeers];
@@ -104,7 +110,11 @@ public class KiNCoL extends Thread{
 			Peer peer = new Peer(PeerAddress.generateRandomAddress(), "peer-" + i);
 			GeoLocation peerLocation = GeoLocation.generateRandomGeoLocation(map);
 			GeoVelocity peerVelocity = new GeoVelocity(peerSpeed, GeoLocation.generateRandomBearing());
-			GeoDevice geoDevice = new RandomWaypointGeoDevice(peerLocation, peerVelocity);
+			
+			//Agent zero is the destination/sink and hence is stationary.
+			GeoDevice geoDevice = (i == 0)? new DefaultGeoDevice(peerLocation, new GeoVelocity()) :
+				                            new RandomWaypointGeoDevice(peerLocation, peerVelocity, map);
+			
 			PeerAgent agent = new PeerAgent(peer, peerEnvironment, geoDevice);
 			agent.setStatMonitor(statMonitor);
 			agents[i] = agent;
@@ -145,10 +155,10 @@ public class KiNCoL extends Thread{
 			
 			//Get a random sender.
 			PeerAgent source = getRandomPeerAgent();
-			PeerAgent destination;
+			PeerAgent destination = agents[0];
 			
-			//Find a random receiver that is not the sender. 
-			while((destination = getRandomPeerAgent()) == source){}
+			//Find a random sender that is not the destination.
+			while((source = getRandomPeerAgent()) == destination){}
 			
 			
 			for(int i = 0; i < numberOfPackets; i++){

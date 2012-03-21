@@ -45,6 +45,14 @@ public class GeoVelocity implements Parcelable {
 	}	
 	
 	/**
+	 * Creates a velocity <0, 0>.
+	 */
+	public GeoVelocity() {
+		this.speed = 0;
+		this.bearing = 0;
+	}
+
+	/**
 	 * Returns the current speed in m/s.
 	 * @return Current speed in m/s
 	 */
