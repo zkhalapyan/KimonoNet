@@ -5,7 +5,6 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
-import javax.swing.DefaultListModel;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -14,24 +13,18 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
 import javax.swing.Timer;
 
 import java.awt.EventQueue;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
-import java.awt.Font;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
 
 import kimononet.geo.GeoDevice;
 import kimononet.geo.GeoLocation;
-import kimononet.geo.GeoLocationException;
 import kimononet.geo.GeoVelocity;
 import kimononet.geo.GeoMap;
 import kimononet.geo.RandomWaypointGeoDevice;
@@ -40,19 +33,12 @@ import kimononet.net.transport.DataPacket;
 import kimononet.peer.DefaultPeerEnvironment;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
-import kimononet.peer.PeerAddressException;
 import kimononet.peer.PeerAgent;
 import kimononet.peer.PeerEnvironment;
 import kimononet.stat.MasterStatMonitor;
 import kimononet.stat.StatMonitor;
 import kimononet.stat.StatResults;
 
-import javax.swing.JList;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.border.BevelBorder;
@@ -61,294 +47,203 @@ import java.awt.Color;
 
 public class Simulation {
 
-	private final String[] properties = {	"Name",				// Row 0
-											"Address",			// Row 1
-											"Longitude (°)",	// Row 2
-											"Latitude (°)",		// Row 3
-											"Accuracy",			// Row 4
-											"Speed (m/s)",		// Row 5
-											"Bearing (°)"};		// Row 6
-
-	private ArrayList<PeerAgent> arrayListPeerAgents = new ArrayList<PeerAgent>();
-	private boolean bSimRunning = false;
-	private boolean bh4x0r = false;
+	private ArrayList<PeerAgent> agents = new ArrayList<PeerAgent>();
+	private boolean bSimRunning = false, bh4x0r = false;
 	private float hostilityFactor;
-	private DefaultListModel listModelPeers;
-	private PropertyTableModel tableModelPeerProps;
-	private PropertyTableModel tableModelPeerEnvProps;
-	private JButton btnStartStop, btnAddPeer, btnDeletePeer, btnClearAll, /*btnApplyPeerProps, btnApplyEnvProps,*/ btnh4x0r, btnCopy, btnClear;
+	private EnvironmentPropertiesTable envTable;
+	private GeoMap mapDim = new GeoMap(	new GeoLocation(-0.01, 0.01, 0f),	// Upper left
+										new GeoLocation(0.01, -0.01, 0f));	// Lower right
+	private int peerIndex = 0;	// This is just for peer names, e.g. Peer-0, Peer-1, etc.
+	private JButton btnStartStop, btnAddPeer, btnDeletePeer, btnClearAll, btnh4x0r, btnCopy, btnClear;
 	private JFrame frame; 
 	private JLabel lblSimStatusDisplay;
-	private JList listPeers;
 	private JMenuItem mntmStartStopSim, mntmChangeHostility, mntmEditMapDim;
-	private JTable tablePeerProps;
-	private JTable tablePeerEnvProps;
-	private JTextArea textAreaStats;
-	private int peerIndex = 0;	// This is just for peer names, e.g. Peer-0, Peer-1, etc.
-	private GeoMap mapDim = new GeoMap(	new GeoLocation(-0.01, 0.01, 0f),		// Upper left
-										new GeoLocation(0.01, -0.01, 0f));	// Lower right
-	private PeerEnvironment peerEnv = new DefaultPeerEnvironment();
+	private StatDisplay statDisplay;
+	private PeerEnvironment env = new DefaultPeerEnvironment();
+	private PeerList peerList;
+	private PeerPropertiesTable peerPropTable;
 	private SimulationPanel panel; 
-	private StatMonitor statMon = new MasterStatMonitor();
+	private StatMonitor monitor = new MasterStatMonitor();
 	private StatResults results;
 	private Timer timer;
 	private int timerRefreshRate = 1000;	// in ms
 
+	private PeerAgent getRandomPeerAgent() {
+		return (agents.isEmpty() ? null : agents.get((int)(Math.random() * agents.size())));
+	}
+
 	private void addPeer() {
+		String name = "Peer-" + peerIndex++;
+		PeerAddress address = PeerAddress.generateRandomAddress();
 		GeoLocation location = GeoLocation.generateRandomGeoLocation(mapDim);
 		GeoVelocity velocity = new GeoVelocity(100, GeoLocation.generateRandomBearing());
-		GeoDevice geoDevice = new RandomWaypointGeoDevice(location, velocity);
+		GeoDevice device = new RandomWaypointGeoDevice(location, velocity);
 
 		// Create new peer with random address, location, velocity.
-		Peer peer = new Peer(PeerAddress.generateRandomAddress(), location, velocity);
-		peer.setName("Peer-" + peerIndex++);
+		Peer peer = new Peer(address, location, velocity);
+		peer.setName(name);
 
 		// Create new PeerAgent to represent peer and add it to ArrayList.
-		PeerAgent agent = new PeerAgent(peer, peerEnv, geoDevice);
-		agent.setStatMonitor(statMon);
-		arrayListPeerAgents.add(agent);
+		PeerAgent agent = new PeerAgent(peer, env, device);
+		agent.setStatMonitor(monitor);
+		agents.add(agent);
 
 		// Add peer to list.
-		listModelPeers.add(listPeers.getModel().getSize(), peer.getName() + " (" + peer.getAddress().toString() + ")");
+		peerList.append(peer);
 
 		refresh();
 	}
 
-	private void deletePeer(int i) {
-		if (i < 0)
-			return;
-		listModelPeers.remove(i);
-		if (bSimRunning)
-			arrayListPeerAgents.get(i).shutdownServices();
-		arrayListPeerAgents.remove(i);
+	private void deleteAllPeers() {
+		peerList.clear();
+		agents.clear();
 		refresh();
 	}
 
 	private void deleteCurrentPeer() {
-		deletePeer(getCurrentPeerIndex());
+		deletePeerAt(getCurrentPeerIndex());
 	}
 
-	private void deleteAllPeers() {
-		listModelPeers.clear();
-		arrayListPeerAgents.clear();
+	private void deletePeerAt(int i) {
+		if (i < 0)
+			return;
+		peerList.deleteItemAt(i);
+		if (bSimRunning)
+			agents.get(i).shutdownServices();
+		agents.remove(i);
 		refresh();
 	}
 
 	private void startStopSim() {
-		if (!bSimRunning && arrayListPeerAgents.size() < 2) {
-			JOptionPane.showMessageDialog(frame, "Please at least 2 peers.");
-			return;
-		}
+		if (!bSimRunning) {
+			/*****************************************************************
+			 * About to START simulation.
+			 *****************************************************************/
 
-		// Start/stop services of each peer.
-		try {
-			for (int i = 0; i < arrayListPeerAgents.size(); i++) {
-				PeerAgent agent = arrayListPeerAgents.get(i);
-				Peer peer = agent.getPeer();
-				if (!bSimRunning) {
-					// This is to prevent the UAVs from jumping a large distance if
-					// the simulation was not started right after adding the peers.
-					peer.getLocation().setTimestamp(agent.getTimeProvider().getTime());
-	
+			// Check if there are enough peers.
+			if (agents.size() < 2) {
+				JOptionPane.showMessageDialog(frame, "Please at least 2 peers.");
+				return;
+			}
+
+			// Start peer services.
+			for (PeerAgent agent : agents) {
+				try {
+					agent.getPeer().getLocation().setTimestamp(agent.getTimeProvider().getTime());
 					agent.startServices();
 				}
-				else
-					agent.shutdownServices();
+				catch (Exception e) {
+					JOptionPane.showMessageDialog(frame, "Cannot start the simulation. Please ensure all parameters are set correctly.");
+					return;
+				}
 			}
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(frame, "Cannot start the simulation. Please ensure all parameters are set correctly.");
-			return;
-		}
 
-		bSimRunning = !bSimRunning;
-
-		if (!bSimRunning) {
-			// If we are stopping the simulation, then cleanup and display the
-			// statistics.
-
-			// Wait for all the threads to die out/shutdown.
-			//sleep(KiNCoL.SHUTDOWN_DELAY);
-
-			panel.clearExplosionPoints();
-			results = null;
-
-			/*System.out.println("#########BEACON SERVICE RESULTS#########");
-			for(PeerAgent agent : agents){
-				System.out.println("Agent: \t " + agent.getPeer().getName() + 
-						           " # of peers: \t " + agent.getPeers().size() + 
-						           " # of peers2: \t " + agent.getPeers2().size());
-			}
-			System.out.println("#################DONE###################");*/
+			results = new StatResults();
+			bSimRunning = true;
+			timer.start();
 		}
 		else {
-			// We are starting the simulation.
-			results = new StatResults();
-		}
+			/*****************************************************************
+			 * About to STOP simulation.
+			 *****************************************************************/
 
-		// Start/stop repaint timer.
-		if (bSimRunning)
-			timer.start();
-		else
+			// Stop peer services.
+			for (PeerAgent agent : agents)
+				agent.shutdownServices();
+
+			// Wait for all the threads to die out/shutdown.
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			panel.clearExplosionPoints();
+			bSimRunning = false;
 			timer.stop();
-
-		// Enable/disable buttons and stuff. Note that some buttons are enabled
-		// disabled through refresh() -- these are the ones that will also be
-		// enabled/disabled depending on other factors, e.g. if there are is a
-		// peer selected, not just whether or not the simulation is running.
-		if (btnAddPeer != null)
-			btnAddPeer.setEnabled(!bSimRunning);
-		if (mntmStartStopSim != null)
-			mntmStartStopSim.setText(bSimRunning ? "Stop Simulation" : "Start Simulation");
-		if (btnStartStop != null)
-			btnStartStop.setText(bSimRunning ? "Stop" : "Start");
-		if (lblSimStatusDisplay != null) {
-			lblSimStatusDisplay.setText(bSimRunning ? "Simulation RUNNING" : "Simulation STOPPED");
-			lblSimStatusDisplay.setBackground(bSimRunning ? Color.GREEN : Color.RED);
 		}
-		if (mntmEditMapDim != null)
-			mntmEditMapDim.setEnabled(!bSimRunning);
-		if (tablePeerProps != null)
-			tablePeerProps.setEnabled(!bSimRunning);
-		if (tablePeerEnvProps != null)
-			tablePeerEnvProps.setEnabled(!bSimRunning);
+
+		btnAddPeer.setEnabled(!bSimRunning);
+		btnStartStop.setText(bSimRunning ? "Stop" : "Start");
+		envTable.setEnabled(!bSimRunning);
+		lblSimStatusDisplay.setBackground(bSimRunning ? Color.GREEN : Color.RED);
+		lblSimStatusDisplay.setText(bSimRunning ? "Simulation RUNNING" : "Simulation STOPPED");
+		mntmEditMapDim.setEnabled(!bSimRunning);
+		mntmStartStopSim.setText(bSimRunning ? "Stop Simulation" : "Start Simulation");
+		peerPropTable.setEnabled(!bSimRunning);
 
 		refresh();
 	}
 
-	private PeerAgent getRandomPeerAgent() {
-		return (arrayListPeerAgents.isEmpty() ? null : arrayListPeerAgents.get((int)(Math.random() * arrayListPeerAgents.size())));
+	public ArrayList<PeerAgent> getPeerAgents() {
+		return agents;
 	}
 
 	public boolean isSimulationRunning() {
 		return bSimRunning;
 	}
 
-	public ArrayList<PeerAgent> getPeerAgents() {
-		return arrayListPeerAgents;
-	}
-
-	public Peer getCurrentPeer() {
-		return getPeerAt(getCurrentPeerIndex());
-	}
-
 	public int getCurrentPeerIndex() {
-		if (listPeers == null)
-			return -1;
-		return listPeers.getSelectionModel().getMinSelectionIndex();	
-	}
-
-	public void setCurrentPeerIndex(int i) {
-		if (listPeers == null)
-			return;
-		listPeers.getSelectionModel().setSelectionInterval(i, i);	
-	}
-
-	public void updateCurrentPeerAgent(GeoLocation location) {
-		updateCurrentPeerAgent(location, getCurrentPeer().getVelocity());		
-	}
-
-	public void updateCurrentPeerAgent(GeoLocation location, GeoVelocity velocity) {
-		getCurrentPeer().setLocation(location);
-		getCurrentPeer().setVelocity(velocity);
-		arrayListPeerAgents.set(getCurrentPeerIndex(), new PeerAgent(getCurrentPeer(), peerEnv, new RandomWaypointGeoDevice(location, velocity)));		
-	}
-
-	public Peer getPeerAt(int index) {
-		if (index < 0)
-			return null;
-		return arrayListPeerAgents.get(index).getPeer();
+		return peerList.getCurrentlySelectedItemIndex();	
 	}
 
 	public JFrame getFrame() {
 		return frame;
 	}
 
+	public Peer getCurrentPeer() {
+		return getPeerAt(getCurrentPeerIndex());
+	}
+
+	public Peer getPeerAt(int i) {
+		if (i < 0)
+			return null;
+		return agents.get(i).getPeer();
+	}
+
+	public PeerEnvironment getPeerEnvironment() {
+		return env;
+	}
+
+	public void setCurrentPeerIndex(int i) {
+		if (i < 0)
+			return;
+		peerList.setCurrentlySelectedItemIndex(i);
+		refresh();
+	}
+
+	public void updateCurrentPeerAgent(GeoLocation location) {
+		if (location == null || getCurrentPeer() == null)
+			return;
+		updateCurrentPeerAgent(location, getCurrentPeer().getVelocity());
+		refresh();
+	}
+
+	public void updateCurrentPeerAgent(GeoLocation location, GeoVelocity velocity) {
+		if (location == null || velocity == null || getCurrentPeer() == null)
+			return;
+		getCurrentPeer().setLocation(location);
+		getCurrentPeer().setVelocity(velocity);
+		agents.set(getCurrentPeerIndex(), new PeerAgent(getCurrentPeer(), env, new RandomWaypointGeoDevice(location, velocity)));
+		refresh();
+	}
+
 	public void refresh() {
-		if (tableModelPeerProps != null)
-			tableModelPeerProps.getDataVector().removeAllElements();
+		// Refresh peer list and property tables.
+		peerList.refresh();
+		peerPropTable.refresh();
+		envTable.refresh();
 
-		if (tableModelPeerEnvProps != null)
-			tableModelPeerEnvProps.getDataVector().removeAllElements();
+		// Enable disable buttons.
+		btnClearAll.setEnabled(!peerList.isEmpty() && !bSimRunning);
+		btnDeletePeer.setEnabled((getCurrentPeer() != null) && !bSimRunning);
+		btnClear.setEnabled((results != null) && !bSimRunning);
+		btnCopy.setEnabled((results != null) && !bSimRunning);
 
-		if (listModelPeers != null && !listModelPeers.isEmpty()) {
-			if (btnClearAll != null)
-				btnClearAll.setEnabled(!bSimRunning);
-		}
-		else {
-			if (btnClearAll != null)
-				btnClearAll.setEnabled(false);
-		}
+		// Refresh statistics.
+		statDisplay.refresh(results);
 
-		if (listModelPeers != null && getCurrentPeerIndex() >= 0 && getCurrentPeer() != null) {
-			// Refresh peer list item display.
-			listModelPeers.set(getCurrentPeerIndex(), getCurrentPeer().getName() + " (" + getCurrentPeer().getAddress().toString() + ")");
-
-			// Refresh peer properties table display.
-			String longitude = new String();
-			String latitude = new String();
-			String accuracy = new String();
-			GeoLocation location = getCurrentPeer().getLocation();
-			if (location != null) {
-				longitude = Double.toString(location.getLongitude());
-				latitude = Double.toString(location.getLatitude());
-				accuracy = Float.toString(location.getAccuracy());
-			}
-			else {
-				longitude = "n/a";
-				latitude = "n/a";
-				accuracy = "n/a";
-			}
-			if (tableModelPeerProps != null) {
-				tableModelPeerProps.addRow(new Object[] {properties[0], getCurrentPeer().getName()});
-				tableModelPeerProps.addRow(new Object[] {properties[1], getCurrentPeer().getAddress().toString()});
-				tableModelPeerProps.addRow(new Object[] {properties[2], longitude});
-				tableModelPeerProps.addRow(new Object[] {properties[3], latitude});
-				tableModelPeerProps.addRow(new Object[] {properties[4], accuracy});
-				tableModelPeerProps.addRow(new Object[] {properties[5], Float.toString(getCurrentPeer().getVelocity().getSpeed())});
-				tableModelPeerProps.addRow(new Object[] {properties[6], Double.toString(Math.toDegrees(getCurrentPeer().getVelocity().getBearing()))});
-			}
-
-			if (btnDeletePeer != null)
-				btnDeletePeer.setEnabled(!bSimRunning);
-			/*if (btnApplyPeerProps != null)
-				btnApplyPeerProps.setEnabled(!bSimRunning);
-			if (btnApplyEnvProps != null)
-				btnApplyEnvProps.setEnabled(!bSimRunning);*/
-		}
-		else {
-			if (btnDeletePeer != null)
-				btnDeletePeer.setEnabled(false);
-			/*if (btnApplyPeerProps != null)
-				btnApplyPeerProps.setEnabled(false);
-			if (btnApplyEnvProps != null)
-				btnApplyEnvProps.setEnabled(false);*/
-		}
-
-		// Refresh peer environment table display.
-		if (tableModelPeerEnvProps != null) {
-		    Iterator it = peerEnv.getHashMap().entrySet().iterator();
-		    while (it.hasNext()) {
-		        Map.Entry pairs = (Map.Entry)it.next();
-		        tableModelPeerEnvProps.addRow(new Object[] {pairs.getKey(), pairs.getValue()});
-		    }
-		}
-
-		if (textAreaStats != null && results != null) {
-			textAreaStats.setText(results.toString());
-			textAreaStats.setCaretPosition(0);
-		}
-
-		if (textAreaStats.getText().isEmpty()) {
-			btnClear.setEnabled(false);
-			btnCopy.setEnabled(false);
-		}
-		else {
-			btnClear.setEnabled(!bSimRunning);
-			btnCopy.setEnabled(!bSimRunning);
-		}
-
-		if (frame != null)
-			frame.repaint();
+		frame.repaint();
 	}
 
 	/**
@@ -615,18 +510,8 @@ public class Simulation {
 
 		frame.getContentPane().add(scrollPanePeers, gbc_scrollPanePeers);
 
-		listModelPeers = new DefaultListModel();
-		listPeers = new JList(listModelPeers);
-		listPeers.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		(listPeers.getSelectionModel()).addListSelectionListener(new ListSelectionListener() {
-			public void valueChanged(ListSelectionEvent event) {
-				ListSelectionModel listSelectionModel = (ListSelectionModel)event.getSource();
-				if (!listSelectionModel.isSelectionEmpty())
-					refresh();
-			}
-		});
-
-		scrollPanePeers.setViewportView(listPeers);
+		peerList = new PeerList(this);
+		scrollPanePeers.setViewportView(peerList);
 
 		// Add separator. /////////////////////////////////////////////////////
 
@@ -657,40 +542,6 @@ public class Simulation {
 
 		frame.getContentPane().add(lblPeerProps, gbc_lblPeerProps);
 		
-		// Add "Apply" button. ////////////////////////////////////////////////
-
-		/*btnApplyPeerProps = new JButton("Apply");
-		btnApplyPeerProps.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				Peer peer = getCurrentPeer();
-				if (peer != null) {
-					peer.setName((String)tableModelPeerProps.getValueAt(0, 1));
-					try {
-						double longitude = Double.parseDouble((String)tableModelPeerProps.getValueAt(2, 1));
-						double latitude = Double.parseDouble((String)tableModelPeerProps.getValueAt(3, 1));
-						float accuracy = Float.parseFloat((String)tableModelPeerProps.getValueAt(4, 1));
-						peer.setLocation(new GeoLocation(longitude, latitude, accuracy));
-					} catch (NumberFormatException e) {
-						
-					}
-					try {
-						peer.setAddress(new PeerAddress((String)tableModelPeerProps.getValueAt(1, 1)));
-					} catch (PeerAddressException e) {
-						
-					}
-					refresh();
-				}
-			}
-		});
-		
-		GridBagConstraints gbc_btnApplyPeerProps = new GridBagConstraints();
-		gbc_btnApplyPeerProps.fill = GridBagConstraints.HORIZONTAL;
-		gbc_btnApplyPeerProps.gridx = 4;
-		gbc_btnApplyPeerProps.gridy = 5;
-		gbc_btnApplyPeerProps.insets = new Insets(0, 0, 5, 0);
-		
-		frame.getContentPane().add(btnApplyPeerProps, gbc_btnApplyPeerProps);*/
-
 		// Add peer properties table. /////////////////////////////////////////
 
 		JScrollPane scrollPanePeerProps = new JScrollPane();
@@ -704,44 +555,8 @@ public class Simulation {
 
 		frame.getContentPane().add(scrollPanePeerProps, gbc_scrollPanePeerProps);
 
-		tableModelPeerProps = new PropertyTableModel();
-		tablePeerProps = new JTable(tableModelPeerProps);
-		tableModelPeerProps.addColumn("Property");
-		tableModelPeerProps.addColumn("Value");
-		tableModelPeerProps.addTableModelListener(new TableModelListener() {
-			public void tableChanged(TableModelEvent tme) {
-				if (tme.getType() == TableModelEvent.UPDATE) {
-					Peer peer = getCurrentPeer();
-					if (peer != null) {
-						try {
-							String name = (String)tableModelPeerProps.getValueAt(0, 1);
-							PeerAddress address = new PeerAddress((String)tableModelPeerProps.getValueAt(1, 1));
-							double longitude = Double.parseDouble((String)tableModelPeerProps.getValueAt(2, 1));
-							double latitude = Double.parseDouble((String)tableModelPeerProps.getValueAt(3, 1));
-							float accuracy = Float.parseFloat((String)tableModelPeerProps.getValueAt(4, 1));
-							float speed = Float.parseFloat((String)tableModelPeerProps.getValueAt(5, 1));
-							float bearing = (float)Math.toRadians(Double.parseDouble((String)tableModelPeerProps.getValueAt(6, 1)));
-
-							GeoLocation location = new GeoLocation(longitude, latitude, accuracy);
-							GeoVelocity velocity = new GeoVelocity(speed, bearing); 
-
-							peer.setName(name);
-							peer.setAddress(address);
-							updateCurrentPeerAgent(location, velocity);
-						} catch (NumberFormatException nfe) {
-							JOptionPane.showMessageDialog(frame, "Please a valid number.");
-						} catch (GeoLocationException gle) {
-							JOptionPane.showMessageDialog(frame, gle.getMessage());
-						} catch (PeerAddressException pae) {
-							JOptionPane.showMessageDialog(frame, "Please a valid address.");
-						}
-						refresh();
-					}
-				}
-			}
-		});
-
-		scrollPanePeerProps.setViewportView(tablePeerProps);
+		peerPropTable = new PeerPropertiesTable(this);
+		scrollPanePeerProps.setViewportView(peerPropTable);
 
 		// Add separator. /////////////////////////////////////////////////////
 
@@ -772,18 +587,6 @@ public class Simulation {
 
 		frame.getContentPane().add(lblPeerEnv, gbc_lblPeerEnv);
 		
-		// Add "Apply" button. ////////////////////////////////////////////////
-
-		/*btnApplyEnvProps = new JButton("Apply");
-		
-		GridBagConstraints gbc_btnApplyEnvProps = new GridBagConstraints();
-		gbc_btnApplyEnvProps.fill = GridBagConstraints.HORIZONTAL;
-		gbc_btnApplyEnvProps.gridx = 4;
-		gbc_btnApplyEnvProps.gridy = 8;
-		gbc_btnApplyEnvProps.insets = new Insets(0, 0, 5, 0);
-				
-		frame.getContentPane().add(btnApplyEnvProps, gbc_btnApplyEnvProps);*/
-
 		// Add peer environment properties table. /////////////////////////////
 
 		JScrollPane scrollPaneEnvProps = new JScrollPane();
@@ -798,20 +601,8 @@ public class Simulation {
 
 		frame.getContentPane().add(scrollPaneEnvProps, gbc_scrollPaneEnvProps);
 
-		tableModelPeerEnvProps = new PropertyTableModel();
-		tablePeerEnvProps = new JTable(tableModelPeerEnvProps);
-		tableModelPeerEnvProps.addColumn("Property");
-		tableModelPeerEnvProps.addColumn("Value");
-		tableModelPeerEnvProps.addTableModelListener(new TableModelListener(){
-			public void tableChanged(TableModelEvent tme) {
-				if (tme.getType() == TableModelEvent.UPDATE) {
-					for (int row = 0; row < tableModelPeerEnvProps.getRowCount(); row++)
-						peerEnv.set((String)tableModelPeerEnvProps.getValueAt(row, 0), (String)tableModelPeerEnvProps.getValueAt(row, 1));
-					refresh();
-				}
-			}
-		});
-		scrollPaneEnvProps.setViewportView(tablePeerEnvProps);
+		envTable = new EnvironmentPropertiesTable(this);
+		scrollPaneEnvProps.setViewportView(envTable);
 		
 		// Add separator. /////////////////////////////////////////////////////
 
@@ -855,10 +646,8 @@ public class Simulation {
 
 		frame.getContentPane().add(scrollPaneStats, gbc_scrollPaneStats);
 
-		textAreaStats = new JTextArea();
-		textAreaStats.setFont(new Font("Monospaced", Font.PLAIN, 13));
-		textAreaStats.setEditable(false);
-		scrollPaneStats.setViewportView(textAreaStats);
+		statDisplay = new StatDisplay();
+		scrollPaneStats.setViewportView(statDisplay);
 
 		// Add "h4x0r" button. /////////////////////////////////////////////////
 
@@ -867,12 +656,12 @@ public class Simulation {
 			public void actionPerformed(ActionEvent event) {
 				bh4x0r = !bh4x0r;
 				if (bh4x0r) {
-					textAreaStats.setForeground(Color.GREEN);
-					textAreaStats.setBackground(Color.BLACK);
+					statDisplay.setForeground(Color.GREEN);
+					statDisplay.setBackground(Color.BLACK);
 				}
 				else {
-					textAreaStats.setForeground(Color.BLACK);
-					textAreaStats.setBackground(Color.WHITE);
+					statDisplay.setForeground(Color.BLACK);
+					statDisplay.setBackground(Color.WHITE);
 				}
 				refresh();
 			}
@@ -891,9 +680,7 @@ public class Simulation {
 		btnCopy = new JButton("Copy");
 		btnCopy.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				textAreaStats.selectAll();
-				textAreaStats.copy();
-				textAreaStats.setCaretPosition(0);
+				statDisplay.copyToClipboard();
 				refresh();
 			}
 		});
@@ -911,7 +698,7 @@ public class Simulation {
 		btnClear = new JButton("Clear");
 		btnClear.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				textAreaStats.setText(null);
+				results = null;
 				refresh();
 			}
 		});
@@ -929,13 +716,13 @@ public class Simulation {
 		timer = new Timer(timerRefreshRate, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// Account for agents exploding in hostile environments.
-				for (int i = 0; i < arrayListPeerAgents.size(); i++) {
+				for (int i = 0; i < agents.size(); i++) {
 					if (Math.random() < hostilityFactor) {
 						panel.peerExplode(getPeerAt(i));
-						deletePeer(i);
+						deletePeerAt(i);
 					}
 				}
-				if (arrayListPeerAgents.size() < 2) {
+				if (agents.size() < 2) {
 					// If we have less than 2 agents left, stop the simulation.
 					startStopSim();
 					JOptionPane.showMessageDialog(frame, "All peers have died except for one. The simulation has been automatically stopped.");
@@ -954,7 +741,7 @@ public class Simulation {
 				source.sendDataPacket(new DataPacket(source, destination.getPeer(), QualityOfService.REGULAR, payload));			
 
 				// Update statistics.
-				results.combine(statMon.getStats().getStatResults(source.getPeer().getAddress(), destination.getPeer().getAddress()));
+				results.combine(monitor.getStats().getStatResults(source.getPeer().getAddress(), destination.getPeer().getAddress()));
 
 				// Refresh the UI.
 				panel.incrementClock();

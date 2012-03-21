@@ -31,6 +31,8 @@ public interface StatMonitor extends Service {
 	 */
 	public void packetReceived(StatPacket packet);
 	
+	public void packetDropped(StatPacket packet);
+	
 	/**
 	 * Returns the gathered data.
 	 * @return The gathered statistical data.
