@@ -59,14 +59,15 @@ public class Simulation {
 	private JLabel lblSimStatusDisplay;
 	private JMenuItem mntmStartStopSim, mntmChangeHostility, mntmEditMapDim;
 	private StatDisplay statDisplay;
+	private PeerAgent source, destination;
 	private PeerEnvironment env = new DefaultPeerEnvironment();
 	private PeerList peerList;
 	private PeerPropertiesTable peerPropTable;
 	private SimulationPanel panel; 
-	private StatMonitor monitor = new MasterStatMonitor();
+	private StatMonitor monitor;
 	private StatResults results;
 	private Timer timer;
-	private int timerRefreshRate = 1000;	// in ms
+	private int timerRefreshRate = 10;	// in ms
 
 	private PeerAgent getRandomPeerAgent() {
 		return (agents.isEmpty() ? null : agents.get((int)(Math.random() * agents.size())));
@@ -85,7 +86,6 @@ public class Simulation {
 
 		// Create new PeerAgent to represent peer and add it to ArrayList.
 		PeerAgent agent = new PeerAgent(peer, env, device);
-		agent.setStatMonitor(monitor);
 		agents.add(agent);
 
 		// Add peer to list.
@@ -126,9 +126,13 @@ public class Simulation {
 				return;
 			}
 
+			monitor = new MasterStatMonitor();
+			results = new StatResults();
+
 			// Start peer services.
 			for (PeerAgent agent : agents) {
 				try {
+					agent.setStatMonitor(monitor);
 					agent.getPeer().getLocation().setTimestamp(agent.getTimeProvider().getTime());
 					agent.startServices();
 				}
@@ -138,7 +142,19 @@ public class Simulation {
 				}
 			}
 
-			results = new StatResults();
+			// Wait for beacon service to populate neighbor tables.
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			// Get a random sender.
+			source = getRandomPeerAgent();
+
+			// Find a random receiver that is not the sender. 
+			while ((destination = getRandomPeerAgent()) == source) { }
+
 			bSimRunning = true;
 			timer.start();
 		}
@@ -728,13 +744,6 @@ public class Simulation {
 					JOptionPane.showMessageDialog(frame, "All peers have died except for one. The simulation has been automatically stopped.");
 					return;
 				}
-
-				// Get a random sender.
-				PeerAgent source = getRandomPeerAgent();
-				PeerAgent destination;
-
-				// Find a random receiver that is not the sender. 
-				while ((destination = getRandomPeerAgent()) == source) { }
 
 				// Send packet from source to destination.
 				byte[] payload = new byte[] {0x01, 0x02};
