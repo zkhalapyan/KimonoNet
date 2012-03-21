@@ -105,6 +105,8 @@ public class PeerAgent {
 	 */
 	private StatMonitor statMonitor;
 	
+	private boolean gpsrSimulation;
+	
 	/**
 	 * Creates a peer agent with a default peer environment.
 	 * 
@@ -210,6 +212,7 @@ public class PeerAgent {
 	 * @see #shutdownServices()
 	 */
 	public void startServices(){
+		
 		//Create the services used by the agent.
 		if(environment.get("beacon-service-timeout") != null){
 			int timeout  = Integer.parseInt(environment.get("beacon-service-timeout"));
@@ -220,6 +223,8 @@ public class PeerAgent {
 											
 		this.geoService    = new GeoService(this);
 		this.dataService   = new DataService(this);
+		
+		dataService.set2HopRouting(!gpsrSimulation);
 		
 		this.geoService.startService();
 		this.beaconService.start();
@@ -323,5 +328,14 @@ public class PeerAgent {
 	 */
 	public long getTime(){
 		return (this.timeProvider == null)? 0 : this.timeProvider.getTime();
+	}
+	
+	public void setGPSRSimulation(boolean gpsrSimulation){
+		
+		this.gpsrSimulation = gpsrSimulation;
+			
+		if(dataService != null){
+			dataService.set2HopRouting(!gpsrSimulation);
+		}
 	}
 }

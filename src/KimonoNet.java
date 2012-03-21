@@ -40,7 +40,7 @@ public class KimonoNet {
 		if(args.length <= 0 || args[0].equals("mode-gui")){
 			startUISimulation();
 			
-		}else if(args[0].equals("mode-cl")){
+		}else if(args[0].equals("mode-cl") || args[0].equals("mode-cl-gpsr")){
 			
 			if(args.length < 7){
 				System.out.println("Please specify [number-of-peers map-width map-height hostility-factor peer-speed number-of-packets].");
@@ -48,12 +48,14 @@ public class KimonoNet {
 			}
 			
 			//Extract command line properties.
-			int   numberOfPeers   = Integer.parseInt(args[1]);
-			int   mapWidth        = Integer.parseInt(args[2]);
-			int   mapHeight       = Integer.parseInt(args[3]);
-			float hostilityFactor = Float.parseFloat(args[4]);
-			float peerSpeed       = Float.parseFloat(args[5]);
-			int  numberOfPackets  = Integer.parseInt(args[6]);
+			int   numberOfPeers    = Integer.parseInt(args[1]);
+			int   mapWidth         = Integer.parseInt(args[2]);
+			int   mapHeight        = Integer.parseInt(args[3]);
+			float hostilityFactor  = Float.parseFloat(args[4]);
+			float peerSpeed        = Float.parseFloat(args[5]);
+			int   numberOfPackets  = Integer.parseInt(args[6]);
+			int   beaconTimeout    = (args.length > 7)? Integer.parseInt(args[7]) : -1;
+			boolean gpsrSimulation =  args[0].equals("mode-cl-gpsr");
 			
 			if(numberOfPeers < 2){
 				
@@ -67,7 +69,13 @@ public class KimonoNet {
 			
 			GeoMap map = new GeoMap(mapWidth, mapHeight);
 			
-			new KiNCoL(numberOfPeers, map, peerSpeed, numberOfPackets, hostilityFactor).start();
+			new KiNCoL(numberOfPeers, 
+					   map, 
+					   peerSpeed, 
+					   numberOfPackets, 
+					   hostilityFactor, 
+					   beaconTimeout,
+					   gpsrSimulation).start();
 			
 		}else{
 			System.out.println("Please specify [mode] [number-of-peers " +

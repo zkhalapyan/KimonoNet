@@ -23,7 +23,7 @@ public class KiNCoL extends Thread{
 	 * Internal at which packets will be send from a random source to a random
 	 * sink. This value is in milliseconds.
 	 */
-	private static final int PACKET_SENDING_INTERVAL = 10;
+	private static final int PACKET_SENDING_INTERVAL = 200;
 	
 	/**
 	 * Numbers of seconds to allow beacon service to populate peers table prior
@@ -79,7 +79,8 @@ public class KiNCoL extends Thread{
 				  float peerSpeed, 
 				  int numberOfPackets, 
 				  float hostilityFactor,
-				  int beaconTimeout){
+				  int beaconTimeout,
+				  boolean gpsrSimulation){
 		
 		System.out.println("########PARAMETERS RECEIVED########");
 		System.out.println("Number of Peers:   \t " + numberOfPeers);
@@ -116,6 +117,7 @@ public class KiNCoL extends Thread{
 				                            new RandomWaypointGeoDevice(peerLocation, peerVelocity, map);
 			
 			PeerAgent agent = new PeerAgent(peer, peerEnvironment, geoDevice);
+			agent.setGPSRSimulation(gpsrSimulation);
 			agent.setStatMonitor(statMonitor);
 			agents[i] = agent;
 		}
@@ -155,13 +157,12 @@ public class KiNCoL extends Thread{
 			
 			//Get a random sender.
 			PeerAgent source = getRandomPeerAgent();
-			PeerAgent destination = agents[0];
-			
-			//Find a random sender that is not the destination.
-			while((source = getRandomPeerAgent()) == destination){}
-			
+			PeerAgent destination = agents[0];	
 			
 			for(int i = 0; i < numberOfPackets; i++){
+				
+				//Find a random sender that is not the destination.
+				while((source = getRandomPeerAgent()) == destination){}
 				
 				//Account for agents exploding in hostile environments.
 				for(PeerAgent agent : agents){
@@ -174,9 +175,12 @@ public class KiNCoL extends Thread{
 				
 				source.sendDataPacket(new DataPacket(source, destination.getPeer(), QualityOfService.REGULAR, payload));			
 			
-				//Slows down the simulation.
+				//Sleep until the packet is delivered so we can compute the 
+				//statistical information. If this line was not here, then after
+				//calling the send 
 				sleep(PACKET_SENDING_INTERVAL);
 				
+				results.combine(statMonitor.getStats().getStatResults(source.getPeer().getAddress(), destination.getPeer().getAddress()));
 			}
 			
 			//Kill all services/threads.
@@ -187,7 +191,7 @@ public class KiNCoL extends Thread{
 			//Wait for all the threads to die out/shutdown.
 			sleep(SHUTDOWN_DELAY);
 			
-			results.combine(statMonitor.getStats().getStatResults(source.getPeer().getAddress(), destination.getPeer().getAddress()));
+			
 			
 			//Output the results.
 			System.out.println(results);
