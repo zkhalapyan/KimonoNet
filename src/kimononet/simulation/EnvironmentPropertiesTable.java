@@ -7,12 +7,6 @@ import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-import kimononet.geo.GeoLocation;
-import kimononet.geo.GeoVelocity;
-import kimononet.peer.Peer;
-import kimononet.peer.PeerAddress;
-import kimononet.peer.PeerEnvironment;
-
 public class EnvironmentPropertiesTable extends JTable {
 
 	private PropertyTableModel model;

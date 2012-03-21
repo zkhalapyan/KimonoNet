@@ -2,7 +2,6 @@ package kimononet.simulation;
 
 import java.awt.Font;
 
-import javax.swing.JButton;
 import javax.swing.JTextArea;
 
 import kimononet.stat.StatResults;
