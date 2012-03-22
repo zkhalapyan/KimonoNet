@@ -74,6 +74,9 @@ public class StatData {
 		
 		int totalPacketCount = 0;
 		
+		int totalSentPackets = 0;
+		int totalReceivedPackets = 0;
+		
 		int totalSentDataPackets = 0;
 		int totalReceivedDataPackets = 0;
 		
@@ -87,6 +90,8 @@ public class StatData {
 		int perimeterCount   = 0;
 		
 		synchronized(sentPackets){
+			
+			totalSentPackets = sentPackets.size();
 			
 			totalPacketCount += sentPackets.size();
 			
@@ -131,6 +136,8 @@ public class StatData {
 		
 		synchronized(receivedPackets){
 			
+			totalReceivedPackets = receivedPackets.size();
+			
 			totalPacketCount += receivedPackets.size();
 			
 			for(StatPacket packet : receivedPackets){
@@ -139,11 +146,7 @@ public class StatData {
 					continue;
 				}
 				
-				if(packet.getType() == PacketType.BEACON){
-					beaconPacketCount ++;
-					
-				}else if(packet.getType() == PacketType.DATA){
-					dataPacketCount ++;
+				if(packet.getType() == PacketType.DATA){
 					
 					totalReceivedDataPackets ++;
 					
@@ -167,7 +170,9 @@ public class StatData {
 							   greedyCount, 
 							   perimeterCount,
 							   totalSentDataPackets,
-							   totalReceivedDataPackets);
+							   totalReceivedDataPackets,
+							   totalSentPackets,
+							   totalReceivedPackets);
 		
 	}
 	

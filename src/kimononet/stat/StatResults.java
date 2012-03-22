@@ -68,6 +68,10 @@ public class StatResults {
 	
 	private int totalReceivedDataPackets;
 	
+	private int totalSentPackets;
+	
+	private int totalReceivedPackets;
+	
 
 	/**
 	 * Creates a new results package given various count values.
@@ -99,7 +103,9 @@ public class StatResults {
 					   int greedyCount, 
 					   int perimeterCount,
 					   int totalSentDataPackets,
-					   int totalReceivedDataPackets){
+					   int totalReceivedDataPackets,
+					   int totalSentPackets,
+					   int totalReceivedPackets){
 		
 		this.totalPacketCount = totalPacketCount;
 		this.sentPackets      = sentPackets;
@@ -111,6 +117,9 @@ public class StatResults {
 		
 		this.totalSentDataPackets = totalSentDataPackets;
 		this.totalReceivedDataPackets = totalSentDataPackets;
+		
+		this.totalSentPackets = totalSentPackets;
+		this.totalReceivedPackets = totalReceivedPackets;
 	}
 	
 
@@ -118,7 +127,7 @@ public class StatResults {
 	 * Creates a new results package with all values set to null.
 	 */
 	public StatResults() {
-		this(0, 0, 0, 0, 0, 0, 0, 0, 0);
+		this(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	}
 
 
@@ -142,9 +151,9 @@ public class StatResults {
 	 * @return Control overhead ratio.
 	 */
 	public double getControlOverhead(){
-		return (totalPacketCount == 0)? 
+		return (totalSentPackets == 0)? 
 					0.0 : 
-				    (beaconPackets) / (double)totalPacketCount;
+				    (beaconPackets) / (double)totalSentPackets;
 	}
 	
 	/**
@@ -224,6 +233,17 @@ public class StatResults {
 		this.perimeterCount   += results.perimeterCount;
 		this.totalReceivedDataPackets += results.totalReceivedDataPackets;
 		this.totalSentDataPackets += results.totalSentDataPackets;
+		
+		this.totalSentPackets     += results.totalSentPackets;
+		this.totalReceivedPackets += results.totalReceivedPackets;
+	}
+	
+	public int getTotalSentPackets(){
+		return this.totalSentPackets;
+	}
+	
+	public int getTotalReceivedPackets(){
+		return this.totalReceivedPackets;
 	}
 	
 	/**
@@ -256,6 +276,8 @@ public class StatResults {
 		results += "###############COUNTS###############"                 + "\n";
 		
 		results += "Total Packet Count:                      \t" + totalPacketCount         + "\n";
+		results += "Total Sent Packets:                      \t" + totalSentPackets         + "\n";
+		results += "Total Received Packets:                  \t" + totalReceivedPackets     + "\n";
 		results += "Total Sent Data Packet Count:            \t" + totalSentDataPackets     + "\n";
 		results += "Total Received Data Packet Count:        \t" + totalReceivedDataPackets + "\n";
 		results += "Sent Packets (from source) Count:        \t" + sentPackets 	            + "\n";
