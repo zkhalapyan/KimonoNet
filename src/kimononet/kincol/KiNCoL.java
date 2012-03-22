@@ -74,6 +74,8 @@ public class KiNCoL extends Thread{
 	 */
 	private final PeerEnvironment peerEnvironment;
 	
+	private int beaconTimeout;
+	
 	public KiNCoL(int numberOfPeers, 
 				  GeoMap map, 
 				  float peerSpeed, 
@@ -89,6 +91,8 @@ public class KiNCoL extends Thread{
 		System.out.println("Peer Velocity:     \t " + peerSpeed);
 		System.out.println("Hostility Factor:  \t " + hostilityFactor);
 		
+		
+		this.beaconTimeout = beaconTimeout;
 		
 		if(hostilityFactor > 0.5){
 			System.out.println("Warning! You have specified a very hostile environment.");
@@ -144,7 +148,7 @@ public class KiNCoL extends Thread{
 			//If no data packets are going to be sent, then sleep for a long 
 			//time in order to get a chance to test out beacon service.
 			if(numberOfPackets == 0){
-				sleep(BEACON_SERVICE_SIMULATION_TIMEOUT);
+				sleep(BEACON_SERVICE_SIMULATION_TIMEOUT + beaconTimeout);
 				
 				results.combine(statMonitor.getStats().getStatResults(null, null));
 				
@@ -152,7 +156,7 @@ public class KiNCoL extends Thread{
 			//that beacon service has enough time to populate its neighbor 
 			//tables.
 			}if(numberOfPackets > 0){
-				sleep(INITIALIZATION_DELAY);
+				sleep(INITIALIZATION_DELAY + beaconTimeout);
 			}
 			
 			//Get a random sender.
