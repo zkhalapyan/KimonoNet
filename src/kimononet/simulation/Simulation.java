@@ -110,7 +110,9 @@ public class Simulation {
 		}
 
 		// Make new receiver's GeoDevice stationary.
-		agents.set(i, new PeerAgent(getPeerAgentAt(i).getPeer(), env, new DefaultGeoDevice(getPeerAgentAt(i).getPeer().getLocation(), getPeerAgentAt(i).getPeer().getVelocity())));
+		GeoVelocity stationary = new GeoVelocity();
+		getPeerAgentAt(i).getPeer().setVelocity(stationary);
+		agents.set(i, new PeerAgent(getPeerAgentAt(i).getPeer(), env, new DefaultGeoDevice(getPeerAgentAt(i).getPeer().getLocation(), stationary)));
 		destination = getPeerAgentAt(i);
 
 		refresh();
@@ -295,11 +297,14 @@ public class Simulation {
 			return;
 		boolean bReceiver = isReceiver(getCurrentPeerAgent());
 		getCurrentPeerAgent().getPeer().setLocation(location);
-		getCurrentPeerAgent().getPeer().setVelocity(velocity);
-		if (!bReceiver)
+		if (!bReceiver) {
+			getCurrentPeerAgent().getPeer().setVelocity(velocity);
 			agents.set(getCurrentPeerAgentIndex(), new PeerAgent(getCurrentPeerAgent().getPeer(), env, new RandomWaypointGeoDevice(location, velocity, mapDim)));
+		}
 		else {
-			agents.set(getCurrentPeerAgentIndex(), new PeerAgent(getCurrentPeerAgent().getPeer(), env, new DefaultGeoDevice(location, velocity)));
+			GeoVelocity stationary = new GeoVelocity();
+			getCurrentPeerAgent().getPeer().setVelocity(stationary);
+			agents.set(getCurrentPeerAgentIndex(), new PeerAgent(getCurrentPeerAgent().getPeer(), env, new DefaultGeoDevice(location, stationary)));
 			destination = getCurrentPeerAgent();
 		}
 		refresh();
