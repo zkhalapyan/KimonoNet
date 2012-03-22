@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import kimononet.geo.GeoLocation;
+import kimononet.log.Logger;
 import kimononet.net.transport.DataPacket;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
@@ -70,7 +71,7 @@ public class RoutingLogic {
 
 		Map<PeerAddress, Peer> routingTable1 = agent.getPeers();
 		if(routingTable1.size() == 0) {
-			System.out.println("Packet dropped because there are no peers in table to route to.");
+			Logger.debug("Packet dropped because there are no peers in table to route to.");
 			return false;
 		}
 		
@@ -90,7 +91,7 @@ public class RoutingLogic {
 		
 		if(id.equals(agent.getPeer().getAddress()))
 		{
-			System.out.println("Reached local maximum, switching packet to perimeter mode");
+			Logger.debug("Reached local maximum, switching packet to perimeter mode");
 			return routePerimeter(packet);
 		}
 		
@@ -114,14 +115,14 @@ public class RoutingLogic {
 			GeoLocation e = packet.getPerimeterEnteredLocation();
 			if(d.distanceTo(s) < d.distanceTo(e))
 			{
-				System.out.println("Switching packet to GREEDY mode.");
+				Logger.debug("Switching packet to GREEDY mode.");
 				return routeGreedy(packet);
 			}
 		}
 		
 		Map<PeerAddress, Peer> routingTable1 = agent.getPeers();
 		if(routingTable1.size() == 0) {
-			System.out.println("Packet dropped because there are no peers in table to route to.");
+			Logger.debug("Packet dropped because there are no peers in table to route to.");
 			return false;
 		}
 
@@ -159,7 +160,7 @@ public class RoutingLogic {
 		
 		if(id.equals(agent.getPeer().getAddress()))
 		{
-			System.out.println("No peers to route to in perimeter, dropping packet.");
+			Logger.debug("No peers to route to in perimeter, dropping packet.");
 			return false;
 		}
 		else if(packet.getForwardMode() == ForwardMode.GREEDY)
