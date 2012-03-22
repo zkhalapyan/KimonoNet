@@ -22,7 +22,6 @@ import javax.swing.JPanel;
 import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoVelocity;
 import kimononet.geo.GeoMap;
-import kimononet.peer.Peer;
 import kimononet.peer.PeerAgent;
 
 public class SimulationPanel extends JPanel {
@@ -174,7 +173,7 @@ public class SimulationPanel extends JPanel {
 		for (PeerAgent agent : sim.getPeerAgents()) {
 			BufferedImage image = imageUAV;
 
-			if (sim.isSender(agent))
+			if (sim.isSender(agent) && sim.isSimulationRunning())
 				image = imageUAVsending;
 			else if (sim.isReceiver(agent))
 				image = imageUAVdest;

@@ -29,8 +29,6 @@ import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoVelocity;
 import kimononet.geo.GeoMap;
 import kimononet.geo.RandomWaypointGeoDevice;
-import kimononet.net.routing.QualityOfService;
-import kimononet.net.transport.DataPacket;
 import kimononet.peer.DefaultPeerEnvironment;
 import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
@@ -48,12 +46,15 @@ import java.awt.Color;
 
 public class Simulation {
 
+	private static final int INITIALIZATION_DELAY = 2000;
+	private static final int SHUTDOWN_DELAY = 1000;
+
 	private ArrayList<PeerAgent> agents = new ArrayList<PeerAgent>();
 	private boolean bSimRunning = false, bh4x0r = false;
 	private float hostilityFactor;
 	private EnvironmentPropertiesTable envTable;
-	private GeoMap mapDim = new GeoMap(	new GeoLocation(-0.01, 0.01, 0f),	// Upper left
-										new GeoLocation(0.01, -0.01, 0f));	// Lower right
+	private GeoMap mapDim = new GeoMap(	new GeoLocation(-0.0025, 0.0025, 0f),	// Upper left
+										new GeoLocation(0.0025, -0.0025, 0f));	// Lower right
 	private int peerIndex = 0;	// This is just for peer names, e.g. Peer-0, Peer-1, etc.
 	private JButton btnStartStop, btnAddPeer, btnDeletePeer, btnClearAll, btnSetAsRecv, btnh4x0r, btnCopy, btnClear;
 	private JFrame frame; 
@@ -65,140 +66,12 @@ public class Simulation {
 	private PeerList peerList;
 	private PeerPropertiesTable peerPropTable;
 	private SimulationPanel panel; 
+	private SimulationThread thread;
 	//private JPanel panel;
 	private StatMonitor monitor;
 	private StatResults results;
 	private Timer timer;
-	private int timerRefreshRate = 10;	// in ms
-
-	private PeerAgent getRandomPeerAgent() {
-		return (agents.isEmpty() ? null : agents.get((int)(Math.random() * agents.size())));
-	}
-
-	private void addPeerAgent() {
-		String name = "Peer-" + peerIndex++;
-		PeerAddress address = PeerAddress.generateRandomAddress();
-		GeoLocation location = GeoLocation.generateRandomGeoLocation(mapDim);
-		GeoVelocity velocity = new GeoVelocity(100, GeoLocation.generateRandomBearing());
-		GeoDevice device = new RandomWaypointGeoDevice(location, velocity, mapDim);
-
-		// Create new peer with random address, location, velocity.
-		Peer peer = new Peer(address, location, velocity);
-		peer.setName(name);
-
-		// Create new PeerAgent to represent peer and add it to ArrayList.
-		PeerAgent agent = new PeerAgent(peer, env, device);
-		agents.add(agent);
-
-		// Add peer to list.
-		peerList.append(agent);
-
-		refresh();
-	}
-
-	private void deleteAllPeerAgents() {
-		destination = null;
-		peerList.clear();
-		agents.clear();
-		refresh();
-	}
-
-	private void deleteCurrentPeerAgent() {
-		deletePeerAgentAt(getCurrentPeerAgentIndex());
-	}
-
-	private void deletePeerAgentAt(int i) {
-		if (i < 0 || i >= agents.size())
-			return;
-		if (getPeerAgentAt(i) == destination)
-			destination = null;
-		peerList.deleteItemAt(i);
-		if (bSimRunning)
-			agents.get(i).shutdownServices();
-		agents.remove(i);
-		refresh();
-	}
-
-	private void startStopSim() {
-		if (!bSimRunning) {
-			/*****************************************************************
-			 * About to START simulation.
-			 *****************************************************************/
-
-			// Check if there are enough peers.
-			if (agents.size() < 2) {
-				JOptionPane.showMessageDialog(frame, "Please at least 2 peers.");
-				return;
-			}
-
-			// Check if there is a receiver.
-			if (destination == null) {
-				JOptionPane.showMessageDialog(frame, "Please designate a peer as the receiver.");
-				return;
-			}
-
-			monitor = new MasterStatMonitor();
-			results = new StatResults();
-
-			// Start peer services.
-			for (PeerAgent agent : agents) {
-				try {
-					agent.setStatMonitor(monitor);
-					agent.getPeer().getLocation().setTimestamp(agent.getTimeProvider().getTime());
-					agent.startServices();
-				}
-				catch (Exception e) {
-					JOptionPane.showMessageDialog(frame, "Cannot start the simulation. Please ensure all parameters are set correctly.");
-					return;
-				}
-			}
-
-			// Wait for beacon service to populate neighbor tables.
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
-			// Get an initial random sender.
-			source = getRandomPeerAgent();
-
-			bSimRunning = true;
-			timer.start();
-		}
-		else {
-			/*****************************************************************
-			 * About to STOP simulation.
-			 *****************************************************************/
-
-			// Stop peer services.
-			for (PeerAgent agent : agents)
-				agent.shutdownServices();
-
-			// Wait for all the threads to die out/shutdown.
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
-			panel.clearExplosionPoints();
-			bSimRunning = false;
-			source = null;
-			timer.stop();
-		}
-
-		btnAddPeer.setEnabled(!bSimRunning);
-		btnStartStop.setText(bSimRunning ? "Stop" : "Start");
-		envTable.setEnabled(!bSimRunning);
-		lblSimStatusDisplay.setBackground(bSimRunning ? Color.GREEN : Color.RED);
-		lblSimStatusDisplay.setText(bSimRunning ? "Simulation RUNNING" : "Simulation STOPPED");
-		mntmEditMapDim.setEnabled(!bSimRunning);
-		mntmStartStopSim.setText(bSimRunning ? "Stop Simulation" : "Start Simulation");
-		peerPropTable.setEnabled(!bSimRunning);
-
-		refresh();
-	}
+	private int timerRefreshRate = 1;	// in ms
 
 	public ArrayList<PeerAgent> getPeerAgents() {
 		return agents;
@@ -262,14 +135,166 @@ public class Simulation {
 		return agents.get(i);
 	}
 
+	public PeerAgent getRandomPeerAgent() {
+		return (agents.isEmpty() ? null : agents.get((int)(Math.random() * agents.size())));
+	}
+
+	public PeerAgent getReceiver() {
+		return destination;
+	}
+
+	public PeerAgent getSender() {
+		return source;
+	}
+
 	public PeerEnvironment getPeerEnvironment() {
 		return env;
+	}
+
+	public SimulationPanel getSimulationPanel() {
+		return panel;
+	}
+
+	public StatMonitor getStatMonitor() {
+		return monitor;
+	}
+
+	public StatResults getStatResults() {
+		return results;
+	}
+
+	public void addPeerAgent() {
+		String name = "Peer-" + peerIndex++;
+		PeerAddress address = PeerAddress.generateRandomAddress();
+		GeoLocation location = GeoLocation.generateRandomGeoLocation(mapDim);
+		GeoVelocity velocity = new GeoVelocity(100, GeoLocation.generateRandomBearing());
+		GeoDevice device = new RandomWaypointGeoDevice(location, velocity, mapDim);
+
+		// Create new peer with random address, location, velocity.
+		Peer peer = new Peer(address, location, velocity);
+		peer.setName(name);
+
+		// Create new PeerAgent to represent peer and add it to ArrayList.
+		PeerAgent agent = new PeerAgent(peer, env, device);
+		agents.add(agent);
+
+		// Add peer to list.
+		peerList.append(agent);
+
+		refresh();
+	}
+
+	public void deleteAllPeerAgents() {
+		destination = null;
+		peerList.clear();
+		agents.clear();
+		refresh();
+	}
+
+	public void deleteCurrentPeerAgent() {
+		deletePeerAgentAt(getCurrentPeerAgentIndex());
+	}
+
+	public void deletePeerAgentAt(int i) {
+		if (i < 0 || i >= agents.size())
+			return;
+		if (getPeerAgentAt(i) == destination)
+			destination = null;
+		peerList.deleteItemAt(i);
+		if (bSimRunning)
+			agents.get(i).shutdownServices();
+		agents.remove(i);
+		refresh();
 	}
 
 	public void setCurrentPeerIndex(int i) {
 		if (i < 0 || i >= agents.size())
 			return;
 		peerList.setCurrentlySelectedItemIndex(i);
+		refresh();
+	}
+
+	public void setSender(PeerAgent agent) {
+		source = agent;
+	}
+
+	public void startStopSim() {
+		if (!bSimRunning) {
+			/*****************************************************************
+			 * About to START simulation.
+			 *****************************************************************/
+
+			// Check if there are enough peers.
+			if (agents.size() < 2) {
+				JOptionPane.showMessageDialog(frame, "Please at least 2 peers.");
+				return;
+			}
+
+			// Check if there is a receiver.
+			if (destination == null) {
+				JOptionPane.showMessageDialog(frame, "Please designate a peer as the receiver.");
+				return;
+			}
+
+			monitor = new MasterStatMonitor();
+			results = new StatResults();
+
+			// Start peer services.
+			for (PeerAgent agent : agents) {
+				try {
+					agent.setStatMonitor(monitor);
+					agent.getPeer().getLocation().setTimestamp(agent.getTimeProvider().getTime());
+					agent.startServices();
+				}
+				catch (Exception e) {
+					JOptionPane.showMessageDialog(frame, "Cannot start the simulation. Please ensure all parameters are set correctly.");
+					return;
+				}
+			}
+
+			// Wait for beacon service to populate neighbor tables.
+			try {
+				Thread.sleep(INITIALIZATION_DELAY + Integer.parseInt(env.get("beacon-service-timeout")));
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			thread = new SimulationThread(this, hostilityFactor);
+			thread.start();
+			timer.start();
+			bSimRunning = true;
+		}
+		else {
+			/*****************************************************************
+			 * About to STOP simulation.
+			 *****************************************************************/
+
+			bSimRunning = false;
+			timer.stop();
+			thread.stopSimulationThread();
+			panel.clearExplosionPoints();
+
+			// Stop peer services.
+			for (PeerAgent agent : agents)
+				agent.shutdownServices();
+
+			// Wait for all the threads to die out/shutdown.
+			try {
+				Thread.sleep(SHUTDOWN_DELAY + Integer.parseInt(env.get("beacon-service-timeout")));
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+
+		btnAddPeer.setEnabled(!bSimRunning);
+		btnStartStop.setText(bSimRunning ? "Stop" : "Start");
+		envTable.setEnabled(!bSimRunning);
+		lblSimStatusDisplay.setBackground(bSimRunning ? Color.GREEN : Color.RED);
+		lblSimStatusDisplay.setText(bSimRunning ? "Simulation RUNNING" : "Simulation STOPPED");
+		mntmEditMapDim.setEnabled(!bSimRunning);
+		mntmStartStopSim.setText(bSimRunning ? "Stop Simulation" : "Start Simulation");
+		peerPropTable.setEnabled(!bSimRunning);
+
 		refresh();
 	}
 
@@ -757,7 +782,7 @@ public class Simulation {
 
 		// Add "h4x0r" button. /////////////////////////////////////////////////
 
-		btnh4x0r = new JButton("1337 Mode");
+		btnh4x0r = new JButton("Invert Colors");
 		btnh4x0r.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				bh4x0r = !bh4x0r;
@@ -800,32 +825,6 @@ public class Simulation {
 
 		timer = new Timer(timerRefreshRate, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// Account for agents exploding in hostile environments.
-				for (int i = 0; i < agents.size(); i++) {
-					if (getPeerAgentAt(i) == source || getPeerAgentAt(i) == destination)
-						continue;
-					if (Math.random() < hostilityFactor) {
-						panel.peerExplode(getPeerAgentAt(i));
-						deletePeerAgentAt(i);
-					}
-				}
-				if (agents.size() < 2) {
-					// If we have less than 2 agents left, stop the simulation.
-					startStopSim();
-					JOptionPane.showMessageDialog(frame, "All peers have died except for one. The simulation has been automatically stopped.");
-					return;
-				}
-
-				// Send packet from source to destination.
-				byte[] payload = new byte[] {0x01, 0x02};
-				source.sendDataPacket(new DataPacket(source, destination.getPeer(), QualityOfService.REGULAR, payload));			
-
-				// Update statistics.
-				results.combine(monitor.getStats().getStatResults(source.getPeer().getAddress(), destination.getPeer().getAddress()));
-
-				// Find a new random sender that is not the destination for the next iteration.
-				while ((source = getRandomPeerAgent()) == destination) { }
-
 				// Refresh the UI.
 				panel.incrementClock();
 				refresh();
