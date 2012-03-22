@@ -420,7 +420,7 @@ public class DataPacket extends Packet implements Comparable<DataPacket> {
 	 */
 	public String toString(){
 		
-		return "PACKET FROM " + getPeer().getAddress() + " TO " + getDestinationPeer().getAddress();
+		return "Source: " + getPeer().getAddress() + " Destination: " + getDestinationPeer().getAddress();
 	}
 
 	public void setXHDRFaceFirstEdgeDst(GeoLocation dst) {

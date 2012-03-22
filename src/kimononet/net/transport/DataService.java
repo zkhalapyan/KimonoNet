@@ -2,6 +2,8 @@ package kimononet.net.transport;
 
 import java.util.concurrent.PriorityBlockingQueue;
 
+import kimononet.log.LogType;
+import kimononet.log.Logger;
 import kimononet.net.p2p.Connection;
 import kimononet.net.p2p.MulticastConnection;
 import kimononet.net.p2p.UDPConnection;
@@ -70,7 +72,7 @@ public class DataService extends Thread implements Service{
 				StatPacket p = new StatPacket(packet, agent.getPeer().getAddress());
 				agent.getStatMonitor().packetDropped(p);
 				
-				System.out.println("Packet was dropped during routing protocol!");
+				Logger.log("Packet was dropped during routing protocol!", LogType.INFO);
 				return false;
 			}
 
@@ -180,13 +182,13 @@ public class DataService extends Thread implements Service{
 					
 					//Ignore data packets from the same peer.
 					if(agent.getPeer().getAddress().equals(packet.getPeer().getAddress())){
-						System.out.println("Packet is addressed to self, dropped.");
+						Logger.log("Packet is addressed to self, dropped.", LogType.DEBUG);
 						continue;
 					}
 					
 					//Ignore data packets that were not intended for this agent.
 					if(!agent.getPeer().getAddress().equals(packet.getHdr_fwd_dst_id())){
-						System.out.println("Packet was not intended for this node, dropped.");
+						Logger.log("Packet was not intended for this node, dropped.", LogType.DEBUG);
 						continue;
 					}
 					
@@ -224,7 +226,7 @@ public class DataService extends Thread implements Service{
 	
 	private void deliverPacket(DataPacket packet){
 		
-		System.out.println("\nPacket delivered to destination:\n" + packet.toString());
+		Logger.log("\nPacket delivered to destination: " + packet.toString(), LogType.INFO);
 		
 	}
 	

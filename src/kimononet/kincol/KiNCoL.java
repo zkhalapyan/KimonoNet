@@ -6,6 +6,8 @@ import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoMap;
 import kimononet.geo.GeoVelocity;
 import kimononet.geo.RandomWaypointGeoDevice;
+import kimononet.log.LogType;
+import kimononet.log.Logger;
 import kimononet.net.routing.QualityOfService;
 import kimononet.net.transport.DataPacket;
 import kimononet.peer.DefaultPeerEnvironment;
@@ -91,11 +93,10 @@ public class KiNCoL extends Thread{
 		System.out.println("Peer Velocity:     \t " + peerSpeed);
 		System.out.println("Hostility Factor:  \t " + hostilityFactor);
 		
-		
 		this.beaconTimeout = beaconTimeout;
 		
 		if(hostilityFactor > 0.5){
-			System.out.println("Warning! You have specified a very hostile environment.");
+			Logger.info("Warning! You have specified a very hostile environment.");
 		}
 		
 		this.hostilityFactor = hostilityFactor;
@@ -131,7 +132,7 @@ public class KiNCoL extends Thread{
 
 	public void run(){
 		
-		System.out.println("#########STARTING SIMULATION##########");
+		Logger.info("#########STARTING SIMULATION##########");
 	
 		//The stat result will store the final results to be displayed to the 
 		//user.
@@ -190,17 +191,15 @@ public class KiNCoL extends Thread{
 			//Kill all services/threads.
 			killEveryone(agents);
 			
-			System.out.println("Shutting down...");
+			Logger.info("Shutting down...");
 			
 			//Wait for all the threads to die out/shutdown.
 			sleep(SHUTDOWN_DELAY);
 			
-			
-			
 			//Output the results.
-			System.out.println(results);
+			Logger.info(results.toString());
 			
-			System.out.println("#########BEACON SERVICE RESULTS#########");
+			Logger.info("#########BEACON SERVICE RESULTS#########");
 			for(PeerAgent agent : agents){
 				
 				int peers2NeighborCount = 0;
@@ -209,11 +208,12 @@ public class KiNCoL extends Thread{
 					peers2NeighborCount += agent.getPeers2().get(address).size();
 				}
 				
-				System.out.println("Agent: \t " + agent.getPeer().getName() + 
-						           " # of peers: \t " + agent.getPeers().size() + 
-						           " # of peers2: \t " + peers2NeighborCount);
+				Logger.info("Agent: \t " + agent.getPeer().getName() + 
+						    " # of peers: \t " + agent.getPeers().size() + 
+						    " # of peers2: \t " + peers2NeighborCount);
 			}
-			System.out.println("#################DONE###################");
+			
+			Logger.info("#################DONE###################");
 			
 		} catch (InterruptedException e) {
 			e.printStackTrace();

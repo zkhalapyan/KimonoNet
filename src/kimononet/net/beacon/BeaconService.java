@@ -3,6 +3,8 @@ package kimononet.net.beacon;
 import java.util.HashMap;
 import java.util.Map;
 
+import kimononet.log.LogType;
+import kimononet.log.Logger;
 import kimononet.net.PacketException;
 import kimononet.net.p2p.Connection;
 import kimononet.net.p2p.MulticastConnection;
@@ -116,7 +118,7 @@ public class BeaconService extends Thread implements Service{
 			received = connection.receive();
 			
 			if(received == null){
-				//System.out.println("Beacon service for " + agent.getPeer().getAddress() + " timed out. Sending a beacon.");
+				Logger.log("Beacon service for " + agent.getPeer().getAddress() + " timed out. Sending a beacon.", LogType.DEBUG);
 				sendBeacon(connection);
 					
 			}else{
@@ -128,7 +130,7 @@ public class BeaconService extends Thread implements Service{
 					 
 				//In case of an error, output the message and reset the loop.
 				}catch(PacketException ex){
-					System.out.println(ex.getMessage());
+					Logger.log(ex.getMessage(), LogType.ERROR);
 					continue;
 				}
 				
@@ -181,7 +183,7 @@ public class BeaconService extends Thread implements Service{
 				//send a beacon as a response.
 				if(!packet.getPeers().containsKey(agent.getPeer().getAddress())){
 					sendBeacon(connection);
-					//System.out.println("Apparently peer " + packet.getPeer().getAddress() + " doesn't know about " + agent.getPeer().getAddress());
+					Logger.debug("Apparently peer " + packet.getPeer().getAddress() + " doesn't know about " + agent.getPeer().getAddress());
 				}
 				
 				
