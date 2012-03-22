@@ -275,6 +275,7 @@ public class Simulation {
 		envTable.setEnabled(!bSimRunning);
 		lblSimStatusDisplay.setBackground(bSimRunning ? Color.GREEN : Color.RED);
 		lblSimStatusDisplay.setText(bSimRunning ? "Simulation RUNNING" : "Simulation STOPPED");
+		mntmChangeHostility.setEnabled(!bSimRunning);
 		mntmEditMapDim.setEnabled(!bSimRunning);
 		mntmStartStopSim.setText(bSimRunning ? "Stop Simulation" : "Start Simulation");
 		peerPropTable.setEnabled(!bSimRunning);
