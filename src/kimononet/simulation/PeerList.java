@@ -6,17 +6,17 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import kimononet.peer.Peer;
+import kimononet.peer.PeerAgent;
 
 public class PeerList extends JList {
 
 	private DefaultListModel model;
 	private Simulation sim;
 
-	private String composeListItem(Peer peer) {
-		if (peer == null)
+	private String composeListItem(PeerAgent agent) {
+		if (agent == null)
 			return null;
-		return peer.getName() + " (" + peer.getAddress().toString() + ")";
+		return (agent.getPeer().getName() + " (" + agent.getPeer().getAddress().toString() + ")" + (sim.isReceiver(agent) ? " [RECEIVER]" : ""));
 	}
 
 	public boolean isEmpty() {
@@ -32,13 +32,13 @@ public class PeerList extends JList {
 	}
 
 	public void deleteItemAt(int i) {
-		if (i >= 0)
+		if (i >= 0 && i < model.size())
 			model.remove(i);
 	}
 
-	public void append(Peer peer) {
-		if (peer != null) {
-			String string = composeListItem(peer);
+	public void append(PeerAgent agent) {
+		if (agent != null) {
+			String string = composeListItem(agent);
 			if (string != null)
 				model.addElement(string);
 		}
@@ -49,9 +49,15 @@ public class PeerList extends JList {
 	}
 
 	public void refresh() {
-		String string = composeListItem(sim.getCurrentPeer());
-		if (string != null)
-			model.set(sim.getCurrentPeerIndex(), string);
+		refresh(sim.getCurrentPeerAgentIndex());
+	}
+
+	public void refresh(int i) {
+		if (i >= 0 && i < model.size()) {
+			String string = composeListItem(sim.getPeerAgentAt(i));
+			if (string != null)
+				model.set(i, string);
+		}
 	}
 
 	public PeerList(Simulation s) {

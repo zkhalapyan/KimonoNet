@@ -8,19 +8,19 @@ import javax.swing.event.TableModelListener;
 import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoLocationException;
 import kimononet.geo.GeoVelocity;
-import kimononet.peer.Peer;
 import kimononet.peer.PeerAddress;
 import kimononet.peer.PeerAddressException;
+import kimononet.peer.PeerAgent;
 
 public class PeerPropertiesTable extends JTable {
 
-	private final String[] properties = {	"Name",				// Row 0
-											"Address",			// Row 1
-											"Longitude (?)",	// Row 2
-											"Latitude (?)",		// Row 3
-											"Accuracy",			// Row 4
-											"Speed (m/s)",		// Row 5
-											"Bearing (?)" };	// Row 6
+	private final String[] properties = {	"Name",					// Row 0
+											"Address",				// Row 1
+											"Longitude (Degrees)",	// Row 2
+											"Latitude (Degrees)",	// Row 3
+											"Accuracy",				// Row 4
+											"Speed (m/s)",			// Row 5
+											"Bearing (Degrees)" };	// Row 6
 
 	private PropertyTableModel model;
 	private Simulation sim;
@@ -28,15 +28,15 @@ public class PeerPropertiesTable extends JTable {
 	public void refresh() {
 		model.getDataVector().clear();
 
-		Peer peer = sim.getCurrentPeer();
+		PeerAgent agent = sim.getCurrentPeerAgent();
 
-		if (peer == null)
+		if (agent == null)
 			return;
 
-		String name = peer.getName();
-		PeerAddress address = peer.getAddress();
-		GeoLocation location = peer.getLocation();
-		GeoVelocity velocity = peer.getVelocity();
+		String name = agent.getPeer().getName();
+		PeerAddress address = agent.getPeer().getAddress();
+		GeoLocation location = agent.getPeer().getLocation();
+		GeoVelocity velocity = agent.getPeer().getVelocity();
 
 		String longitude = new String();
 		String latitude = new String();
@@ -67,9 +67,9 @@ public class PeerPropertiesTable extends JTable {
 				if (tme.getType() == TableModelEvent.UPDATE) {
 					// Automatically apply user-entered values upon table value change.
 
-					Peer peer = sim.getCurrentPeer();
+					PeerAgent agent = sim.getCurrentPeerAgent();
 
-					if (peer == null)
+					if (agent == null)
 						return;
 
 					try {
@@ -84,8 +84,8 @@ public class PeerPropertiesTable extends JTable {
 						GeoLocation location = new GeoLocation(longitude, latitude, accuracy);
 						GeoVelocity velocity = new GeoVelocity(speed, bearing); 
 
-						peer.setName(name);
-						peer.setAddress(address);
+						agent.getPeer().setName(name);
+						agent.getPeer().setAddress(address);
 						sim.updateCurrentPeerAgent(location, velocity);
 					} catch (NumberFormatException nfe) {
 						JOptionPane.showMessageDialog(sim.getFrame(), "Please a valid number.");

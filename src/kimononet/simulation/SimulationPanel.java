@@ -35,17 +35,17 @@ public class SimulationPanel extends JPanel {
 	private long clock;
 	private Simulation sim;
 
-	private Rectangle calculatePeerRectangle(Peer peer) {
-		return new Rectangle((int)(longitudeToX(peer.getLocation().getLongitude()) - (imageUAV.getWidth() / 2)), (int)(latitudeToY(peer.getLocation().getLatitude()) - (imageUAV.getHeight() / 2)), imageUAV.getWidth(), imageUAV.getHeight());
+	private Rectangle calculatePeerRectangle(PeerAgent agent) {
+		return new Rectangle((int)(longitudeToX(agent.getPeer().getLocation().getLongitude()) - (imageUAV.getWidth() / 2)), (int)(latitudeToY(agent.getPeer().getLocation().getLatitude()) - (imageUAV.getHeight() / 2)), imageUAV.getWidth(), imageUAV.getHeight());
 	}
 
 	public void incrementClock() {
 		clock++;
 	}
 
-	public void peerExplode(Peer peer) {
-		if (peer != null)
-			explosionPoints.put(new Point((int)(longitudeToX(peer.getLocation().getLongitude())) - (imageUAV.getWidth() / 2), (int)(latitudeToY(peer.getLocation().getLatitude())) - (imageUAV.getHeight() / 2)), clock);
+	public void peerExplode(PeerAgent agent) {
+		if (agent != null)
+			explosionPoints.put(new Point((int)(longitudeToX(agent.getPeer().getLocation().getLongitude())) - (imageUAV.getWidth() / 2), (int)(latitudeToY(agent.getPeer().getLocation().getLatitude())) - (imageUAV.getHeight() / 2)), clock);
 	}
 
 	public void clearExplosionPoints() {
@@ -71,9 +71,9 @@ public class SimulationPanel extends JPanel {
 
 		if (e.getID() == MouseEvent.MOUSE_DRAGGED && !sim.isSimulationRunning()) {
 			// Drag the currently selected peer.
-			Peer peer = sim.getCurrentPeer();
-			if ((peer != null) && calculatePeerRectangle(peer).contains(mouseX, mouseY)) {
-				sim.updateCurrentPeerAgent(new GeoLocation(xToLongitude(mouseX), yToLatitude(mouseY), peer.getLocation().getAccuracy()));
+			PeerAgent agent = sim.getCurrentPeerAgent();
+			if ((agent != null) && calculatePeerRectangle(agent).contains(mouseX, mouseY)) {
+				sim.updateCurrentPeerAgent(new GeoLocation(xToLongitude(mouseX), yToLatitude(mouseY), agent.getPeer().getLocation().getAccuracy()));
 				sim.refresh();
 			}
 		}
@@ -92,7 +92,7 @@ public class SimulationPanel extends JPanel {
 			// Select the peer.
 			int i = 0;
 			for (PeerAgent agent : sim.getPeerAgents()) {
-				if (calculatePeerRectangle(agent.getPeer()).contains(mouseX, mouseY)) {
+				if (calculatePeerRectangle(agent).contains(mouseX, mouseY)) {
 					sim.setCurrentPeerIndex(i);
 					sim.refresh();
 					break;
@@ -107,9 +107,9 @@ public class SimulationPanel extends JPanel {
 	public void processMouseWheelEvent(MouseWheelEvent e) {
 		if (!sim.isSimulationRunning()) {
 			// Rotate the currently selected peer using the mouse wheel.
-			Peer peer = sim.getCurrentPeer();
-			if ((peer != null) && calculatePeerRectangle(peer).contains(mouseX, mouseY)) {
-				sim.updateCurrentPeerAgent(peer.getLocation(), new GeoVelocity(peer.getVelocity().getSpeed(), peer.getVelocity().getBearing() + (float)Math.toRadians(e.getWheelRotation())));
+			PeerAgent agent = sim.getCurrentPeerAgent();
+			if ((agent != null) && calculatePeerRectangle(agent).contains(mouseX, mouseY)) {
+				sim.updateCurrentPeerAgent(agent.getPeer().getLocation(), new GeoVelocity(agent.getPeer().getVelocity().getSpeed(), agent.getPeer().getVelocity().getBearing() + (float)Math.toRadians(e.getWheelRotation())));
 				sim.refresh();
 			}
 		}
@@ -156,7 +156,8 @@ public class SimulationPanel extends JPanel {
 	public void paintComponent(Graphics g) {
 		Graphics2D g2d = (Graphics2D)g;
 
-		final double GRID_INTERVAL = 0.001d; 
+		final double GRID_INTERVAL = Math.toDegrees(Double.parseDouble(sim.getPeerEnvironment().get("max-transmission-range")) / (double)GeoLocation.EARTH_MEDIAN_RADIUS);
+
 		g2d.setColor(Color.LIGHT_GRAY);
 
 		// Paint vertical gridlines.
@@ -169,22 +170,20 @@ public class SimulationPanel extends JPanel {
 
 		// Paint peers.
 		for (PeerAgent agent : sim.getPeerAgents()) {
-			Peer peer = agent.getPeer();
-
 			// These offsets are to make the center of the image as the origin.
 			int offsetX = imageUAV.getWidth() / 2;
 			int offsetY = imageUAV.getHeight() / 2;
 
 			// Calculate peer position in pixels.
-			int peerX = (int)(longitudeToX(peer.getLocation().getLongitude())) - offsetX;
-			int peerY = (int)(latitudeToY(peer.getLocation().getLatitude())) - offsetY;
+			int peerX = (int)(longitudeToX(agent.getPeer().getLocation().getLongitude())) - offsetX;
+			int peerY = (int)(latitudeToY(agent.getPeer().getLocation().getLatitude())) - offsetY;
 
 			// Rotate peer.
-			AffineTransformOp atop = new AffineTransformOp(AffineTransform.getRotateInstance(peer.getVelocity().getBearing(), offsetX, offsetY), AffineTransformOp.TYPE_BILINEAR);
+			AffineTransformOp atop = new AffineTransformOp(AffineTransform.getRotateInstance(agent.getPeer().getVelocity().getBearing(), offsetX, offsetY), AffineTransformOp.TYPE_BILINEAR);
 			BufferedImage imageUAVRotated = atop.filter(imageUAV, null);
 
 			// Highlight currently selected peer.
-			if (peer == sim.getCurrentPeer()) {
+			if (agent == sim.getCurrentPeerAgent()) {
 				RescaleOp rop = new RescaleOp(1.2f, 15, null);
 				rop.filter(imageUAVRotated, imageUAVRotated);
 			}
@@ -212,8 +211,8 @@ public class SimulationPanel extends JPanel {
 			g2d.fillRect(tooltipX, tooltipY, 175, 50);
 			g2d.setColor(Color.BLACK);
 			g2d.drawRect(tooltipX, tooltipY, 175, 50);
-			g2d.drawString("Longitude: " + Float.toString((float)xToLongitude(mouseX)) + "?", tooltipX + 5, tooltipY + 20);
-			g2d.drawString("Latitude: " + Float.toString((float)yToLatitude(mouseY)) + "?", tooltipX + 5, tooltipY + 40);
+			g2d.drawString("Longitude: " + Float.toString((float)xToLongitude(mouseX)), tooltipX + 5, tooltipY + 20);
+			g2d.drawString("Latitude: " + Float.toString((float)yToLatitude(mouseY)), tooltipX + 5, tooltipY + 40);
 		}
 
 	}

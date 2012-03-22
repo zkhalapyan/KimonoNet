@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import kimononet.geo.DefaultGeoDevice;
 import kimononet.geo.GeoDevice;
 import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoVelocity;
@@ -54,7 +55,7 @@ public class Simulation {
 	private GeoMap mapDim = new GeoMap(	new GeoLocation(-0.01, 0.01, 0f),	// Upper left
 										new GeoLocation(0.01, -0.01, 0f));	// Lower right
 	private int peerIndex = 0;	// This is just for peer names, e.g. Peer-0, Peer-1, etc.
-	private JButton btnStartStop, btnAddPeer, btnDeletePeer, btnClearAll, btnh4x0r, btnCopy, btnClear;
+	private JButton btnStartStop, btnAddPeer, btnDeletePeer, btnClearAll, btnSetAsRecv, btnh4x0r, btnCopy, btnClear;
 	private JFrame frame; 
 	private JLabel lblSimStatusDisplay;
 	private JMenuItem mntmStartStopSim, mntmChangeHostility, mntmEditMapDim;
@@ -64,6 +65,7 @@ public class Simulation {
 	private PeerList peerList;
 	private PeerPropertiesTable peerPropTable;
 	private SimulationPanel panel; 
+	//private JPanel panel;
 	private StatMonitor monitor;
 	private StatResults results;
 	private Timer timer;
@@ -73,7 +75,7 @@ public class Simulation {
 		return (agents.isEmpty() ? null : agents.get((int)(Math.random() * agents.size())));
 	}
 
-	private void addPeer() {
+	private void addPeerAgent() {
 		String name = "Peer-" + peerIndex++;
 		PeerAddress address = PeerAddress.generateRandomAddress();
 		GeoLocation location = GeoLocation.generateRandomGeoLocation(mapDim);
@@ -89,23 +91,23 @@ public class Simulation {
 		agents.add(agent);
 
 		// Add peer to list.
-		peerList.append(peer);
+		peerList.append(agent);
 
 		refresh();
 	}
 
-	private void deleteAllPeers() {
+	private void deleteAllPeerAgents() {
 		peerList.clear();
 		agents.clear();
 		refresh();
 	}
 
-	private void deleteCurrentPeer() {
-		deletePeerAt(getCurrentPeerIndex());
+	private void deleteCurrentPeerAgent() {
+		deletePeerAgentAt(getCurrentPeerAgentIndex());
 	}
 
-	private void deletePeerAt(int i) {
-		if (i < 0)
+	private void deletePeerAgentAt(int i) {
+		if (i < 0 || i >= agents.size())
 			return;
 		peerList.deleteItemAt(i);
 		if (bSimRunning)
@@ -123,6 +125,12 @@ public class Simulation {
 			// Check if there are enough peers.
 			if (agents.size() < 2) {
 				JOptionPane.showMessageDialog(frame, "Please at least 2 peers.");
+				return;
+			}
+
+			// Check if there is a receiver.
+			if (destination == null) {
+				JOptionPane.showMessageDialog(frame, "Please designate a peer as the receiver.");
 				return;
 			}
 
@@ -149,11 +157,8 @@ public class Simulation {
 				e.printStackTrace();
 			}
 
-			// Get a random sender.
+			// Get an initial random sender.
 			source = getRandomPeerAgent();
-
-			// Find a random receiver that is not the sender. 
-			while ((destination = getRandomPeerAgent()) == source) { }
 
 			bSimRunning = true;
 			timer.start();
@@ -195,26 +200,58 @@ public class Simulation {
 		return agents;
 	}
 
+	public boolean isReceiver(PeerAgent agent) {
+		return (destination == agent);
+	}
+
 	public boolean isSimulationRunning() {
 		return bSimRunning;
 	}
 
-	public int getCurrentPeerIndex() {
+	public int getCurrentPeerAgentIndex() {
 		return peerList.getCurrentlySelectedItemIndex();	
+	}
+
+	/**
+	 * @return If an error occurred, returns -2.
+	 *         If successful, returns -1.
+	 *         If successful AND there was a previous receiver, returns index of that receiver.
+	 */
+	public int setAsReceiver(int i) {
+		if (i < 0 || i >= agents.size() || (destination == getPeerAgentAt(i)))
+			return -2;
+
+		int ret = -1;
+
+		if (destination != null) {
+			// Restore previous receiver's GeoDevice to random waypoint.
+			int j = agents.indexOf(destination);
+			agents.set(j, new PeerAgent(destination.getPeer(), env, new RandomWaypointGeoDevice(destination.getPeer().getLocation(), destination.getPeer().getVelocity(), mapDim)));
+			peerList.refresh(j);
+			ret = j;
+		}
+
+		// Make new receiver's GeoDevice stationary.
+		agents.set(i, new PeerAgent(getPeerAgentAt(i).getPeer(), env, new DefaultGeoDevice(getPeerAgentAt(i).getPeer().getLocation(), getPeerAgentAt(i).getPeer().getVelocity())));
+		destination = getPeerAgentAt(i);
+
+		refresh();
+
+		return ret;
 	}
 
 	public JFrame getFrame() {
 		return frame;
 	}
 
-	public Peer getCurrentPeer() {
-		return getPeerAt(getCurrentPeerIndex());
+	public PeerAgent getCurrentPeerAgent() {
+		return getPeerAgentAt(getCurrentPeerAgentIndex());
 	}
 
-	public Peer getPeerAt(int i) {
-		if (i < 0)
+	public PeerAgent getPeerAgentAt(int i) {
+		if (i < 0 || i >= agents.size())
 			return null;
-		return agents.get(i).getPeer();
+		return agents.get(i);
 	}
 
 	public PeerEnvironment getPeerEnvironment() {
@@ -222,25 +259,25 @@ public class Simulation {
 	}
 
 	public void setCurrentPeerIndex(int i) {
-		if (i < 0)
+		if (i < 0 || i >= agents.size())
 			return;
 		peerList.setCurrentlySelectedItemIndex(i);
 		refresh();
 	}
 
 	public void updateCurrentPeerAgent(GeoLocation location) {
-		if (location == null || getCurrentPeer() == null)
+		if (location == null || getCurrentPeerAgent() == null)
 			return;
-		updateCurrentPeerAgent(location, getCurrentPeer().getVelocity());
+		updateCurrentPeerAgent(location, getCurrentPeerAgent().getPeer().getVelocity());
 		refresh();
 	}
 
 	public void updateCurrentPeerAgent(GeoLocation location, GeoVelocity velocity) {
-		if (location == null || velocity == null || getCurrentPeer() == null)
+		if (location == null || velocity == null || getCurrentPeerAgent() == null)
 			return;
-		getCurrentPeer().setLocation(location);
-		getCurrentPeer().setVelocity(velocity);
-		agents.set(getCurrentPeerIndex(), new PeerAgent(getCurrentPeer(), env, new RandomWaypointGeoDevice(location, velocity)));
+		getCurrentPeerAgent().getPeer().setLocation(location);
+		getCurrentPeerAgent().getPeer().setVelocity(velocity);
+		agents.set(getCurrentPeerAgentIndex(), new PeerAgent(getCurrentPeerAgent().getPeer(), env, new RandomWaypointGeoDevice(location, velocity, mapDim)));
 		refresh();
 	}
 
@@ -252,7 +289,8 @@ public class Simulation {
 
 		// Enable disable buttons.
 		btnClearAll.setEnabled(!peerList.isEmpty() && !bSimRunning);
-		btnDeletePeer.setEnabled((getCurrentPeer() != null) && !bSimRunning);
+		btnDeletePeer.setEnabled((getCurrentPeerAgent() != null) && !bSimRunning);
+		btnSetAsRecv.setEnabled((getCurrentPeerAgent() != null) && !bSimRunning);
 		btnClear.setEnabled((results != null) && !bSimRunning);
 		btnCopy.setEnabled((results != null) && !bSimRunning);
 
@@ -287,9 +325,9 @@ public class Simulation {
 	 */
 	private void initialize() {
 		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[] {0, 0, 0, 0, 0};
+		gridBagLayout.columnWidths = new int[] {0, 0, 0, 0, 0, 0};
 		gridBagLayout.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-		gridBagLayout.columnWeights = new double[] {1.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gridBagLayout.columnWeights = new double[] {1.0, 0.0, 0.0, 0.0, Double.MIN_VALUE, 0.0};
 		gridBagLayout.rowWeights = new double[] {0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
 
 		frame = new JFrame("KimonoNet Simulator");
@@ -388,6 +426,7 @@ public class Simulation {
 		}
 
 		panel = new SimulationPanel(imageUAV, imageUAVxplod, mapDim, this);
+		//panel = new JPanel();
 		panel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 
 		GridBagConstraints gbc_panel = new GridBagConstraints();
@@ -411,7 +450,7 @@ public class Simulation {
 
 		GridBagConstraints gbc_lblSimStatusDisplay = new GridBagConstraints();
 		gbc_lblSimStatusDisplay.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblSimStatusDisplay.gridwidth = 3;
+		gbc_lblSimStatusDisplay.gridwidth = 4;
 		gbc_lblSimStatusDisplay.gridx = 1;
 		gbc_lblSimStatusDisplay.gridy = 0;
 		gbc_lblSimStatusDisplay.insets = new Insets(0, 0, 5, 5);
@@ -429,10 +468,10 @@ public class Simulation {
 		
 		GridBagConstraints gbc_btnStartStop = new GridBagConstraints();
 		gbc_btnStartStop.fill = GridBagConstraints.HORIZONTAL;
-		gbc_btnStartStop.gridx = 4;
+		gbc_btnStartStop.gridx = 5;
 		gbc_btnStartStop.gridy = 0;
 		gbc_btnStartStop.insets = new Insets(0, 0, 5, 0);
-				
+		
 		frame.getContentPane().add(btnStartStop, gbc_btnStartStop);
 		
 		// Add separator. /////////////////////////////////////////////////////
@@ -441,7 +480,7 @@ public class Simulation {
 
 		GridBagConstraints gbc_separatorSimStatus = new GridBagConstraints();
 		gbc_separatorSimStatus.fill = GridBagConstraints.HORIZONTAL;
-		gbc_separatorSimStatus.gridwidth = 4;
+		gbc_separatorSimStatus.gridwidth = 5;
 		gbc_separatorSimStatus.gridx = 1;
 		gbc_separatorSimStatus.gridy = 1;
 		gbc_separatorSimStatus.insets = new Insets(0, 0, 5, 0);
@@ -469,7 +508,7 @@ public class Simulation {
 		btnAddPeer = new JButton("Add Peer");
 		btnAddPeer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				addPeer();
+				addPeerAgent();
 			}
 		});
 
@@ -486,7 +525,7 @@ public class Simulation {
 		btnDeletePeer = new JButton("Delete Peer");
 		btnDeletePeer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				deleteCurrentPeer();
+				deleteCurrentPeerAgent();
 			}
 		});
 
@@ -502,16 +541,32 @@ public class Simulation {
 		btnClearAll = new JButton("Clear All");
 		btnClearAll.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				deleteAllPeers();
+				deleteAllPeerAgents();
 			}
 		});
 		
 		GridBagConstraints gbc_btnClearAll = new GridBagConstraints();
 		gbc_btnClearAll.gridx = 4;
 		gbc_btnClearAll.gridy = 2;
-		gbc_btnClearAll.insets = new Insets(0, 0, 5, 0);
+		gbc_btnClearAll.insets = new Insets(0, 0, 5, 5);
 		
 		frame.getContentPane().add(btnClearAll, gbc_btnClearAll);
+		
+		// Add "Set As Receiver" button. ////////////////////////////////////////////
+
+		btnSetAsRecv = new JButton("Set As Receiver");
+		btnSetAsRecv.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				setAsReceiver(getCurrentPeerAgentIndex());
+			}
+		});
+		
+		GridBagConstraints gbc_btnSetAsRecv = new GridBagConstraints();
+		gbc_btnSetAsRecv.gridx = 5;
+		gbc_btnSetAsRecv.gridy = 2;
+		gbc_btnSetAsRecv.insets = new Insets(0, 0, 5, 5);
+		
+		frame.getContentPane().add(btnSetAsRecv, gbc_btnSetAsRecv);
 
 		// Add peer list. /////////////////////////////////////////////////////
 
@@ -519,7 +574,7 @@ public class Simulation {
 
 		GridBagConstraints gbc_scrollPanePeers = new GridBagConstraints();
 		gbc_scrollPanePeers.fill = GridBagConstraints.BOTH;
-		gbc_scrollPanePeers.gridwidth = 4;
+		gbc_scrollPanePeers.gridwidth = 5;
 		gbc_scrollPanePeers.gridx = 1;
 		gbc_scrollPanePeers.gridy = 3;
 		gbc_scrollPanePeers.insets = new Insets(0, 0, 5, 0);
@@ -535,7 +590,7 @@ public class Simulation {
 
 		GridBagConstraints gbc_separatorPeers = new GridBagConstraints();
 		gbc_separatorPeers.fill = GridBagConstraints.HORIZONTAL;
-		gbc_separatorPeers.gridwidth = 4;
+		gbc_separatorPeers.gridwidth = 5;
 		gbc_separatorPeers.gridx = 1;
 		gbc_separatorPeers.gridy = 4;
 		gbc_separatorPeers.insets = new Insets(0, 0, 5, 0);
@@ -564,7 +619,7 @@ public class Simulation {
 
 		GridBagConstraints gbc_scrollPanePeerProps = new GridBagConstraints();
 		gbc_scrollPanePeerProps.fill = GridBagConstraints.BOTH;
-		gbc_scrollPanePeerProps.gridwidth = 4;
+		gbc_scrollPanePeerProps.gridwidth = 5;
 		gbc_scrollPanePeerProps.gridx = 1;
 		gbc_scrollPanePeerProps.gridy = 6;
 		gbc_scrollPanePeerProps.insets = new Insets(0, 0, 5, 0);
@@ -580,7 +635,7 @@ public class Simulation {
 
 		GridBagConstraints gbc_separatorPeerProps = new GridBagConstraints();
 		gbc_separatorPeerProps.fill = GridBagConstraints.HORIZONTAL;
-		gbc_separatorPeerProps.gridwidth = 4;
+		gbc_separatorPeerProps.gridwidth = 5;
 		gbc_separatorPeerProps.gridx = 1;
 		gbc_separatorPeerProps.gridy = 7;
 		gbc_separatorPeerProps.insets = new Insets(0, 0, 5, 0);
@@ -610,7 +665,7 @@ public class Simulation {
 		GridBagConstraints gbc_scrollPaneEnvProps = new GridBagConstraints();
 
 		gbc_scrollPaneEnvProps.fill = GridBagConstraints.BOTH;
-		gbc_scrollPaneEnvProps.gridwidth = 4;
+		gbc_scrollPaneEnvProps.gridwidth = 5;
 		gbc_scrollPaneEnvProps.gridx = 1;
 		gbc_scrollPaneEnvProps.gridy = 9;
 		gbc_scrollPaneEnvProps.insets = new Insets(0, 0, 5, 0);
@@ -626,7 +681,7 @@ public class Simulation {
 
 		GridBagConstraints gbc_separatorBottom = new GridBagConstraints();
 		gbc_separatorBottom.fill = GridBagConstraints.HORIZONTAL;
-		gbc_separatorBottom.gridwidth = 5;
+		gbc_separatorBottom.gridwidth = 6;
 		gbc_separatorBottom.gridx = 0;
 		gbc_separatorBottom.gridy = 10;
 		gbc_separatorBottom.insets = new Insets(0, 0, 5, 0);
@@ -650,13 +705,75 @@ public class Simulation {
 
 		frame.getContentPane().add(lblStatistics, gbc_lblStatistics);
 		
+				// Add "Clear" button. /////////////////////////////////////////////////
+		
+				btnClear = new JButton("Clear");
+				btnClear.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent event) {
+						results = null;
+						refresh();
+					}
+				});
+				
+						// Add "Copy" button. /////////////////////////////////////////////////
+				
+						btnCopy = new JButton("Copy");
+						btnCopy.addActionListener(new ActionListener() {
+							public void actionPerformed(ActionEvent event) {
+								statDisplay.copyToClipboard();
+								refresh();
+							}
+						});
+						
+								// Add "h4x0r" button. /////////////////////////////////////////////////
+						
+								btnh4x0r = new JButton("1337 Mode");
+								btnh4x0r.addActionListener(new ActionListener() {
+									public void actionPerformed(ActionEvent event) {
+										bh4x0r = !bh4x0r;
+										if (bh4x0r) {
+											statDisplay.setForeground(Color.GREEN);
+											statDisplay.setBackground(Color.BLACK);
+										}
+										else {
+											statDisplay.setForeground(Color.BLACK);
+											statDisplay.setBackground(Color.WHITE);
+										}
+										refresh();
+									}
+								});
+								
+								GridBagConstraints gbc_btnh4x0r = new GridBagConstraints();
+								gbc_btnh4x0r.fill = GridBagConstraints.HORIZONTAL;
+								gbc_btnh4x0r.gridx = 3;
+								gbc_btnh4x0r.gridy = 11;
+								gbc_btnh4x0r.insets = new Insets(0, 0, 5, 5);
+								
+								frame.getContentPane().add(btnh4x0r, gbc_btnh4x0r);
+						
+						GridBagConstraints gbc_btnCopy = new GridBagConstraints();
+						gbc_btnCopy.fill = GridBagConstraints.HORIZONTAL;
+						gbc_btnCopy.gridx = 4;
+						gbc_btnCopy.gridy = 11;
+						gbc_btnCopy.insets = new Insets(0, 0, 5, 5);
+						
+						frame.getContentPane().add(btnCopy, gbc_btnCopy);
+				
+				GridBagConstraints gbc_btnClear = new GridBagConstraints();
+				gbc_btnClear.fill = GridBagConstraints.HORIZONTAL;
+				gbc_btnClear.gridx = 5;
+				gbc_btnClear.gridy = 11;
+				gbc_btnClear.insets = new Insets(0, 0, 5, 0);
+				
+				frame.getContentPane().add(btnClear, gbc_btnClear);
+		
 		// Add statistics text area. //////////////////////////////////////////
 
 		JScrollPane scrollPaneStats = new JScrollPane();
 
 		GridBagConstraints gbc_scrollPaneStats = new GridBagConstraints();
 		gbc_scrollPaneStats.fill = GridBagConstraints.BOTH;
-		gbc_scrollPaneStats.gridwidth = 5;
+		gbc_scrollPaneStats.gridwidth = 6;
 		gbc_scrollPaneStats.gridx = 0;
 		gbc_scrollPaneStats.gridy = 12;
 
@@ -665,68 +782,6 @@ public class Simulation {
 		statDisplay = new StatDisplay();
 		scrollPaneStats.setViewportView(statDisplay);
 
-		// Add "h4x0r" button. /////////////////////////////////////////////////
-
-		btnh4x0r = new JButton("1337 Mode");
-		btnh4x0r.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				bh4x0r = !bh4x0r;
-				if (bh4x0r) {
-					statDisplay.setForeground(Color.GREEN);
-					statDisplay.setBackground(Color.BLACK);
-				}
-				else {
-					statDisplay.setForeground(Color.BLACK);
-					statDisplay.setBackground(Color.WHITE);
-				}
-				refresh();
-			}
-		});
-		
-		GridBagConstraints gbc_btnh4x0r = new GridBagConstraints();
-		gbc_btnh4x0r.fill = GridBagConstraints.HORIZONTAL;
-		gbc_btnh4x0r.gridx = 2;
-		gbc_btnh4x0r.gridy = 11;
-		gbc_btnh4x0r.insets = new Insets(0, 0, 5, 0);
-		
-		frame.getContentPane().add(btnh4x0r, gbc_btnh4x0r);
-
-		// Add "Copy" button. /////////////////////////////////////////////////
-
-		btnCopy = new JButton("Copy");
-		btnCopy.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				statDisplay.copyToClipboard();
-				refresh();
-			}
-		});
-		
-		GridBagConstraints gbc_btnCopy = new GridBagConstraints();
-		gbc_btnCopy.fill = GridBagConstraints.HORIZONTAL;
-		gbc_btnCopy.gridx = 3;
-		gbc_btnCopy.gridy = 11;
-		gbc_btnCopy.insets = new Insets(0, 0, 5, 0);
-		
-		frame.getContentPane().add(btnCopy, gbc_btnCopy);
-
-		// Add "Clear" button. /////////////////////////////////////////////////
-
-		btnClear = new JButton("Clear");
-		btnClear.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				results = null;
-				refresh();
-			}
-		});
-		
-		GridBagConstraints gbc_btnClear = new GridBagConstraints();
-		gbc_btnClear.fill = GridBagConstraints.HORIZONTAL;
-		gbc_btnClear.gridx = 4;
-		gbc_btnClear.gridy = 11;
-		gbc_btnClear.insets = new Insets(0, 0, 5, 0);
-		
-		frame.getContentPane().add(btnClear, gbc_btnClear);
-
 		refresh();
 
 		timer = new Timer(timerRefreshRate, new ActionListener() {
@@ -734,8 +789,8 @@ public class Simulation {
 				// Account for agents exploding in hostile environments.
 				for (int i = 0; i < agents.size(); i++) {
 					if (Math.random() < hostilityFactor) {
-						panel.peerExplode(getPeerAt(i));
-						deletePeerAt(i);
+						panel.peerExplode(getPeerAgentAt(i));
+						deletePeerAgentAt(i);
 					}
 				}
 				if (agents.size() < 2) {
@@ -751,6 +806,9 @@ public class Simulation {
 
 				// Update statistics.
 				results.combine(monitor.getStats().getStatResults(source.getPeer().getAddress(), destination.getPeer().getAddress()));
+
+				// Find a new random sender that is not the destination for the next iteration.
+				while ((source = getRandomPeerAgent()) == destination) { }
 
 				// Refresh the UI.
 				panel.incrementClock();
