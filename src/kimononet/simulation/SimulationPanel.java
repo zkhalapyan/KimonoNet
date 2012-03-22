@@ -27,7 +27,7 @@ import kimononet.peer.PeerAgent;
 
 public class SimulationPanel extends JPanel {
 
-	private BufferedImage imageUAV, imageUAVxplod;
+	private BufferedImage imageUAV, imageUAVxplod, imageUAVdest, imageUAVsending;
 	private final int EXPLOSION_POINT_LIFETIME = 10;
 	private GeoMap mapDim;
 	private HashMap<Point, Long> explosionPoints = new HashMap<Point, Long>();
@@ -53,9 +53,11 @@ public class SimulationPanel extends JPanel {
 		explosionPoints.clear();
 	}
 
-	public SimulationPanel(BufferedImage i1, BufferedImage i2, GeoMap m, Simulation s) {
+	public SimulationPanel(BufferedImage i1, BufferedImage i2, BufferedImage i3, BufferedImage i4, GeoMap m, Simulation s) {
 		imageUAV = i1;
 		imageUAVxplod = i2;
+		imageUAVdest = i3;
+		imageUAVsending = i4;
 		mapDim = m;
 		sim = s;
 
@@ -170,9 +172,16 @@ public class SimulationPanel extends JPanel {
 
 		// Paint peers.
 		for (PeerAgent agent : sim.getPeerAgents()) {
+			BufferedImage image = imageUAV;
+
+			if (sim.isSender(agent))
+				image = imageUAVsending;
+			else if (sim.isReceiver(agent))
+				image = imageUAVdest;
+
 			// These offsets are to make the center of the image as the origin.
-			int offsetX = imageUAV.getWidth() / 2;
-			int offsetY = imageUAV.getHeight() / 2;
+			int offsetX = image.getWidth() / 2;
+			int offsetY = image.getHeight() / 2;
 
 			// Calculate peer position in pixels.
 			int peerX = (int)(longitudeToX(agent.getPeer().getLocation().getLongitude())) - offsetX;
@@ -180,16 +189,16 @@ public class SimulationPanel extends JPanel {
 
 			// Rotate peer.
 			AffineTransformOp atop = new AffineTransformOp(AffineTransform.getRotateInstance(agent.getPeer().getVelocity().getBearing(), offsetX, offsetY), AffineTransformOp.TYPE_BILINEAR);
-			BufferedImage imageUAVRotated = atop.filter(imageUAV, null);
+			BufferedImage imageRotated = atop.filter(image, null);
 
 			// Highlight currently selected peer.
 			if (agent == sim.getCurrentPeerAgent()) {
 				RescaleOp rop = new RescaleOp(1.2f, 15, null);
-				rop.filter(imageUAVRotated, imageUAVRotated);
+				rop.filter(imageRotated, imageRotated);
 			}
 
 			// Draw peer.
-			g2d.drawImage(imageUAVRotated, peerX, peerY, this);
+			g2d.drawImage(imageRotated, peerX, peerY, this);
 		}
 
 		// Paint exploded peers.
