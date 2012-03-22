@@ -1,7 +1,5 @@
 package kimononet.kincol;
 
-import java.util.ArrayList;
-
 import kimononet.geo.DefaultGeoDevice;
 import kimononet.geo.GeoDevice;
 import kimononet.geo.GeoLocation;
@@ -167,8 +165,6 @@ public class KiNCoL extends Thread{
 			PeerAgent source = getRandomPeerAgent();
 			PeerAgent destination = agents[0];	
 			
-			ArrayList<PeerAgent> sources = new ArrayList<PeerAgent>();
-			
 			for(int i = 0; i < numberOfPackets; i++){
 				
 				//Find a random sender that is not the destination.
@@ -207,9 +203,7 @@ public class KiNCoL extends Thread{
 			long stopTime = System.currentTimeMillis();
 			
 			//Wait for all the threads to die out/shutdown.
-			sleep(SHUTDOWN_DELAY);
-			
-			
+			sleep(SHUTDOWN_DELAY + beaconTimeout);
 			
 			//Output the results.
 			Logger.info(results.toString());
@@ -236,10 +230,7 @@ public class KiNCoL extends Thread{
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-	
 
-	
-		
 	}
 	
 

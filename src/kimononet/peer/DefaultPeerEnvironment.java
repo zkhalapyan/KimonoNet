@@ -28,7 +28,9 @@ public class DefaultPeerEnvironment extends PeerEnvironment{
 
 	public DefaultPeerEnvironment()
 	{
-		set("beacon-service-timeout", "300");
+		set("beacon-service-timeout", "3000");
+		set("beacon-service-timeout-random-additive", "0.20");
+		
 		set("max-beacon-peers",       "34");
 		set("packet-loss-rate",       "0");
 		set("max-transmission-range", "150");

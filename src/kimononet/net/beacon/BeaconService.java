@@ -30,7 +30,7 @@ public class BeaconService extends Thread implements Service{
 	 * long in seconds a beacon service waits for receiving a beacon from a 
 	 * neighbor before sending out its own beacon.
 	 */
-	private static final int DEFAULT_TIMEOUT = 100;
+	private static final int DEFAULT_TIMEOUT = 5000;
 	
 	/**
 	 * Peer agent associated with this peer discovery service.
@@ -103,7 +103,12 @@ public class BeaconService extends Thread implements Service{
 			connection = new UDPConnection(servicePort, serviceAddress);
 		}
 		
-		connection.setTimeout(timeout);
+		float randomAdditive = 0;
+		
+		if(agent.getEnvironment().get("beacon-service-timeout-random-additive") != null)
+			randomAdditive = Float.parseFloat(agent.getEnvironment().get("beacon-service-timeout-random-additive"));
+		
+		connection.setTimeout(timeout + (int)(Math.random() * timeout * randomAdditive));
 	
 		if(!connection.connect()){
 			return;
@@ -227,6 +232,8 @@ public class BeaconService extends Thread implements Service{
 			//sent, notify the stat monitor.
 			if(agent.getStatMonitor() != null && success){
 				agent.getStatMonitor().packetSent(new StatPacket(beacon));
+				
+				Logger.debug("SENT BEACON PACKET.");
 			}
 
 			return success;

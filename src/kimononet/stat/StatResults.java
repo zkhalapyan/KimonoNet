@@ -271,7 +271,7 @@ public class StatResults {
 		results += "Lost Packets:          \t" +  getLostPackets() +    "\n";
 		results += "Packet Delivery Ratio: \t" + (int)(getPacketDeliveryRatio() * 100)    + "%\n";
 		results += "Control Overhead:      \t" + (int)(getControlOverhead() * 100)    + "%\n";
-		results += "Greedy Ratio:          \t" + (int)(getGreedyRatio()     * 100)    + "%\n\ns";
+		results += "Greedy Ratio:          \t" + (int)(getGreedyRatio()     * 100)    + "%\n\n";
 		
 		results += "###############COUNTS###############"                 + "\n";
 		
