@@ -91,15 +91,18 @@ public class StatData {
 		
 		synchronized(sentPackets){
 			
-			totalSentPackets = sentPackets.size();
 			
-			totalPacketCount += sentPackets.size();
+			
+			
 			
 			for(StatPacket packet : sentPackets){
 				
 				if(packet.isDropped()){
 					continue;
 				}
+				
+				totalSentPackets ++;
+				totalPacketCount ++;
 				
 				if(packet.getType() == PacketType.BEACON){
 					beaconPacketCount ++;
@@ -136,15 +139,15 @@ public class StatData {
 		
 		synchronized(receivedPackets){
 			
-			totalReceivedPackets = receivedPackets.size();
-			
-			totalPacketCount += receivedPackets.size();
-			
 			for(StatPacket packet : receivedPackets){
 				
 				if(packet.isDropped()){
 					continue;
 				}
+				
+				totalReceivedPackets++;
+				
+				totalPacketCount++;
 				
 				if(packet.getType() == PacketType.DATA){
 					
