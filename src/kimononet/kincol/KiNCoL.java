@@ -135,6 +135,8 @@ public class KiNCoL extends Thread{
 		
 		Logger.info("#########STARTING SIMULATION##########");
 	
+		long startTime = System.currentTimeMillis();
+		
 		//The stat result will store the final results to be displayed to the 
 		//user.
 		StatResults results = new StatResults();
@@ -197,16 +199,22 @@ public class KiNCoL extends Thread{
 				statMonitor.getStats().reset();
 			}
 			
+			Logger.info("Shutting down...");
+			
 			//Kill all services/threads.
 			killEveryone(agents);
 			
-			Logger.info("Shutting down...");
+			long stopTime = System.currentTimeMillis();
 			
 			//Wait for all the threads to die out/shutdown.
 			sleep(SHUTDOWN_DELAY);
 			
+			
+			
 			//Output the results.
 			Logger.info(results.toString());
+			
+			Logger.info("Total Time: \t " + (int)((stopTime - startTime) / 1000) + " seconds.\n");
 			
 			Logger.info("#########BEACON SERVICE RESULTS#########");
 			for(PeerAgent agent : agents){
@@ -221,6 +229,7 @@ public class KiNCoL extends Thread{
 						    " # of peers: \t " + agent.getPeers().size() + 
 						    " # of peers2: \t " + peers2NeighborCount);
 			}
+			
 			
 			Logger.info("#################DONE###################");
 			
