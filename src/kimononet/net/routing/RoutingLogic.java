@@ -167,12 +167,7 @@ public class RoutingLogic {
 			packet.setForwardMode(ForwardMode.PERIMETER);
 			packet.setXHDRFaceFirstEdgeDst(x);
 		}
-		//else if(false)
-			//TODO CHECK IF INTERSECTION
-		//{
-			//packet.setXHDRFaceFirstEdgeSrc(s);
-			//packet.setXHDRFaceFirstEdgeDst(x);
-		//}
+		//TODO CHECK IF INTERSECTION FOR FULL CIRCLE CHECK
 
 		packet.setHdr_fwd_dst_id(id);
 		
