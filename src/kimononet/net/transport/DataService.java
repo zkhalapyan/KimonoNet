@@ -4,6 +4,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 import kimononet.log.LogType;
 import kimononet.log.Logger;
+import kimononet.net.PacketException;
 import kimononet.net.p2p.Connection;
 import kimononet.net.p2p.MulticastConnection;
 import kimononet.net.p2p.UDPConnection;
@@ -177,8 +178,14 @@ public class DataService extends Thread implements Service{
 				received = connection.receive();
 				
 				if(received != null){
+					DataPacket packet;
 					
-					DataPacket packet = new DataPacket(received);
+					try{
+						packet = new DataPacket(received);
+					}catch(PacketException ex){
+						Logger.error(ex.getMessage());
+						continue;
+					}
 					
 					//Ignore data packets from the same peer.
 					if(agent.getPeer().getAddress().equals(packet.getPeer().getAddress())){
