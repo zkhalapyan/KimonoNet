@@ -39,4 +39,6 @@ public interface StatMonitor extends Service {
 	 */
 	public StatData getStats();
 	
+	public void reset();
+	
 }

@@ -2,6 +2,7 @@ package kimononet.stat;
 
 import java.util.ArrayList;
 
+import kimononet.log.Logger;
 import kimononet.net.Packet;
 import kimononet.net.PacketType;
 import kimononet.peer.PeerAddress;
@@ -42,6 +43,17 @@ public class StatData {
 	public StatData(){
 		sentPackets      = new ArrayList<StatPacket>(DEFAULT_LIST_CAPACITY);
 		receivedPackets = new ArrayList<StatPacket>(DEFAULT_LIST_CAPACITY);
+	}
+	
+	public void reset(){
+		
+		synchronized(sentPackets){
+			sentPackets.clear();
+		}
+		
+		synchronized(receivedPackets){
+			receivedPackets.clear();
+		}
 	}
 	
 	/**
@@ -90,10 +102,6 @@ public class StatData {
 		int perimeterCount   = 0;
 		
 		synchronized(sentPackets){
-			
-			
-			
-			
 			
 			for(StatPacket packet : sentPackets){
 				

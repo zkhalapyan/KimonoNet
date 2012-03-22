@@ -51,6 +51,10 @@ public class MasterStatMonitor implements StatMonitor {
 			data.addSentPacket(packet);
 		}	
 	}
+	
+	public void reset(){
+		data.reset();
+	}
 
 	public final void packetDropped(StatPacket packet){
 		packet.setDropped(true);

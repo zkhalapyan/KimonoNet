@@ -1,12 +1,13 @@
 package kimononet.kincol;
 
+import java.util.ArrayList;
+
 import kimononet.geo.DefaultGeoDevice;
 import kimononet.geo.GeoDevice;
 import kimononet.geo.GeoLocation;
 import kimononet.geo.GeoMap;
 import kimononet.geo.GeoVelocity;
 import kimononet.geo.RandomWaypointGeoDevice;
-import kimononet.log.LogType;
 import kimononet.log.Logger;
 import kimononet.net.routing.QualityOfService;
 import kimononet.net.transport.DataPacket;
@@ -25,7 +26,7 @@ public class KiNCoL extends Thread{
 	 * Internal at which packets will be send from a random source to a random
 	 * sink. This value is in milliseconds.
 	 */
-	private static final int PACKET_SENDING_INTERVAL = 200;
+	private static final int PACKET_SENDING_INTERVAL = 1000;
 	
 	/**
 	 * Numbers of seconds to allow beacon service to populate peers table prior
@@ -164,6 +165,8 @@ public class KiNCoL extends Thread{
 			PeerAgent source = getRandomPeerAgent();
 			PeerAgent destination = agents[0];	
 			
+			ArrayList<PeerAgent> sources = new ArrayList<PeerAgent>();
+			
 			for(int i = 0; i < numberOfPackets; i++){
 				
 				//Find a random sender that is not the destination.
@@ -171,6 +174,10 @@ public class KiNCoL extends Thread{
 				
 				//Account for agents exploding in hostile environments.
 				for(PeerAgent agent : agents){
+					
+					if(agent == source || agent == destination)
+						continue;
+					
 					if(Math.random() < hostilityFactor){
 						killAgent(agent);
 					}
@@ -186,6 +193,8 @@ public class KiNCoL extends Thread{
 				sleep(PACKET_SENDING_INTERVAL);
 				
 				results.combine(statMonitor.getStats().getStatResults(source.getPeer().getAddress(), destination.getPeer().getAddress()));
+				
+				statMonitor.getStats().reset();
 			}
 			
 			//Kill all services/threads.
