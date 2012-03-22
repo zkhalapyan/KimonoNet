@@ -24,7 +24,7 @@ public class KiNCoL extends Thread{
 	 * Internal at which packets will be send from a random source to a random
 	 * sink. This value is in milliseconds.
 	 */
-	private static final int PACKET_SENDING_INTERVAL = 1000;
+	private static final int PACKET_SENDING_INTERVAL = 500;
 	
 	/**
 	 * Numbers of seconds to allow beacon service to populate peers table prior
