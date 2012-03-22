@@ -46,9 +46,6 @@ import java.awt.Color;
 
 public class Simulation {
 
-	private static final int INITIALIZATION_DELAY = 2000;
-	private static final int SHUTDOWN_DELAY = 1000;
-
 	private ArrayList<PeerAgent> agents = new ArrayList<PeerAgent>();
 	private boolean bSimRunning = false, bh4x0r = false;
 	private float hostilityFactor;
@@ -66,12 +63,12 @@ public class Simulation {
 	private PeerList peerList;
 	private PeerPropertiesTable peerPropTable;
 	private SimulationPanel panel; 
-	private SimulationThread thread;
-	//private JPanel panel;
 	private StatMonitor monitor;
 	private StatResults results;
 	private Timer timer;
 	private int timerRefreshRate = 1;	// in ms
+	private Timer timerEnableButton;
+	private int timerEnableButtonRefreshRate = 2000 + Integer.parseInt(env.get("beacon-service-timeout"));	// in ms
 
 	public ArrayList<PeerAgent> getPeerAgents() {
 		return agents;
@@ -252,15 +249,7 @@ public class Simulation {
 				}
 			}
 
-			// Wait for beacon service to populate neighbor tables.
-			try {
-				Thread.sleep(INITIALIZATION_DELAY + Integer.parseInt(env.get("beacon-service-timeout")));
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
-			thread = new SimulationThread(this, hostilityFactor);
-			thread.start();
+			(new SimulationThread(this, hostilityFactor)).start();
 			timer.start();
 			bSimRunning = true;
 		}
@@ -269,21 +258,16 @@ public class Simulation {
 			 * About to STOP simulation.
 			 *****************************************************************/
 
-			bSimRunning = false;
+			bSimRunning = false;	// This automatically stops the SimulationThread.
 			timer.stop();
-			thread.stopSimulationThread();
-			panel.clearExplosionPoints();
 
 			// Stop peer services.
 			for (PeerAgent agent : agents)
 				agent.shutdownServices();
 
-			// Wait for all the threads to die out/shutdown.
-			try {
-				Thread.sleep(SHUTDOWN_DELAY + Integer.parseInt(env.get("beacon-service-timeout")));
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			btnStartStop.setEnabled(false);
+			mntmStartStopSim.setEnabled(false);
+			timerEnableButton.start();
 		}
 
 		btnAddPeer.setEnabled(!bSimRunning);
@@ -467,7 +451,6 @@ public class Simulation {
 		}
 
 		panel = new SimulationPanel(imageUAV, imageUAVxplod, imageUAVdest, imageUAVsending, mapDim, this);
-		//panel = new JPanel();
 		panel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 
 		GridBagConstraints gbc_panel = new GridBagConstraints();
@@ -647,6 +630,7 @@ public class Simulation {
 		JLabel lblPeerProps = new JLabel("Peer Properties:");
 
 		GridBagConstraints gbc_lblPeerProps = new GridBagConstraints();
+		gbc_lblPeerProps.gridwidth = 5;
 		gbc_lblPeerProps.anchor = GridBagConstraints.WEST;
 		gbc_lblPeerProps.gridx = 1;
 		gbc_lblPeerProps.gridy = 5;
@@ -692,6 +676,7 @@ public class Simulation {
 		JLabel lblPeerEnv = new JLabel("Global Peer Environment Properties:");
 
 		GridBagConstraints gbc_lblPeerEnv = new GridBagConstraints();
+		gbc_lblPeerEnv.gridwidth = 5;
 		gbc_lblPeerEnv.anchor = GridBagConstraints.WEST;
 		gbc_lblPeerEnv.gridx = 1;
 		gbc_lblPeerEnv.gridy = 8;
@@ -828,6 +813,15 @@ public class Simulation {
 				// Refresh the UI.
 				panel.incrementClock();
 				refresh();
+			}
+		});
+
+		timerEnableButton = new Timer(timerEnableButtonRefreshRate, new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				btnStartStop.setEnabled(true);
+				mntmStartStopSim.setEnabled(true);
+				refresh();
+				timerEnableButton.stop();
 			}
 		});
 	}

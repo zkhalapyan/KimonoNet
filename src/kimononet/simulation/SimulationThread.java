@@ -2,15 +2,17 @@ package kimononet.simulation;
 
 import java.util.ArrayList;
 
+import javax.swing.JOptionPane;
+
 import kimononet.net.routing.QualityOfService;
 import kimononet.net.transport.DataPacket;
 import kimononet.peer.PeerAgent;
 
 public class SimulationThread extends Thread {
 
+	private static final int INITIALIZATION_DELAY = 2000;
 	private static final int PACKET_SENDING_INTERVAL = 1000;
 
-	private boolean bShutdown = false;
 	private float hostilityFactor;
 	private Simulation sim;
 
@@ -19,12 +21,15 @@ public class SimulationThread extends Thread {
 		hostilityFactor = hf;
 	}
 
-	public void stopSimulationThread() {
-		bShutdown = false;
-	}
-
 	public void run() {
-		while (!bShutdown) {
+		// Wait for beacon service to populate neighbor tables.
+		try {
+			sleep(INITIALIZATION_DELAY + Integer.parseInt(sim.getPeerEnvironment().get("beacon-service-timeout")));
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		while (sim.isSimulationRunning()) {
 			// Find a random sender that is not the receiver for the next iteration.
 			PeerAgent source;
 			while ((source = sim.getRandomPeerAgent()) == sim.getReceiver()) { }
@@ -47,14 +52,17 @@ public class SimulationThread extends Thread {
 	
 			// Sleep until the packet is delivered so we can compute the statistical information. 
 			try {
-				Thread.sleep(PACKET_SENDING_INTERVAL);
-			} catch (InterruptedException ie) {
-				ie.printStackTrace();
+				sleep(PACKET_SENDING_INTERVAL);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 	
 			// Update statistics.
 			sim.getStatResults().combine(sim.getStatMonitor().getStats().getStatResults(sim.getSender().getPeer().getAddress(), sim.getReceiver().getPeer().getAddress()));
 			sim.getStatMonitor().getStats().reset();
 		}
+
+		sim.setSender(null);
+		sim.getSimulationPanel().clearExplosionPoints();
 	}
 }
