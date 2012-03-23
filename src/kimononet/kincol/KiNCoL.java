@@ -77,6 +77,8 @@ public class KiNCoL extends Thread{
 	
 	private int beaconTimeout;
 	
+	private boolean gpsrSimulation;
+	
 	public KiNCoL(int numberOfPeers, 
 				  GeoMap map, 
 				  float peerSpeed, 
@@ -91,6 +93,7 @@ public class KiNCoL extends Thread{
 		System.out.println("Map Size:          \t " + map);
 		System.out.println("Peer Velocity:     \t " + peerSpeed);
 		System.out.println("Hostility Factor:  \t " + hostilityFactor);
+		System.out.println();
 		
 		this.beaconTimeout = beaconTimeout;
 		
@@ -100,6 +103,7 @@ public class KiNCoL extends Thread{
 		
 		this.hostilityFactor = hostilityFactor;
 		this.numberOfPackets = numberOfPackets;
+		this.gpsrSimulation = gpsrSimulation;
 		
 		peerEnvironment = new DefaultPeerEnvironment();
 		
@@ -221,7 +225,7 @@ public class KiNCoL extends Thread{
 				
 				Logger.info("Agent: \t " + agent.getPeer().getName() + 
 						    " # of peers: \t " + agent.getPeers().size() + 
-						    " # of peers2: \t " + peers2NeighborCount);
+						    ((gpsrSimulation)? "" : " # of peers2: \t " + peers2NeighborCount));
 			}
 			
 			
