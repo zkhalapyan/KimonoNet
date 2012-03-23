@@ -73,7 +73,7 @@ public class DataService extends Thread implements Service{
 				StatPacket p = new StatPacket(packet, agent.getPeer().getAddress());
 				agent.getStatMonitor().packetDropped(p);
 				
-				Logger.log("Packet was dropped during routing protocol!", LogType.INFO);
+				Logger.debug("Packet was dropped during routing protocol!");
 				return false;
 			}
 

@@ -87,13 +87,14 @@ public class KiNCoL extends Thread{
 				  int beaconTimeout,
 				  boolean gpsrSimulation){
 		
-		System.out.println("########PARAMETERS RECEIVED########");
-		System.out.println("Number of Peers:   \t " + numberOfPeers);
-		System.out.println("Number of Packets: \t " + numberOfPackets);
-		System.out.println("Map Size:          \t " + map);
-		System.out.println("Peer Velocity:     \t " + peerSpeed);
-		System.out.println("Hostility Factor:  \t " + hostilityFactor);
-		System.out.println();
+		
+		Logger.info("########## PARAMETERS RECEIVED ###########");
+		Logger.info("Number of Peers:   \t " + numberOfPeers);
+		Logger.info("Number of Packets: \t " + numberOfPackets);
+		Logger.info("Map Size:          \t " + map);
+		Logger.info("Peer Velocity:     \t " + peerSpeed);
+		Logger.info("Hostility Factor:  \t " + hostilityFactor);
+		Logger.info("");
 		
 		this.beaconTimeout = beaconTimeout;
 		
@@ -135,7 +136,7 @@ public class KiNCoL extends Thread{
 
 	public void run(){
 		
-		Logger.info("#########STARTING SIMULATION##########");
+		Logger.info("########### RUNNING SIMULATION ###########");
 	
 		long startTime = System.currentTimeMillis();
 		
@@ -200,6 +201,7 @@ public class KiNCoL extends Thread{
 			}
 			
 			Logger.info("Shutting down...");
+			Logger.info("");
 			
 			//Kill all services/threads.
 			killEveryone(agents);
@@ -214,7 +216,7 @@ public class KiNCoL extends Thread{
 			
 			Logger.info("Total Time: \t " + (int)((stopTime - startTime) / 1000) + " seconds.\n");
 			
-			Logger.info("#########BEACON SERVICE RESULTS#########");
+			Logger.info("######### BEACON SERVICE RESULTS #########");
 			for(PeerAgent agent : agents){
 				
 				int peers2NeighborCount = 0;
@@ -225,11 +227,12 @@ public class KiNCoL extends Thread{
 				
 				Logger.info("Agent: \t " + agent.getPeer().getName() + 
 						    " # of peers: \t " + agent.getPeers().size() + 
-						    ((gpsrSimulation)? "" : " # of peers2: \t " + peers2NeighborCount));
+						    ((gpsrSimulation)? "" : " \t # of peers2: \t " + peers2NeighborCount));
 			}
 			
 			
-			Logger.info("#################DONE###################");
+			Logger.info("");
+			Logger.info("################# DONE ###################");
 			
 		} catch (InterruptedException e) {
 			e.printStackTrace();

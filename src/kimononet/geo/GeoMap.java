@@ -62,8 +62,8 @@ public class GeoMap {
 	}
 	
 	public String toString(){
-		return "UpperLeft: (" + (float)upperLeft.getLongitude() + ", " + (float)upperLeft.getLatitude() + ") " +
-			   "LowerRight: (" + (float)lowerRight.getLongitude() + ", " + (float)lowerRight.getLatitude() + ")";
+		return "UL: (" + (float)upperLeft.getLongitude() + ", " + (float)upperLeft.getLatitude() + ") " +
+			   "LR: (" + (float)lowerRight.getLongitude() + ", " + (float)lowerRight.getLatitude() + ")";
 	}
 
 }

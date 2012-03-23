@@ -1,5 +1,7 @@
 package kimononet.stat;
 
+import kimononet.log.Logger;
+
 /**
  * The class encapsulates specific calculated data gathered from analyzing the 
  * data gathered from monitoring packets that are sent from a single source
@@ -267,13 +269,15 @@ public class StatResults {
 	public String toString(){
 		
 		String results = "";
-		results += "###############RESULTS###############"                + "\n";
-		results += "Lost Packets:          \t" +  getLostPackets() +    "\n";
+		
+		results += "################# RESULTS ################"        + "\n";
+		results += "Lost Packets:          \t" +  getLostPackets()     + "\n";
 		results += "Packet Delivery Ratio: \t" + (int)(getPacketDeliveryRatio() * 100)    + "%\n";
 		results += "Control Overhead:      \t" + (int)(getControlOverhead() * 100)    + "%\n";
 		results += "Greedy Ratio:          \t" + (int)(getGreedyRatio()     * 100)    + "%\n\n";
 		
-		results += "###############COUNTS###############"                 + "\n";
+		
+		results += "################## COUNTS ################"                 + "\n";
 		
 		results += "Total Packet Count:                      \t" + totalPacketCount         + "\n";
 		results += "Total Sent Packets:                      \t" + totalSentPackets         + "\n";
