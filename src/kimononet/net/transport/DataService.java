@@ -233,7 +233,7 @@ public class DataService extends Thread implements Service{
 	
 	private void deliverPacket(DataPacket packet){
 		
-		Logger.log("\nPacket delivered to destination: " + packet.toString(), LogType.INFO);
+		Logger.debug("\nPacket delivered to destination: " + packet.toString());
 		
 	}
 	
