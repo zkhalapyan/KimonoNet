@@ -18,9 +18,8 @@ public class PeerPropertiesTable extends JTable {
 											"Address",				// Row 1
 											"Longitude (Degrees)",	// Row 2
 											"Latitude (Degrees)",	// Row 3
-											"Accuracy",				// Row 4
-											"Speed (m/s)",			// Row 5
-											"Bearing (Degrees)" };	// Row 6
+											"Speed (m/s)",			// Row 4
+											"Bearing (Degrees)" };	// Row 5
 
 	private PropertyTableModel model;
 	private Simulation sim;
@@ -40,19 +39,16 @@ public class PeerPropertiesTable extends JTable {
 
 		String longitude = new String();
 		String latitude = new String();
-		String accuracy = new String();
 
 		longitude = Double.toString(location.getLongitude());
 		latitude = Double.toString(location.getLatitude());
-		accuracy = Float.toString(location.getAccuracy());
 
 		model.addRow(new Object[] {properties[0], name});
 		model.addRow(new Object[] {properties[1], address.toString()});
 		model.addRow(new Object[] {properties[2], longitude});
 		model.addRow(new Object[] {properties[3], latitude});
-		model.addRow(new Object[] {properties[4], accuracy});
-		model.addRow(new Object[] {properties[5], Float.toString(velocity.getSpeed())});
-		model.addRow(new Object[] {properties[6], Double.toString(Math.toDegrees(velocity.getBearing()))});
+		model.addRow(new Object[] {properties[4], Float.toString(velocity.getSpeed())});
+		model.addRow(new Object[] {properties[5], Double.toString(Math.toDegrees(velocity.getBearing()))});
 	}
 
 	public PeerPropertiesTable(Simulation s) {
@@ -77,11 +73,10 @@ public class PeerPropertiesTable extends JTable {
 						PeerAddress address = new PeerAddress((String)model.getValueAt(1, 1));
 						double longitude = Double.parseDouble((String)model.getValueAt(2, 1));
 						double latitude = Double.parseDouble((String)model.getValueAt(3, 1));
-						float accuracy = Float.parseFloat((String)model.getValueAt(4, 1));
-						float speed = Float.parseFloat((String)model.getValueAt(5, 1));
-						float bearing = (float)Math.toRadians(Double.parseDouble((String)model.getValueAt(6, 1)));
+						float speed = Float.parseFloat((String)model.getValueAt(4, 1));
+						float bearing = (float)Math.toRadians(Double.parseDouble((String)model.getValueAt(5, 1)));
 
-						GeoLocation location = new GeoLocation(longitude, latitude, accuracy);
+						GeoLocation location = new GeoLocation(longitude, latitude, agent.getPeer().getLocation().getAccuracy());
 						GeoVelocity velocity = new GeoVelocity(speed, bearing); 
 
 						agent.getPeer().setName(name);
