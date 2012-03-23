@@ -448,10 +448,10 @@ public class Simulation {
 		BufferedImage imageUAV = null, imageUAVxplod = null, imageUAVdest = null, imageUAVsending = null;
 
 		try {
-			imageUAV = ImageIO.read(new File("uav.png"));
-			imageUAVxplod = ImageIO.read(new File("uavxplod.png"));
-			imageUAVdest = ImageIO.read(new File("uavdest.png"));
-			imageUAVsending = ImageIO.read(new File("uavsend.png"));
+			imageUAV = ImageIO.read(this.getClass().getResourceAsStream("/kimononet/simulation/uav.png"));
+			imageUAVxplod = ImageIO.read(this.getClass().getResourceAsStream("/kimononet/simulation/uavxplod.png"));
+			imageUAVdest = ImageIO.read(this.getClass().getResourceAsStream("/kimononet/simulation/uavdest.png"));
+			imageUAVsending = ImageIO.read(this.getClass().getResourceAsStream("/kimononet/simulation/uavsend.png"));
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(frame, "Error loading image.");
 		}
